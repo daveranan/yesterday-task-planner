@@ -1,0 +1,46 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Setting the body background to the absolute darkest neutral color */
+body {
+    margin: 0;
+    padding: 0;
+    font-family: sans-serif;
+    height: 100vh;
+    overflow: hidden;
+    background-color: #0a0a0a;
+    /* neutral-950 equivalent for absolute fallback */
+}
+
+#root {
+    height: 100%;
+}
+
+/* Dark mode settings for scrollbar using neutral colors */
+.scrollbar-style::-webkit-scrollbar {
+    width: 8px;
+}
+
+.scrollbar-style::-webkit-scrollbar-thumb {
+    background-color: #525252;
+    /* neutral-600 */
+    border-radius: 4px;
+}
+
+.scrollbar-style::-webkit-scrollbar-track {
+    background-color: #0a0a0a;
+    /* neutral-950 */
+    margin-block: 4px; /* Slight margin to separate from edges */
+}
+
+.dark .scrollbar-style::-webkit-scrollbar-thumb {
+    background-color: #404040;
+    /* neutral-700 */
+    border-radius: 4px;
+}
+
+.dark .scrollbar-style::-webkit-scrollbar-track {
+    background-color: #0a0a0a;
+    /* neutral-950 */
+}
