@@ -9,10 +9,16 @@ const Column = ({ title, category, limit, tasks, allTasks, handleAddTask, handle
     // to get the count of INCOMPLETE tasks for this specific column.
     const visibleTasks = tasks.filter(t => {
         const globalTask = allTasks[t.taskId];
-        // CRITICAL FIX: Ensure the task belongs to this category AND is incomplete.
-        // Uses GLOBAL category if available (fixing sync issues), falls back to entry data.
-        const categoryMatch = (globalTask?.category || t.category) === category;
-        return globalTask && !globalTask.completed && categoryMatch;
+
+        // 1. Must check if global task exists and is not completed
+        if (!globalTask || globalTask.completed) return false;
+
+        // 2. Hide if the local entry is scheduled on the timeline
+        if (t.category === 'scheduled') return false;
+
+        // 3. Match category: Use global category for the column match
+        // (This ensures tasks return to their column if un-scheduled)
+        return (globalTask.category || t.category) === category;
     });
 
     const isLimitReached = limit && visibleTasks.length >= limit;

@@ -61,15 +61,17 @@ const DailyPlanner = () => {
                 // Only roll over incomplete tasks. Check GLOBAL category to exclude scheduled items if needed.
                 // Assuming 'scheduled' items (time slots) shouldn't roll over as "to-dos".
                 const category = task.category || entry.category;
-                return task && !task.completed && category !== 'scheduled';
-            }).map(entry => ({
-                taskId: entry.taskId,
-                // category: entry.category, // Remove redundant local category on rollover
-                slotId: null, // Reset scheduled time
-                rolledOverFrom: prevDateString, // Flag
-                // Fallback category from entry if not global yet (will be synced later)
-                _fallbackCategory: entry.category
-            }));
+                return task && !task.completed;
+            }).map(entry => {
+                const task = allTasks[entry.taskId];
+                return {
+                    taskId: entry.taskId,
+                    category: task.category, // RESET: Use global category, effectively "unscheduling" if it was scheduled
+                    slotId: null, // Reset scheduled time
+                    rolledOverFrom: prevDateString, // Flag
+                    _fallbackCategory: task.category
+                };
+            });
 
             // 2. Clear completed tasks from the *current* day's list that were rolled over
             const tasksToKeep = dayData.taskEntries.filter(entry => {
