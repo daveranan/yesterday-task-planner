@@ -1,9 +1,14 @@
 import React, { useState } from 'react';
 import TaskItem from './TaskItem';
+import { useDroppable } from '@dnd-kit/core';
+import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 
-const Column = ({ title, category, limit, tasks, allTasks, handleAddTask, handleDrop, handleDragStart, toggleTask, deleteTask, handleEditTask }) => {
+const Column = ({ title, category, limit, tasks, allTasks, handleAddTask, toggleTask, deleteTask, handleEditTask }) => {
     const [localNewTaskTitle, setLocalNewTaskTitle] = useState('');
-    const [isDragOver, setIsDragOver] = useState(false);
+
+    const { setNodeRef, isOver } = useDroppable({
+        id: category,
+    });
 
     // FIX: Filter out tasks that are completed AND/OR don't belong to this category 
     // to get the count of INCOMPLETE tasks for this specific column.
@@ -30,36 +35,16 @@ const Column = ({ title, category, limit, tasks, allTasks, handleAddTask, handle
         setLocalNewTaskTitle('');
     };
 
-    const handleDragEnter = (e) => {
-        e.preventDefault();
-        setIsDragOver(true);
-    };
-
-    const handleDragLeave = (e) => {
-        const targetElement = e.currentTarget;
-        const relatedElement = e.relatedTarget;
-        if (relatedElement && targetElement.contains(relatedElement)) return;
-        setIsDragOver(false);
-    };
-
-    const handleColumnDrop = (e) => {
-        setIsDragOver(false);
-        handleDrop(e, category);
-    };
-
     return (
         <div
+            ref={setNodeRef}
             className={`flex-1 min-w-[200px] flex flex-col h-full rounded-xl border-dashed transition-all duration-150
-                ${isDragOver
+                ${isOver
                     /* USE NEUTRAL: Darker drag over feedback */
-                    ? 'bg-neutral-800 border-neutral-600 border-4 shadow-lg'
+                    ? 'bg-neutral-800 border-neutral-500 border-2 shadow-lg ring-1 ring-neutral-700'
                     /* USE NEUTRAL: Set default column background to neutral-900 (from parent) and darker border */
                     : 'bg-neutral-900/50 border-neutral-800 border-2'
                 }`}
-            onDragOver={(e) => e.preventDefault()}
-            onDragEnter={handleDragEnter}
-            onDragLeave={handleDragLeave}
-            onDrop={handleColumnDrop}
         >
             {/* USE NEUTRAL: Darken header border */}
             <div className="p-3 border-b border-neutral-800 flex justify-between items-center">
@@ -68,17 +53,21 @@ const Column = ({ title, category, limit, tasks, allTasks, handleAddTask, handle
             </div>
 
             <div className="p-3 flex-1 overflow-y-auto scrollbar-style">
-                {/* Only map over visible (incomplete and correctly categorized) tasks */}
-                {visibleTasks.map(task =>
-                    <TaskItem
-                        key={task.taskId} // Use taskId as key for consistency
-                        task={task}
-                        allTasks={allTasks}
-                        toggleTask={toggleTask}
-                        deleteTask={deleteTask}
-                        handleDragStart={handleDragStart}
-                        handleEditTask={handleEditTask}
-                    />)}
+                <SortableContext
+                    items={visibleTasks.map(t => t.taskId)}
+                    strategy={verticalListSortingStrategy}
+                >
+                    {/* Only map over visible (incomplete and correctly categorized) tasks */}
+                    {visibleTasks.map(task =>
+                        <TaskItem
+                            key={task.taskId} // Use taskId as key for consistency
+                            task={task}
+                            allTasks={allTasks}
+                            toggleTask={toggleTask}
+                            deleteTask={deleteTask}
+                            handleEditTask={handleEditTask}
+                        />)}
+                </SortableContext>
 
                 {/* Inline Add Task Input */}
                 <div className="mt-2 flex gap-2">

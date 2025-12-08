@@ -8,8 +8,6 @@ const TaskBoard = ({
     allTasks,
     configLimits,
     onAddTask,
-    onDrop,
-    onDragStart,
     onToggleTask,
     onDeleteTask,
     onEditTask,
@@ -31,8 +29,6 @@ const TaskBoard = ({
                         tasks={currentDayData.taskEntries}
                         allTasks={allTasks}
                         handleAddTask={onAddTask}
-                        handleDrop={onDrop}
-                        handleDragStart={onDragStart}
                         toggleTask={onToggleTask}
                         deleteTask={onDeleteTask}
                         handleEditTask={onEditTask}
@@ -46,8 +42,6 @@ const TaskBoard = ({
                         tasks={currentDayData.taskEntries}
                         allTasks={allTasks}
                         handleAddTask={onAddTask}
-                        handleDrop={onDrop}
-                        handleDragStart={onDragStart}
                         toggleTask={onToggleTask}
                         deleteTask={onDeleteTask}
                         handleEditTask={onEditTask}
@@ -63,8 +57,6 @@ const TaskBoard = ({
                     tasks={currentDayData.taskEntries}
                     allTasks={allTasks}
                     handleAddTask={onAddTask}
-                    handleDrop={onDrop}
-                    handleDragStart={onDragStart}
                     toggleTask={onToggleTask}
                     deleteTask={onDeleteTask}
                     handleEditTask={onEditTask}

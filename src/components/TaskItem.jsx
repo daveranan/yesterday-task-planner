@@ -1,7 +1,24 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Icon } from './Icon';
+import { useSortable } from '@dnd-kit/sortable';
+import { useDraggable } from '@dnd-kit/core';
+import { CSS } from '@dnd-kit/utilities';
 
-const TaskItem = ({ task, allTasks, toggleTask, deleteTask, handleDragStart, handleEditTask }) => {
+// The UI Component (Pure, no DnD hooks yourself, but accepts refs/styles)
+export const TaskItemBase = ({
+    task,
+    allTasks,
+    toggleTask,
+    deleteTask,
+    handleEditTask,
+    // DnD props
+    setNodeRef,
+    style,
+    attributes,
+    listeners,
+    isDragging,
+    isOverlay // Helper to styling
+}) => {
     const [isEditing, setIsEditing] = useState(false);
 
     // Get the original task data from the global store
@@ -14,7 +31,7 @@ const TaskItem = ({ task, allTasks, toggleTask, deleteTask, handleDragStart, han
 
     useEffect(() => {
         if (isEditing) {
-            inputRef.current.focus();
+            inputRef.current?.focus();
         }
     }, [isEditing]);
 
@@ -32,7 +49,7 @@ const TaskItem = ({ task, allTasks, toggleTask, deleteTask, handleDragStart, han
             handleEditTask(task.taskId, trimmedTitle);
         }
         // Reset local state in case the new title was invalid or the same
-        setLocalTitle(originalTask ? originalTask.title : task.title);
+        setLocalTitle(originalTask ? originalTask.title : task?.title);
         setIsEditing(false);
     };
 
@@ -41,30 +58,40 @@ const TaskItem = ({ task, allTasks, toggleTask, deleteTask, handleDragStart, han
             saveEdit();
         }
         if (e.key === 'Escape') {
-            setLocalTitle(originalTask ? originalTask.title : task.title);
+            setLocalTitle(originalTask ? originalTask.title : task?.title);
             setIsEditing(false);
         }
     };
 
     if (!originalTask) return null; // Defensive check for missing task data
 
+    if (isDragging) {
+        return (
+            <div
+                ref={setNodeRef}
+                style={style}
+                /* NOTE: Do NOT apply style (transform) here. We want the placeholder to stay in the list. */
+                className="bg-neutral-800 p-2 rounded border border-neutral-600 opacity-50 shadow-xl h-[42px]"
+            />
+        );
+    }
+
     return (
         <div
-            draggable
-            onDragStart={(e) => {
-                // Drag using the unique taskId
-                handleDragStart(e, task.taskId);
-                e.currentTarget.classList.add('opacity-50', 'shadow-xl');
-            }}
-            onDragEnd={(e) => {
-                e.currentTarget.classList.remove('opacity-50', 'shadow-xl');
-            }}
+            ref={setNodeRef}
+            style={style}
+            {...listeners}
+            {...attributes}
             /* USE NEUTRAL: Task item background/border */
-            className="group flex items-center gap-2 bg-neutral-800 p-2 rounded border border-neutral-700 shadow-sm mb-2 cursor-grab active:cursor-grabbing hover:border-neutral-600 transition-colors"
+            className={`group flex items-center gap-2 bg-neutral-800 p-2 rounded border border-neutral-700 shadow-sm mb-2 cursor-grab active:cursor-grabbing hover:border-neutral-600 transition-colors touch-none ${isOverlay ? 'opacity-90 rotate-2' : ''}`}
         >
             {/* USE NEUTRAL: Icons and text colors adjusted for deeper contrast against neutral-800 */}
             {/* Toggle uses the unique taskId to update the global task object */}
-            <button onClick={() => toggleTask(task.taskId)} className="text-neutral-400 hover:text-neutral-300">
+            <button
+                onPointerDown={(e) => e.stopPropagation()} // Prevent drag when clicking checkbox
+                onClick={() => toggleTask(task.taskId)}
+                className="text-neutral-400 hover:text-neutral-300"
+            >
                 {isCompleted ? <Icon name="CheckSquare" className="w-5 h-5 text-neutral-400" /> : <Icon name="Square" className="w-5 h-5 text-neutral-400" />}
             </button>
 
@@ -101,10 +128,69 @@ const TaskItem = ({ task, allTasks, toggleTask, deleteTask, handleDragStart, han
             )}
 
             {/* Delete uses the unique taskId to update the global task object and the day list */}
-            <button onClick={() => deleteTask(task.taskId)} className="opacity-0 group-hover:opacity-100 text-neutral-400 hover:text-red-400 transition-colors">
+            <button
+                onPointerDown={(e) => e.stopPropagation()} // Prevent drag
+                onClick={() => deleteTask(task.taskId)}
+                className="opacity-0 group-hover:opacity-100 text-neutral-400 hover:text-red-400 transition-colors"
+                aria-label="Delete Task"
+            >
                 <Icon name="Trash2" className="w-4 h-4" />
             </button>
         </div>
+    );
+};
+
+// The Sortable Wrapper (Default)
+const TaskItem = (props) => {
+    const {
+        attributes,
+        listeners,
+        setNodeRef,
+        transform,
+        transition,
+        isDragging,
+    } = useSortable({
+        id: props.task.taskId,
+        data: { type: 'TASK', task: props.task }
+    });
+
+    const style = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+    };
+
+    return (
+        <TaskItemBase
+            {...props}
+            setNodeRef={setNodeRef}
+            style={style}
+            attributes={attributes}
+            listeners={listeners}
+            isDragging={isDragging}
+        />
+    );
+};
+
+// The Draggable Wrapper (For Timeline)
+export const DraggableTaskItem = (props) => {
+    const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+        id: props.task.taskId,
+        data: { type: 'TASK', task: props.task }
+    });
+
+    const style = {
+        transform: CSS.Translate.toString(transform),
+    };
+
+    return (
+        <TaskItemBase
+            {...props}
+            setNodeRef={setNodeRef}
+            style={style}
+            attributes={attributes}
+            listeners={listeners}
+            isDragging={isDragging}
+        />
     );
 };
 
