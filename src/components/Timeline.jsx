@@ -7,6 +7,7 @@ const TimeSlot = ({
     slotId,
     displayTime,
     isBlockStart,
+    currentTimePercentage,
     slotTasks,
     allTasks,
     onToggleTask,
@@ -20,10 +21,22 @@ const TimeSlot = ({
     return (
         <div
             ref={setNodeRef}
-            className={`flex border-b border-neutral-800 min-h-[80px]
+            className={`flex border-b border-neutral-800 min-h-[80px] relative
                 ${isBlockStart ? 'border-t-4 border-t-neutral-800' : ''}
             `}
         >
+            {/* Red Current Time Line */}
+            {currentTimePercentage !== null && (
+                <div
+                    className="absolute left-0 right-0 z-20 pointer-events-none flex items-center"
+                    style={{ top: `${currentTimePercentage}%` }}
+                >
+                    <div className="w-full h-[2px] bg-red-500 shadow-sm relative">
+                        <div className="absolute left-0 -top-1 w-2 h-2 bg-red-500 rounded-full"></div>
+                    </div>
+                </div>
+            )}
+
             <div className="w-16 p-3 text-right text-xs font-medium text-neutral-400 border-r border-neutral-800 bg-neutral-800/50 flex-shrink-0">
                 {displayTime}
             </div>
@@ -56,33 +69,15 @@ const Timeline = ({
     onDeleteTask,
     onEditTask
 }) => {
-    const [currentTimePercentage, setCurrentTimePercentage] = useState(-1);
-
-    // --- Time Logic ---
-    const workWindowDurationMinutes = useMemo(() => {
-        return (config.endHour - config.startHour + 1) * 60;
-    }, [config]);
+    const [now, setNow] = useState(new Date());
 
     useEffect(() => {
-        const updateLinePosition = () => {
-            const now = new Date();
-            const currentHour = now.getHours();
-            const currentMin = now.getMinutes();
-
-            if (!isToday || currentHour < config.startHour || currentHour > config.endHour) {
-                setCurrentTimePercentage(-1);
-                return;
-            }
-
-            const elapsedMinutes = (currentHour - config.startHour) * 60 + currentMin;
-            const position = (elapsedMinutes / workWindowDurationMinutes) * 100;
-            setCurrentTimePercentage(Math.max(0, Math.min(100, position)));
-        };
-
-        updateLinePosition();
-        const interval = setInterval(updateLinePosition, 60000);
+        const interval = setInterval(() => setNow(new Date()), 60000);
         return () => clearInterval(interval);
-    }, [isToday, workWindowDurationMinutes, config]);
+    }, []);
+
+    const currentHour = now.getHours();
+    const currentMin = now.getMinutes();
 
     return (
         <div className="flex-[2] bg-neutral-900 rounded-xl shadow-lg border border-neutral-800 flex flex-col overflow-hidden">
@@ -93,17 +88,7 @@ const Timeline = ({
 
             <div className="flex-1 overflow-y-auto overflow-x-hidden scrollbar-style w-full">
                 <div className="relative w-full">
-                    {/* Red Current Time Line */}
-                    {currentTimePercentage >= 0 && currentTimePercentage <= 100 && isToday && (
-                        <div
-                            className="absolute left-0 right-0 z-20 pointer-events-none flex items-center"
-                            style={{ top: `${currentTimePercentage}%` }}
-                        >
-                            <div className="w-full h-[2px] bg-red-500 shadow-sm relative">
-                                <div className="absolute left-0 -top-1 w-2 h-2 bg-red-500 rounded-full"></div>
-                            </div>
-                        </div>
-                    )}
+
 
                     {/* Time Slots */}
                     {Array.from({ length: config.endHour - config.startHour + 1 }, (_, i) => config.startHour + i).map((hour) => {
@@ -116,12 +101,27 @@ const Timeline = ({
                             t.category === 'scheduled' && t.slotId === slotId
                         );
 
+                        const isCurrentHour = isToday && hour === currentHour;
+                        const validPercentage = isCurrentHour ? (currentMin / 60) * 100 : null;
+
                         if (isLunch) {
                             return (
                                 <div
                                     key={hour}
-                                    className="flex border-b border-neutral-800 min-h-[60px] bg-neutral-950/50"
+                                    className="flex border-b border-neutral-800 min-h-[60px] bg-neutral-950/50 relative"
                                 >
+                                    {/* Red Current Time Line for Lunch */}
+                                    {validPercentage !== null && (
+                                        <div
+                                            className="absolute left-0 right-0 z-20 pointer-events-none flex items-center"
+                                            style={{ top: `${validPercentage}%` }}
+                                        >
+                                            <div className="w-full h-[2px] bg-red-500 shadow-sm relative">
+                                                <div className="absolute left-0 -top-1 w-2 h-2 bg-red-500 rounded-full"></div>
+                                            </div>
+                                        </div>
+                                    )}
+
                                     <div className="w-16 p-3 text-right text-xs font-medium text-neutral-500 border-r border-neutral-800 bg-neutral-900/50 flex items-center justify-end">
                                         {displayTime}
                                     </div>
@@ -138,6 +138,7 @@ const Timeline = ({
                                 slotId={slotId}
                                 displayTime={displayTime}
                                 isBlockStart={isBlockStart}
+                                currentTimePercentage={validPercentage}
                                 slotTasks={slotTasks}
                                 allTasks={allTasks}
                                 onToggleTask={onToggleTask}

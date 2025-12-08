@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useStore } from '../store/useStore';
+import { getYYYYMMDD } from '../utils/dateUtils';
 import { CONFIG } from '../constants/config';
 import PlannerHeader from './PlannerHeader';
 import TaskBoard from './TaskBoard';
@@ -16,7 +17,6 @@ const DailyPlanner = () => {
         setCurrentDate,
         handleDateChange,
         jumpToToday,
-        isToday,
         isDarkMode,
         toggleTheme,
         days,
@@ -38,6 +38,7 @@ const DailyPlanner = () => {
 
     // Derived Data
     const currentDayData = days[currentDate] || { taskEntries: [], gratefulness: '', reflections: '' };
+    const isToday = currentDate === getYYYYMMDD(new Date());
 
     const getCategoryTasks = (category) => {
         return currentDayData.taskEntries.filter(t => {
