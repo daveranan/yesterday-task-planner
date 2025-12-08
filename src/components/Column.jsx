@@ -48,7 +48,7 @@ const Column = ({ title, category, limit, tasks, allTasks, handleAddTask, handle
                     /* USE NEUTRAL: Darker drag over feedback */
                     ? 'bg-neutral-800 border-neutral-600 border-4 shadow-lg'
                     /* USE NEUTRAL: Set default column background to neutral-900 (from parent) and darker border */
-                    : 'bg-neutral-50/50 border-neutral-200 border-2 dark:bg-neutral-900/50 dark:border-neutral-800'
+                    : 'bg-neutral-900/50 border-neutral-800 border-2'
                 }`}
             onDragOver={(e) => e.preventDefault()}
             onDragEnter={handleDragEnter}
@@ -57,7 +57,7 @@ const Column = ({ title, category, limit, tasks, allTasks, handleAddTask, handle
         >
             {/* USE NEUTRAL: Darken header border */}
             <div className="p-3 border-b border-neutral-800 flex justify-between items-center">
-                <h3 className="font-semibold text-neutral-700 dark:text-neutral-100 text-sm">{title}</h3>
+                <h3 className="font-semibold text-neutral-100 text-sm">{title}</h3>
                 <span className="text-xs text-neutral-400">{limit} max</span>
             </div>
 
@@ -83,10 +83,10 @@ const Column = ({ title, category, limit, tasks, allTasks, handleAddTask, handle
                         className={`
                             w-full text-sm px-2 py-1 
                             /* USE NEUTRAL: Input background to neutral-800, border to neutral-700 */
-                            bg-neutral-50 dark:bg-neutral-800 border-b border-neutral-700 dark:border-neutral-700 
-                            focus:bg-white dark:focus:bg-neutral-900 focus:border-neutral-600 focus:ring-neutral-600 focus:ring-1 
+                            bg-neutral-800 border-b border-neutral-700 
+                            focus:bg-neutral-900 focus:border-neutral-600 focus:ring-neutral-600 focus:ring-1 
                             rounded-t-md transition-all duration-150 focus:outline-none
-                            placeholder-neutral-400 dark:placeholder-neutral-500 text-neutral-800 dark:text-neutral-100
+                            placeholder-neutral-500 text-neutral-100
                             ${isLimitReached ? 'text-neutral-400 cursor-not-allowed' : ''}
                         `}
                         value={localNewTaskTitle}

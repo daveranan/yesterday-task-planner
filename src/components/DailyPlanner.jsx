@@ -130,20 +130,11 @@ const DailyPlanner = () => {
     };
 
     // --- Time Logic ---
-    const workHours = [];
-    for (let h = CONFIG.startHour; h <= CONFIG.endHour; h++) {
-        if (h !== CONFIG.skipHour) workHours.push(h);
-    }
-    // The total time span from 8:00 AM to the end of the 5 PM hour (17:59) minus the skip hour (12 PM)
+    // The total time span from 8:00 AM to the end of the 5 PM hour (17:59)
     const workWindowDurationMinutes = useMemo(() => {
         // Total hours spanned (8 AM to 6 PM) is (17 - 8 + 1) = 10 hours = 600 minutes
-        let minutes = (CONFIG.endHour - CONFIG.startHour + 1) * 60;
-
-        // Subtract 1 hour (60 minutes) for the skipped hour (12 PM)
-        if (CONFIG.skipHour >= CONFIG.startHour && CONFIG.skipHour <= CONFIG.endHour) {
-            minutes -= 60;
-        }
-        return minutes; // This should be 540 minutes (9 hours of visibility span)
+        // We NOW include the lunch hour in the total span for linear rendering
+        return (CONFIG.endHour - CONFIG.startHour + 1) * 60;
     }, []);
 
 
@@ -158,20 +149,9 @@ const DailyPlanner = () => {
                 return;
             }
 
-            // Check if current time falls in the skipped hour (12 PM)
-            if (currentHour === CONFIG.skipHour) {
-                setCurrentTimePercentage(-1); // Hide line during lunch
-                console.log("Time Line Debug: Hiding line. Currently in skipped hour (12 PM).");
-                return;
-            }
-
             // Calculate elapsed minutes from the start of the work day (CONFIG.startHour)
-            let elapsedMinutes = (currentHour - CONFIG.startHour) * 60 + currentMin;
-
-            // Subtract the skipped hour duration if we are past it
-            if (currentHour > CONFIG.skipHour) {
-                elapsedMinutes -= 60;
-            }
+            // No need to subtract skip hour anymore as it's part of the timeline
+            const elapsedMinutes = (currentHour - CONFIG.startHour) * 60 + currentMin;
 
             // Calculate percentage relative to the total work window duration
             const position = (elapsedMinutes / workWindowDurationMinutes) * 100;
@@ -522,65 +502,92 @@ const DailyPlanner = () => {
                             <span className="text-xs text-neutral-400">Skip 12 PM</span>
                         </div>
 
-                        <div className="flex-1 overflow-y-auto relative scrollbar-style">
-                            {/* Red Current Time Line */}
-                            {currentTimePercentage >= 0 && currentTimePercentage <= 100 && isToday && (
-                                <div
-                                    className="absolute left-0 right-0 z-20 pointer-events-none flex items-center"
-                                    style={{ top: `${currentTimePercentage}%` }}
-                                >
-                                    <div className="w-full h-[2px] bg-red-500 shadow-sm relative">
-                                        <div className="absolute left-0 -top-1 w-2 h-2 bg-red-500 rounded-full"></div>
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Time Slots */}
-                            {workHours.map((hour, index) => {
-                                const slotId = `${hour}:00`;
-                                const displayTime = hour > 12 ? `${hour - 12} PM` : `${hour} ${hour === 12 ? 'PM' : 'AM'}`;
-
-                                // Filter tasks by slot and completion status
-                                const slotTasks = currentDayData.taskEntries.filter(t =>
-                                    t.category === 'scheduled' && t.slotId === slotId
-                                );
-
-                                return (
+                        <div className="flex-1 overflow-y-auto scrollbar-style">
+                            <div className="relative">
+                                {/* Red Current Time Line */}
+                                {currentTimePercentage >= 0 && currentTimePercentage <= 100 && isToday && (
                                     <div
-                                        key={hour}
-                                        className="flex border-b border-neutral-800 min-h-[80px]"
-                                        onDragOver={(e) => e.preventDefault()}
-                                        onDragEnter={handleSlotDragEnter(slotId)}
-                                        onDragLeave={handleSlotDragLeave}
-                                        onDrop={handleSlotDrop(slotId)}
+                                        className="absolute left-0 right-0 z-20 pointer-events-none flex items-center"
+                                        style={{ top: `${currentTimePercentage}%` }}
                                     >
-                                        {/* USE NEUTRAL: Time Label column to neutral-800/50 and border-neutral-800 */}
-                                        <div className="w-16 p-3 text-right text-xs font-medium text-neutral-400 border-r border-neutral-800 bg-neutral-800/50">
-                                            {displayTime}
-                                        </div>
-                                        <div className={`flex-1 p-2 relative transition-colors duration-150 
-                                            ${hoveredSlotId === slotId
-                                                /* USE NEUTRAL: Drag hover to neutral-800 with neutral-600 border */
-                                                ? 'bg-neutral-800 border-4 border-neutral-600'
-                                                /* USE NEUTRAL: Slot background to neutral-900 and hover to neutral-800/50 */
-                                                : 'bg-neutral-900 hover:bg-neutral-800/50'
-                                            }`}
-                                        >
-                                            {/* Only show incomplete tasks in the slot block */}
-                                            {slotTasks.map(task =>
-                                                <TaskItem
-                                                    key={task.taskId} // Use taskId as key for consistency
-                                                    task={task}
-                                                    allTasks={allTasks}
-                                                    toggleTask={toggleTask}
-                                                    deleteTask={deleteTask}
-                                                    handleDragStart={handleDragStart}
-                                                    handleEditTask={handleEditTask}
-                                                />)}
+                                        <div className="w-full h-[2px] bg-red-500 shadow-sm relative">
+                                            <div className="absolute left-0 -top-1 w-2 h-2 bg-red-500 rounded-full"></div>
                                         </div>
                                     </div>
-                                );
-                            })}
+                                )}
+
+                                {/* Time Slots */}
+                                {Array.from({ length: CONFIG.endHour - CONFIG.startHour + 1 }, (_, i) => CONFIG.startHour + i).map((hour) => {
+                                    const slotId = `${hour}:00`;
+                                    const displayTime = hour > 12 ? `${hour - 12} PM` : `${hour} ${hour === 12 ? 'PM' : 'AM'}`;
+                                    const isLunch = hour === CONFIG.skipHour;
+
+                                    // Grouping: Start of a 2-hour block (8, 10, 1, 3). Lunch is 12.
+                                    // We want separators at 10:00 (end of 8-10), 12:00 (Lunch Start), 13:00 (Lunch End), 15:00 (end of 1-3)
+                                    // Standard block starts: 8, 10, 13, 15.
+                                    // Visual separation: Add extra top margin or border if it's the start of a new block group (except first).
+                                    const isBlockStart = (hour === 10) || (hour === 13) || (hour === 15);
+
+                                    // Filter tasks by slot and completion status
+                                    const slotTasks = currentDayData.taskEntries.filter(t =>
+                                        t.category === 'scheduled' && t.slotId === slotId
+                                    );
+
+                                    if (isLunch) {
+                                        return (
+                                            <div
+                                                key={hour}
+                                                className="flex border-b border-neutral-800 min-h-[60px] bg-neutral-950/50"
+                                            >
+                                                <div className="w-16 p-3 text-right text-xs font-medium text-neutral-500 border-r border-neutral-800 bg-neutral-900/50 flex items-center justify-end">
+                                                    {displayTime}
+                                                </div>
+                                                <div className="flex-1 p-2 flex items-center justify-center text-neutral-600 font-medium tracking-wide uppercase text-xs">
+                                                    Lunch Break
+                                                </div>
+                                            </div>
+                                        );
+                                    }
+
+                                    return (
+                                        <div
+                                            key={hour}
+                                            className={`flex border-b border-neutral-800 min-h-[80px]
+                                                ${isBlockStart ? 'border-t-4 border-t-neutral-800' : ''}
+                                            `}
+                                            onDragOver={(e) => e.preventDefault()}
+                                            onDragEnter={handleSlotDragEnter(slotId)}
+                                            onDragLeave={handleSlotDragLeave}
+                                            onDrop={handleSlotDrop(slotId)}
+                                        >
+                                            {/* USE NEUTRAL: Time Label column to neutral-800/50 and border-neutral-800 */}
+                                            <div className="w-16 p-3 text-right text-xs font-medium text-neutral-400 border-r border-neutral-800 bg-neutral-800/50">
+                                                {displayTime}
+                                            </div>
+                                            <div className={`flex-1 p-2 relative transition-colors duration-150 
+                                                ${hoveredSlotId === slotId
+                                                    /* USE NEUTRAL: Drag hover to neutral-800 with neutral-600 border */
+                                                    ? 'bg-neutral-800 border-4 border-neutral-600'
+                                                    /* USE NEUTRAL: Slot background to neutral-900 and hover to neutral-800/50 */
+                                                    : 'bg-neutral-900 hover:bg-neutral-800/50'
+                                                }`}
+                                            >
+                                                {/* Only show incomplete tasks in the slot block */}
+                                                {slotTasks.map(task =>
+                                                    <TaskItem
+                                                        key={task.taskId} // Use taskId as key for consistency
+                                                        task={task}
+                                                        allTasks={allTasks}
+                                                        toggleTask={toggleTask}
+                                                        deleteTask={deleteTask}
+                                                        handleDragStart={handleDragStart}
+                                                        handleEditTask={handleEditTask}
+                                                    />)}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
                         </div>
                     </div>
 
