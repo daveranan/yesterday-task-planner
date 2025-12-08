@@ -83,7 +83,7 @@ export const TaskItemBase = ({
             {...listeners}
             {...attributes}
             /* USE NEUTRAL: Task item background/border */
-            className={`group flex items-center gap-2 bg-neutral-800 p-2 rounded border border-neutral-700 shadow-sm mb-2 cursor-grab active:cursor-grabbing hover:border-neutral-600 transition-colors touch-none ${isOverlay ? 'opacity-90 rotate-2' : ''}`}
+            className={`group flex items-center gap-2 bg-neutral-800 p-2 rounded border border-neutral-700 shadow-sm cursor-grab active:cursor-grabbing hover:border-neutral-600 transition-colors touch-none ${isOverlay ? 'opacity-90 rotate-2' : ''}`}
         >
             {/* USE NEUTRAL: Icons and text colors adjusted for deeper contrast against neutral-800 */}
             {/* Toggle uses the unique taskId to update the global task object */}

@@ -52,7 +52,7 @@ const Column = ({ title, category, limit, tasks, allTasks, handleAddTask, toggle
                 <span className="text-xs text-neutral-400">{limit} max</span>
             </div>
 
-            <div className="p-3 flex-1 overflow-y-auto scrollbar-style">
+            <div className="p-3 flex-1 overflow-y-auto scrollbar-style flex flex-col gap-2">
                 <SortableContext
                     items={visibleTasks.map(t => t.taskId)}
                     strategy={verticalListSortingStrategy}

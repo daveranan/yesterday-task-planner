@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { DraggableTaskItem } from './TaskItem';
+import TaskItem from './TaskItem';
 import { useDroppable } from '@dnd-kit/core';
+import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 
 // Helper component for a single droppable time slot
 const TimeSlot = ({
@@ -21,42 +22,49 @@ const TimeSlot = ({
     return (
         <div
             ref={setNodeRef}
-            className={`flex border-b border-neutral-800 min-h-[80px] relative
+            className={`flex border-b border-neutral-800 min-h-[50px] flex-1 relative
                 ${isBlockStart ? 'border-t-4 border-t-neutral-800' : ''}
             `}
         >
             {/* Red Current Time Line */}
-            {currentTimePercentage !== null && (
-                <div
-                    className="absolute left-0 right-0 z-20 pointer-events-none flex items-center"
-                    style={{ top: `${currentTimePercentage}%` }}
-                >
-                    <div className="w-full h-[2px] bg-red-500 shadow-sm relative">
-                        <div className="absolute left-0 -top-1 w-2 h-2 bg-red-500 rounded-full"></div>
+            {
+                currentTimePercentage !== null && (
+                    <div
+                        className="absolute left-0 right-0 z-20 pointer-events-none flex items-center"
+                        style={{ top: `${currentTimePercentage}%` }}
+                    >
+                        <div className="w-full h-[2px] bg-red-500 shadow-sm relative">
+                            <div className="absolute left-0 -top-1 w-2 h-2 bg-red-500 rounded-full"></div>
+                        </div>
                     </div>
-                </div>
-            )}
+                )
+            }
 
             <div className="w-16 p-3 text-right text-xs font-medium text-neutral-400 border-r border-neutral-800 bg-neutral-800/50 flex-shrink-0">
                 {displayTime}
             </div>
-            <div className={`flex-1 min-w-0 p-2 relative transition-colors duration-150 
+            <div className={`flex-1 min-w-0 p-2 relative transition-colors duration-150 flex flex-col gap-2
                 ${isOver
                     ? 'bg-neutral-800 ring-2 ring-inset ring-neutral-500' // Use ring-inset to avoid layout shift
                     : 'bg-neutral-900 hover:bg-neutral-800/50'
                 }`}
             >
-                {slotTasks.map(task =>
-                    <DraggableTaskItem
-                        key={task.taskId}
-                        task={task}
-                        allTasks={allTasks}
-                        toggleTask={onToggleTask}
-                        deleteTask={onDeleteTask}
-                        handleEditTask={onEditTask}
-                    />)}
+                <SortableContext
+                    items={slotTasks.map(t => t.taskId)}
+                    strategy={verticalListSortingStrategy}
+                >
+                    {slotTasks.map(task =>
+                        <TaskItem
+                            key={task.taskId}
+                            task={task}
+                            allTasks={allTasks}
+                            toggleTask={onToggleTask}
+                            deleteTask={onDeleteTask}
+                            handleEditTask={onEditTask}
+                        />)}
+                </SortableContext>
             </div>
-        </div>
+        </div >
     );
 };
 
@@ -87,7 +95,7 @@ const Timeline = ({
             </div>
 
             <div className="flex-1 overflow-y-auto overflow-x-hidden scrollbar-style w-full">
-                <div className="relative w-full">
+                <div className="relative w-full min-h-full flex flex-col">
 
 
                     {/* Time Slots */}
@@ -108,7 +116,7 @@ const Timeline = ({
                             return (
                                 <div
                                     key={hour}
-                                    className="flex border-b border-neutral-800 min-h-[60px] bg-neutral-950/50 relative"
+                                    className="flex border-b border-neutral-800 min-h-[50px] flex-1 bg-neutral-950/50 relative"
                                 >
                                     {/* Red Current Time Line for Lunch */}
                                     {validPercentage !== null && (

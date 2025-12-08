@@ -102,10 +102,21 @@ const DailyPlanner = () => {
 
         if (isOverTask) {
             const overTask = overData.task;
-            // Check if same category/context (and not scheduled, as Timeline isn't sortable in this way)
-            if (activeData?.task?.category === overTask?.category && activeData?.task?.category !== 'scheduled') {
-                reorderTask(active.id, over.id);
-                return;
+            // Check if same category/context (including scheduled slots)
+            if (activeData?.task?.category === overTask?.category) {
+                // If it's scheduled, we also need to check if they are in the same slot? 
+                // Actually, reorderTask logic just swaps them in the array, so if they are in the same filtered list, it works.
+                // But wait, "scheduled" tasks are filtered by slotId. 
+                // If we reorder across slots, that's a move.
+                // If we reorder in same slot, it's a reorder.
+
+                // Let's simplify: If reordering functionality covers it, great.
+                // But strictly speaking, if slotId matches, it's a reorder.
+
+                if (activeData?.task?.category !== 'scheduled' || activeData?.task?.slotId === overTask?.slotId) {
+                    reorderTask(active.id, over.id);
+                    return;
+                }
             }
 
             // Cross-list drop onto a task
