@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { useStore } from '../store/useStore';
 import { getYYYYMMDD } from '../utils/dateUtils';
 import { CONFIG } from '../constants/config';
@@ -163,31 +164,40 @@ const DailyPlanner = () => {
                     />
 
                     <div className="flex-1 flex overflow-hidden p-6 gap-6">
+                        <AnimatePresence mode="wait">
+                            <motion.div
+                                key={currentDate}
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                transition={{ duration: 0.2 }}
+                                className="flex-1 flex overflow-hidden gap-6 w-full h-full"
+                            >
+                                <TaskBoard
+                                    // Use explicit limits from CONFIG
+                                    configLimits={CONFIG.limits}
+                                    currentDayData={currentDayData}
+                                    allTasks={allTasks}
+                                    onAddTask={addTask}
+                                    onToggleTask={toggleTask}
+                                    onDeleteTask={deleteTask}
+                                    onEditTask={updateTaskTitle}
+                                    onUpdateDayData={updateDayData}
+                                // Removed manual DnD props
+                                />
 
-                        <TaskBoard
-                            // Use explicit limits from CONFIG
-                            configLimits={CONFIG.limits}
-                            currentDayData={currentDayData}
-                            allTasks={allTasks}
-                            onAddTask={addTask}
-                            onToggleTask={toggleTask}
-                            onDeleteTask={deleteTask}
-                            onEditTask={updateTaskTitle}
-                            onUpdateDayData={updateDayData}
-                        // Removed manual DnD props
-                        />
-
-                        <Timeline
-                            currentDayData={currentDayData}
-                            allTasks={allTasks}
-                            isToday={isToday}
-                            config={CONFIG}
-                            onToggleTask={toggleTask}
-                            onDeleteTask={deleteTask}
-                            onEditTask={updateTaskTitle}
-                        // Removed manual DnD props
-                        />
-
+                                <Timeline
+                                    currentDayData={currentDayData}
+                                    allTasks={allTasks}
+                                    isToday={isToday}
+                                    config={CONFIG}
+                                    onToggleTask={toggleTask}
+                                    onDeleteTask={deleteTask}
+                                    onEditTask={updateTaskTitle}
+                                // Removed manual DnD props
+                                />
+                            </motion.div>
+                        </AnimatePresence>
                     </div>
                 </div>
             </div>

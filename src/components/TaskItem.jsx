@@ -3,6 +3,7 @@ import { Icon } from './Icon';
 import { useSortable } from '@dnd-kit/sortable';
 import { useDraggable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
+import confetti from 'canvas-confetti';
 
 // The UI Component (Pure, no DnD hooks yourself, but accepts refs/styles)
 export const TaskItemBase = ({
@@ -54,6 +55,9 @@ export const TaskItemBase = ({
     };
 
     const handleKeyDown = (e) => {
+        // Prevent dnd-kit from interpreting Space/Enter as drag signals
+        e.stopPropagation();
+
         if (e.key === 'Enter') {
             saveEdit();
         }
@@ -83,13 +87,22 @@ export const TaskItemBase = ({
             {...listeners}
             {...attributes}
             /* USE NEUTRAL: Task item background/border */
-            className={`group flex items-center gap-2 bg-neutral-800 p-2 rounded border border-neutral-700 shadow-sm cursor-grab active:cursor-grabbing hover:border-neutral-600 transition-colors touch-none ${isOverlay ? 'opacity-90 rotate-2' : ''}`}
+            className={`group flex items-center gap-2 bg-neutral-800 p-2 rounded border border-neutral-700 shadow-sm cursor-grab active:cursor-grabbing hover:border-neutral-500 hover:shadow-md hover:scale-[1.01] transition-all duration-200 touch-none ${isOverlay ? 'opacity-90 rotate-2 scale-105 shadow-xl' : ''}`}
         >
             {/* USE NEUTRAL: Icons and text colors adjusted for deeper contrast against neutral-800 */}
             {/* Toggle uses the unique taskId to update the global task object */}
             <button
                 onPointerDown={(e) => e.stopPropagation()} // Prevent drag when clicking checkbox
-                onClick={() => toggleTask(task.taskId)}
+                onClick={(e) => {
+                    if (!isCompleted) {
+                        confetti({
+                            particleCount: 50,
+                            spread: 60,
+                            origin: { x: e.clientX / window.innerWidth, y: e.clientY / window.innerHeight }
+                        });
+                    }
+                    toggleTask(task.taskId);
+                }}
                 className="text-neutral-400 hover:text-neutral-300"
             >
                 {isCompleted ? <Icon name="CheckSquare" className="w-5 h-5 text-neutral-400" /> : <Icon name="Square" className="w-5 h-5 text-neutral-400" />}
