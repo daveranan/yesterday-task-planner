@@ -1,0 +1,33 @@
+{
+  "name": "daily-planner-electron",
+  "version": "1.0.0",
+  "description": "Daily Planner wrapped as an Electron desktop application.",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "package-win": "electron-builder --win"
+  },
+  "keywords": [
+    "electron",
+    "react",
+    "planner"
+  ],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "electron": "^28.2.0",
+    "electron-builder": "^24.9.1"
+  },
+  "build": {
+    "appId": "com.yourcompany.dailyplanner",
+    "productName": "Daily Planner",
+    "win": {
+      "target": "nsis"
+    },
+    "files": [
+      "main.js",
+      "index.html",
+      "package.json"
+    ]
+  }
+}
