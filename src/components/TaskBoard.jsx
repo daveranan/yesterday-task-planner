@@ -1,0 +1,83 @@
+import React from 'react';
+import Column from './Column';
+import JournalSection from './JournalSection';
+
+const TaskBoard = ({
+    categories, // Object containing { id, title, limit, data } or similar map
+    currentDayData,
+    allTasks,
+    configLimits,
+    onAddTask,
+    onDrop,
+    onDragStart,
+    onToggleTask,
+    onDeleteTask,
+    onEditTask,
+    onUpdateDayData
+}) => {
+    // To maintain existing layout, we need:
+    // Row 1: Must-Do, Communications
+    // Row 2: To-Do
+    // Row 3: Journal Section
+
+    return (
+        <div className="flex-[3] flex flex-col gap-6">
+            <div className="flex-[2] flex gap-6 min-h-0">
+                <div className="flex-1 bg-neutral-900 rounded-xl shadow-lg border border-neutral-800 overflow-hidden">
+                    <Column
+                        title="Must-Do's"
+                        category="must-do"
+                        limit={configLimits['must-do']}
+                        tasks={currentDayData.taskEntries}
+                        allTasks={allTasks}
+                        handleAddTask={onAddTask}
+                        handleDrop={onDrop}
+                        handleDragStart={onDragStart}
+                        toggleTask={onToggleTask}
+                        deleteTask={onDeleteTask}
+                        handleEditTask={onEditTask}
+                    />
+                </div>
+                <div className="flex-1 bg-neutral-900 rounded-xl shadow-lg border border-neutral-800 overflow-hidden">
+                    <Column
+                        title="Communications"
+                        category="communications"
+                        limit={configLimits['communications']}
+                        tasks={currentDayData.taskEntries}
+                        allTasks={allTasks}
+                        handleAddTask={onAddTask}
+                        handleDrop={onDrop}
+                        handleDragStart={onDragStart}
+                        toggleTask={onToggleTask}
+                        deleteTask={onDeleteTask}
+                        handleEditTask={onEditTask}
+                    />
+                </div>
+            </div>
+
+            <div className="flex-[3] bg-neutral-900 rounded-xl shadow-lg border border-neutral-800 overflow-hidden min-h-0">
+                <Column
+                    title="To-Do's"
+                    category="todo"
+                    limit={configLimits['todo']}
+                    tasks={currentDayData.taskEntries}
+                    allTasks={allTasks}
+                    handleAddTask={onAddTask}
+                    handleDrop={onDrop}
+                    handleDragStart={onDragStart}
+                    toggleTask={onToggleTask}
+                    deleteTask={onDeleteTask}
+                    handleEditTask={onEditTask}
+                />
+            </div>
+
+            <JournalSection
+                gratefulness={currentDayData.gratefulness}
+                reflections={currentDayData.reflections}
+                onUpdate={onUpdateDayData}
+            />
+        </div>
+    );
+};
+
+export default TaskBoard;
