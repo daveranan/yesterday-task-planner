@@ -46,8 +46,7 @@ const PlannerHeader: React.FC<PlannerHeaderProps> = ({
         <div className="h-12 bg-background border-b border-border flex items-center justify-between px-4 shadow-sm z-20 select-none" style={{ WebkitAppRegion: 'drag' } as React.CSSProperties}>
             <div className="flex items-center gap-4" style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}>
                 <h1 className="flex items-center gap-2">
-                    <img src="assets/img/favicon.png" alt="Icon" className="w-8 h-8" />
-                    <img src="assets/img/Yesterday_logo.svg" alt="Yesterday" className="h-6" />
+                    <img src="assets/img/Yesterday_logo.svg" alt="Yesterday" className="h-6 invert dark:invert-0" />
                 </h1>
                 <div className="flex items-center bg-muted/50 rounded-lg p-1">
                     <Button
