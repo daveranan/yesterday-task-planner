@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Icon } from './Icon';
+import { motion } from 'framer-motion';
 import { useSortable } from '@dnd-kit/sortable';
 import { useDraggable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
@@ -165,7 +166,12 @@ export const TaskItemBase: React.FC<TaskItemBaseProps> = ({
     return (
         <ContextMenu>
             <ContextMenuTrigger asChild>
-                <div
+                <motion.div
+                    layout
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}
+                    transition={{ duration: 0.2 }}
                     id={`task-${task.taskId}`}
                     ref={setNodeRef}
                     style={style}
@@ -174,7 +180,7 @@ export const TaskItemBase: React.FC<TaskItemBaseProps> = ({
                     onMouseEnter={() => setHoveredTaskId(task.taskId)}
                     onMouseLeave={() => setHoveredTaskId(null)}
                     className={cn(
-                        "group flex items-center gap-2 p-1.5 rounded-lg border shadow-sm transition-all duration-200 touch-none",
+                        "group flex items-center gap-2 p-1.5 rounded-lg border shadow-sm transition-colors duration-200 touch-none", // Removed generic transition-all to let motion handle layout
                         getCategoryStyles(),
                         (isOverlay || isGrabbed) && "opacity-90 rotate-2 scale-105 shadow-xl cursor-grabbing bg-card border-primary", // Ensure overlay looks "lifted"
                         !isOverlay && !isGrabbed && "cursor-grab active:cursor-grabbing",
@@ -252,7 +258,7 @@ export const TaskItemBase: React.FC<TaskItemBaseProps> = ({
                     >
                         <Icon name="Trash2" className="w-4 h-4" />
                     </button>
-                </div>
+                </motion.div>
             </ContextMenuTrigger>
             <ContextMenuContent className="w-64">
                 <ContextMenuItem onClick={() => duplicateTask(task.taskId)}>

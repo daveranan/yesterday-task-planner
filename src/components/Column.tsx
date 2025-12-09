@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { AnimatePresence } from 'framer-motion';
 import TaskItem from './TaskItem';
 import { useDroppable } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
@@ -80,17 +81,19 @@ const Column: React.FC<ColumnProps> = ({ title, category, limit, tasks, allTasks
                     items={visibleTasks.map(t => t.taskId)}
                     strategy={verticalListSortingStrategy}
                 >
-                    {/* Only map over visible (incomplete and correctly categorized) tasks */}
-                    {visibleTasks.map((task, index) =>
-                        <TaskItem
-                            key={task.taskId} // Use taskId as key for consistency
-                            index={index}
-                            task={task}
-                            allTasks={allTasks}
-                            toggleTask={toggleTask}
-                            deleteTask={deleteTask}
-                            handleEditTask={handleEditTask}
-                        />)}
+                    <AnimatePresence mode='popLayout' initial={false}>
+                        {/* Only map over visible (incomplete and correctly categorized) tasks */}
+                        {visibleTasks.map((task, index) =>
+                            <TaskItem
+                                key={task.taskId} // Use taskId as key for consistency
+                                index={index}
+                                task={task}
+                                allTasks={allTasks}
+                                toggleTask={toggleTask}
+                                deleteTask={deleteTask}
+                                handleEditTask={handleEditTask}
+                            />)}
+                    </AnimatePresence>
                 </SortableContext>
 
                 {/* Inline Add Task Input */}

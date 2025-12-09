@@ -2,6 +2,7 @@ import { useEffect, useCallback } from 'react';
 import { useStore } from '../store/useStore';
 import { CONFIG } from '../constants/config';
 import confetti from 'canvas-confetti';
+import { toast } from 'sonner';
 import { TaskEntry } from '../store/types';
 import { playSound } from '../utils/soundUtils';
 import { matchesShortcut } from '../utils/keyboardUtils';
@@ -246,8 +247,10 @@ export const useKeyboardNavigation = () => {
     const copyToClipboard = useCallback(async (text: string) => {
         try {
             await navigator.clipboard.writeText(text);
+            toast.success('Copied to clipboard');
         } catch (err) {
             console.error('Failed to copy', err);
+            toast.error('Failed to copy');
         }
     }, []);
 

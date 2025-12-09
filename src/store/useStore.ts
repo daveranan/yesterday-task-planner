@@ -241,6 +241,9 @@ export const useStore = create<Store>((set, get) => ({
             const updatedTasks = { ...state.tasks, [newTaskId]: newTaskGlobal };
 
             saveDataToFile({ tasks: updatedTasks, days: updatedDays, settings: state.settings });
+
+            toast.success('Task duplicated');
+
             return { tasks: updatedTasks, days: updatedDays, past, future: [] };
         });
     },
@@ -335,6 +338,14 @@ export const useStore = create<Store>((set, get) => ({
             }, {} as Record<string, DayData>);
 
             saveDataToFile({ tasks: restTasks, days: updatedDays });
+
+            toast('Task deleted', {
+                action: {
+                    label: 'Undo',
+                    onClick: () => get().undo(),
+                },
+            });
+
             return { tasks: restTasks, days: updatedDays, past, future: [] };
         });
     },
