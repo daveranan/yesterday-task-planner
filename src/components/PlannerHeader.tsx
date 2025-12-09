@@ -22,7 +22,7 @@ const PlannerHeader: React.FC<PlannerHeaderProps> = ({
     onOpenSettings
 }) => {
     return (
-        <div className="h-16 bg-background border-b border-border flex items-center justify-between px-6 shadow-sm z-20">
+        <div className="h-12 bg-background border-b border-border flex items-center justify-between px-4 shadow-sm z-20">
             <div className="flex items-center gap-4">
                 <h1 className="flex items-center gap-2">
                     <img src="assets/img/favicon.png" alt="Icon" className="w-8 h-8" />

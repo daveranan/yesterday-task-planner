@@ -67,14 +67,14 @@ const Column: React.FC<ColumnProps> = ({ title, category, limit, tasks, allTasks
                     : "bg-muted/20 border-2"
             )}
         >
-            <div className="p-3 border-b border-border flex justify-between items-center">
+            <div className="p-2 border-b border-border flex justify-between items-center">
                 <h3 className="font-semibold text-foreground text-sm">{title}</h3>
                 <span className="text-xs text-muted-foreground">
                     {visibleTasks.length} {limit ? `| ${limit} max` : ''}
                 </span>
             </div>
 
-            <div className="p-3 flex-1 overflow-y-auto scrollbar-style flex flex-col gap-2">
+            <div className="p-2 flex-1 overflow-y-auto scrollbar-style flex flex-col gap-1.5">
                 <SortableContext
                     items={visibleTasks.map(t => t.taskId)}
                     strategy={verticalListSortingStrategy}

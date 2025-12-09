@@ -36,7 +36,7 @@ const TimeSlot: React.FC<TimeSlotProps> = ({
     return (
         <div
             ref={setNodeRef}
-            className={`flex border-b border-neutral-200 dark:border-neutral-800 min-h-[50px] flex-1 relative
+            className={`flex border-b border-neutral-200 dark:border-neutral-800 min-h-[32px] flex-1 relative
                 ${isBlockStart ? 'border-t-4 border-t-neutral-200 dark:border-t-neutral-800' : ''}
             `}
         >
@@ -54,10 +54,10 @@ const TimeSlot: React.FC<TimeSlotProps> = ({
                 )
             }
 
-            <div className="w-16 p-3 text-right text-xs font-medium text-neutral-500 dark:text-neutral-400 border-r border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-800/50 flex-shrink-0">
+            <div className="w-16 p-2 text-right text-xs font-medium text-neutral-500 dark:text-neutral-400 border-r border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-800/50 flex-shrink-0">
                 {displayTime}
             </div>
-            <div className={`flex-1 min-w-0 p-2 relative transition-colors duration-150 flex flex-col gap-2
+            <div className={`flex-1 min-w-0 p-1.5 relative transition-colors duration-150 flex flex-col gap-1.5
                 ${isOver
                     ? 'bg-neutral-200 dark:bg-neutral-800 ring-2 ring-inset ring-neutral-400 dark:ring-neutral-500' // Use ring-inset to avoid layout shift
                     : 'bg-white dark:bg-neutral-900 hover:bg-neutral-50 dark:hover:bg-neutral-800/50'
@@ -119,7 +119,7 @@ const Timeline: React.FC<TimelineProps> = ({
                 ? 'border-neutral-500 dark:border-neutral-400'
                 : 'border-neutral-200 dark:border-neutral-800'}
         `}>
-            <div className="p-4 border-b border-neutral-200 dark:border-neutral-800 flex justify-between items-center bg-neutral-100 dark:bg-neutral-800/50">
+            <div className="p-1.5 border-b border-neutral-200 dark:border-neutral-800 flex justify-between items-center bg-neutral-100 dark:bg-neutral-800/50">
                 <h3 className="font-bold text-neutral-900 dark:text-neutral-100">Work Blocks</h3>
                 <span className="text-xs text-neutral-500 dark:text-neutral-400">Skip 12 PM</span>
             </div>
@@ -146,7 +146,7 @@ const Timeline: React.FC<TimelineProps> = ({
                             return (
                                 <div
                                     key={hour}
-                                    className="flex border-b border-neutral-200 dark:border-neutral-800 min-h-[50px] flex-1 bg-neutral-100 dark:bg-neutral-950/50 relative"
+                                    className="flex border-b border-neutral-200 dark:border-neutral-800 min-h-[32px] flex-1 bg-neutral-100 dark:bg-neutral-950/50 relative"
                                 >
                                     {/* Red Current Time Line for Lunch */}
                                     {validPercentage !== null && (
@@ -160,7 +160,7 @@ const Timeline: React.FC<TimelineProps> = ({
                                         </div>
                                     )}
 
-                                    <div className="w-16 p-3 text-right text-xs font-medium text-neutral-400 dark:text-neutral-500 border-r border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900/50 flex items-center justify-end">
+                                    <div className="w-16 p-2 text-right text-xs font-medium text-neutral-400 dark:text-neutral-500 border-r border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900/50 flex items-center justify-end">
                                         {displayTime}
                                     </div>
                                     <div className="flex-1 p-2 flex items-center justify-center text-neutral-400 dark:text-neutral-600 font-medium tracking-wide uppercase text-xs">

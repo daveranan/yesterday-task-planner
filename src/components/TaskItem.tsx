@@ -127,7 +127,7 @@ export const TaskItemBase: React.FC<TaskItemBaseProps> = ({
                 ref={setNodeRef}
                 style={style}
                 /* NOTE: Do NOT apply style (transform) here. We want the placeholder to stay in the list. */
-                className="bg-white dark:bg-neutral-800 p-2 rounded border border-neutral-200 dark:border-neutral-600 opacity-50 shadow-xl h-[42px]"
+                className="bg-white dark:bg-neutral-800 p-1.5 rounded border border-neutral-200 dark:border-neutral-600 opacity-50 shadow-xl h-[36px]"
             />
         );
     }
@@ -142,7 +142,7 @@ export const TaskItemBase: React.FC<TaskItemBaseProps> = ({
             onMouseEnter={() => setHoveredTaskId(task.taskId)}
             onMouseLeave={() => setHoveredTaskId(null)}
             className={cn(
-                "group flex items-center gap-2 bg-card p-3 rounded-lg border shadow-sm transition-all duration-200 touch-none",
+                "group flex items-center gap-2 bg-card p-1.5 rounded-lg border shadow-sm transition-all duration-200 touch-none",
                 "hover:border-primary/50",
                 (isOverlay || isGrabbed) && "opacity-90 rotate-2 scale-105 shadow-xl cursor-grabbing",
                 !isOverlay && !isGrabbed && "cursor-grab active:cursor-grabbing",

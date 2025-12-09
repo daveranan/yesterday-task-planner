@@ -41,8 +41,8 @@ const TaskBoard: React.FC<TaskBoardProps> = ({
     // Row 3: Journal Section
 
     return (
-        <div className="flex-[3] flex flex-col gap-6">
-            <div className="flex-[2] flex gap-6 min-h-0">
+        <div className="flex-[3] flex flex-col gap-2">
+            <div className="flex-[2] flex gap-2 min-h-0">
                 <div className="flex-1 bg-white dark:bg-muted/10 rounded-xl shadow-lg border border-border overflow-hidden">
                     <Column
                         title="Must-Do's"

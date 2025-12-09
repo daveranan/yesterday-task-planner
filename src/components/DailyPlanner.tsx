@@ -216,7 +216,7 @@ const DailyPlanner: React.FC = () => {
                         onOpenSettings={() => setIsSettingsOpen(true)}
                     />
 
-                    <div className="flex-1 flex overflow-hidden p-6 gap-6">
+                    <div className="flex-1 flex overflow-hidden p-2 gap-2">
                         <AnimatePresence mode="wait">
                             <motion.div
                                 key={currentDate}
@@ -224,7 +224,7 @@ const DailyPlanner: React.FC = () => {
                                 animate={{ opacity: 1 }}
                                 exit={{ opacity: 0 }}
                                 transition={{ duration: 0.2 }}
-                                className="flex-1 flex overflow-hidden gap-6 w-full h-full"
+                                className="flex-1 flex overflow-hidden gap-2 w-full h-full"
                             >
                                 <TaskBoard
                                     // Use explicit limits from CONFIG

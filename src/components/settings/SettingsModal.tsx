@@ -125,7 +125,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
 
                                 <div className="flex items-center justify-between p-4 bg-muted/30 rounded-lg border">
                                     <div className="flex items-center gap-3">
-                                        <div className="bg-background rounded-xl shadow-2xl w-full max-w-4xl max-h-[85vh] flex overflow-hidden border border-border">
+                                        <div className="p-2 bg-muted rounded-lg">
                                             <Icon name={settings.isDarkMode ? "Moon" : "Sun"} className="w-5 h-5" />
                                         </div>
                                         <div>

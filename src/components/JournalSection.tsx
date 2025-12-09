@@ -18,7 +18,7 @@ const JournalSection: React.FC<JournalSectionProps> = ({
     if (!showGratefulness && !showReflection) return null;
 
     return (
-        <div className="flex-[2] flex gap-6 min-h-0">
+        <div className="flex-[2] flex gap-2 min-h-0">
             {showGratefulness && (
                 <div className="flex-1 bg-white dark:bg-neutral-900 rounded-xl shadow-lg border border-neutral-200 dark:border-neutral-800 p-4 flex flex-col">
                     <h3 className="text-xs font-bold text-neutral-400 dark:text-neutral-500 uppercase tracking-wider mb-2">Gratefulness</h3>
