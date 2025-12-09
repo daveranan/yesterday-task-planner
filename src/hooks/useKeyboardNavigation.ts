@@ -256,6 +256,15 @@ export const useKeyboardNavigation = () => {
         const handleKeyDown = (e: KeyboardEvent) => {
             const { shortcuts } = settings;
 
+            // Global Ignore inputs for other shortcuts
+            // But allow Escape to blur
+            if (isInputFocused()) {
+                if (matchesShortcut(e, shortcuts.escape)) {
+                    (document.activeElement as HTMLElement).blur();
+                }
+                return;
+            }
+
             // 1. Global Date Switching
             if (matchesShortcut(e, shortcuts.prevDay)) {
                 e.preventDefault();
@@ -277,14 +286,7 @@ export const useKeyboardNavigation = () => {
                 return;
             }
 
-            // Global Ignore inputs for other shortcuts
-            // But allow Escape to blur
-            if (isInputFocused()) {
-                if (matchesShortcut(e, shortcuts.escape)) {
-                    (document.activeElement as HTMLElement).blur();
-                }
-                return;
-            }
+
 
             // 2. Grabbing Mode
             if (grabbedTaskId) {
