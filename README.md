@@ -1,17 +1,18 @@
 # Yesterday
 
-A beautiful, keyboard-first daily task planner application built with Electron, React, and TypeScript.
-
-> **Note**: This application was built with **Gemini 3 pro**.
+A beautiful, opinionated daily offline task planner.
 
 ## Features
 
 - **Daily Focus**: Organize tasks into "Must Do", "Communications", and generic "To Do" lists.
-- **Timeline**: Schedule tasks into specific time slots for the day.
-- **Keyboard Navigation**: Fully navigable via keyboard for maximum efficiency.
+- **Timeline**: Schedule tasks into specific time slots for the day with "Workblocks".
+- **Keyboard Navigation**: Fully navigable via keyboard with distinct "manipulated" states for precision control.
 - **Task Rollover**: Unfinished tasks automatically roll over to the next day.
 - **Gratefulness & Reflection**: Built-in sections for daily mindfulness.
-- **Dark Mode**: Sleek dark mode support.
+- **Persistent Settings**: Theme, audio preferences, and view toggles are automatically saved.
+- **Sound Effects**: Satisfying keyboard sound effects for interactions.
+- **Compact UI**: Optimized information density.
+- **Dark/Light Mode**: Sleek dark mode and high-contrast light mode support.
 - **Cross-Platform**: Runs on Windows and macOS.
 
 ## Installation
