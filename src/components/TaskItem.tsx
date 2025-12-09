@@ -114,10 +114,11 @@ export const TaskItemBase: React.FC<TaskItemBaseProps> = ({
             onMouseEnter={() => setHoveredTaskId(task.taskId)}
             onMouseLeave={() => setHoveredTaskId(null)}
             /* USE NEUTRAL: Task item background/border */
-            className={`group flex items-center gap-2 bg-white dark:bg-neutral-800 p-2 rounded border border-neutral-200 dark:border-neutral-700 shadow-sm cursor-grab active:cursor-grabbing hover:border-neutral-400 dark:hover:border-neutral-500 hover:shadow-md hover:scale-[1.01] transition-all duration-200 touch-none 
+            className={`group flex items-center gap-2 bg-white dark:bg-neutral-800 p-2 rounded border shadow-sm cursor-grab active:cursor-grabbing hover:border-neutral-500 dark:hover:border-neutral-400 transition-all duration-200 touch-none 
                 ${isOverlay ? 'opacity-90 rotate-2 scale-105 shadow-xl' : ''}
-                ${isSelected ? 'ring-2 ring-blue-500 dark:ring-blue-400 border-blue-500 dark:border-blue-400 relative z-10' : ''}
-                ${isManipulated && !isSelected ? 'bg-neutral-50 dark:bg-neutral-750 border-neutral-400 dark:border-neutral-500 shadow-md scale-[1.02]' : ''}
+                ${isSelected || (isManipulated && !isSelected)
+                    ? 'border-neutral-500 dark:border-neutral-400 relative z-10'
+                    : 'border-neutral-200 dark:border-neutral-700'}
             `}
         >
             {/* USE NEUTRAL: Icons and text colors adjusted for deeper contrast against neutral-800 */}

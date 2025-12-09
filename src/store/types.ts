@@ -36,6 +36,7 @@ export interface PlannerData {
 
 export interface StoreState extends PlannerData {
     currentDate: string;
+    activeColumnId: string | null; // 'must-do' | 'communications' | 'todo' | 'scheduled'
     selectedTaskId: string | null;
     hoveredTaskId: string | null;
 }
@@ -50,5 +51,6 @@ export interface StoreActions {
     toggleGratefulness: () => void;
     toggleReflection: () => void;
     addTask: (category: string, title: string) => void;
+    setActiveColumn: (columnId: string | null) => void;
     setHoveredTaskId: (taskId: string | null) => void;
 }

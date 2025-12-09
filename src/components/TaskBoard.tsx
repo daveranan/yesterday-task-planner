@@ -16,6 +16,7 @@ interface TaskBoardProps {
     onUpdateDayData: (updates: Partial<DayData>) => void;
     showGratefulness: boolean;
     showReflection: boolean;
+    activeColumnId: string | null;
 }
 
 const TaskBoard: React.FC<TaskBoardProps> = ({
@@ -31,7 +32,8 @@ const TaskBoard: React.FC<TaskBoardProps> = ({
 
     onUpdateDayData,
     showGratefulness,
-    showReflection
+    showReflection,
+    activeColumnId
 }) => {
     // To maintain existing layout, we need:
     // Row 1: Must-Do, Communications
@@ -52,6 +54,7 @@ const TaskBoard: React.FC<TaskBoardProps> = ({
                         toggleTask={onToggleTask}
                         deleteTask={onDeleteTask}
                         handleEditTask={onEditTask}
+                        isActive={activeColumnId === 'must-do'}
                     />
                 </div>
                 <div className="flex-1 bg-white dark:bg-neutral-900 rounded-xl shadow-lg border border-neutral-200 dark:border-neutral-800 overflow-hidden">
@@ -65,6 +68,7 @@ const TaskBoard: React.FC<TaskBoardProps> = ({
                         toggleTask={onToggleTask}
                         deleteTask={onDeleteTask}
                         handleEditTask={onEditTask}
+                        isActive={activeColumnId === 'communications'}
                     />
                 </div>
             </div>
@@ -80,6 +84,7 @@ const TaskBoard: React.FC<TaskBoardProps> = ({
                     toggleTask={onToggleTask}
                     deleteTask={onDeleteTask}
                     handleEditTask={onEditTask}
+                    isActive={activeColumnId === 'todo'}
                 />
             </div>
 

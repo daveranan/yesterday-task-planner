@@ -36,6 +36,7 @@ export const useStore = create<Store>((set, get) => ({
     settings: initialState.settings!, // We ensured it exists in getInitialState
     tasks: initialState.tasks || {},
     days: initialState.days || {},
+    activeColumnId: null,
     selectedTaskId: null,
     hoveredTaskId: null,
 
@@ -108,6 +109,10 @@ export const useStore = create<Store>((set, get) => ({
             saveDataToFile({ tasks: state.tasks, days: state.days, settings: newSettings });
             return { settings: newSettings };
         });
+    },
+
+    setActiveColumn: (columnId: string | null) => {
+        set({ activeColumnId: columnId });
     },
 
     setSelectedTaskId: (taskId: string | null) => {

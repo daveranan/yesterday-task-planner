@@ -90,6 +90,7 @@ interface TimelineProps {
     onToggleTask: (taskId: string) => void;
     onDeleteTask: (taskId: string) => void;
     onEditTask: (taskId: string, newTitle: string) => void;
+    isActive?: boolean;
 }
 
 const Timeline: React.FC<TimelineProps> = ({
@@ -99,7 +100,8 @@ const Timeline: React.FC<TimelineProps> = ({
     config,
     onToggleTask,
     onDeleteTask,
-    onEditTask
+    onEditTask,
+    isActive
 }) => {
     const [now, setNow] = useState(new Date());
 
@@ -112,7 +114,11 @@ const Timeline: React.FC<TimelineProps> = ({
     const currentMin = now.getMinutes();
 
     return (
-        <div className="flex-[2] bg-white dark:bg-neutral-900 rounded-xl shadow-lg border border-neutral-200 dark:border-neutral-800 flex flex-col overflow-hidden">
+        <div className={`flex-[2] bg-white dark:bg-neutral-900 rounded-xl shadow-lg flex flex-col overflow-hidden transition-all duration-150 border-2
+            ${isActive
+                ? 'border-neutral-500 dark:border-neutral-400'
+                : 'border-neutral-200 dark:border-neutral-800'}
+        `}>
             <div className="p-4 border-b border-neutral-200 dark:border-neutral-800 flex justify-between items-center bg-neutral-100 dark:bg-neutral-800/50">
                 <h3 className="font-bold text-neutral-900 dark:text-neutral-100">Work Blocks</h3>
                 <span className="text-xs text-neutral-500 dark:text-neutral-400">Skip 12 PM</span>

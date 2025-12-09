@@ -4,7 +4,7 @@ import { DEFAULT_SHORTCUTS } from '../constants/shortcuts';
 
 // Helper to check if input is focused
 const isInputFocused = () => {
-    const active = document.activeElement;
+    const active = document.activeElement as HTMLElement;
     return active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.isContentEditable);
 };
 
@@ -13,13 +13,13 @@ export const useKeyboardNavigation = () => {
         settings,
         selectedTaskId,
         setSelectedTaskId,
+        activeColumnId,
+        setActiveColumn,
         days,
         currentDate,
-        tasks,
+        tasks: allTasks,
         toggleTask,
         deleteTask,
-        moveTask,
-        updateTaskTitle
     } = useStore();
 
     const shortcuts = settings.shortcuts || DEFAULT_SHORTCUTS;
@@ -37,18 +37,14 @@ export const useKeyboardNavigation = () => {
 
         const combo = [...modifiers, key].join('+');
 
-        // Find action that matches strict combo
-        // Note: Simple loop might be slow if many shortcuts, but fine for < 20.
         for (const [action, shortcut] of Object.entries(shortcuts)) {
-            // Normalize space for comparison if specific ' ' string was saved
             const normalizedShortcut = shortcut === ' ' ? 'Space' : shortcut;
 
-            if (normalizedShortcut.toLowerCase() === combo.toLowerCase()) {
+            if (typeof normalizedShortcut === 'string' && normalizedShortcut.toLowerCase() === combo.toLowerCase()) {
                 return action;
             }
-
             // Handle plain letters (e.g. 'j' matching 'j' or 'J')
-            if (modifiers.length === 0 && shortcut.toLowerCase() === key.toLowerCase()) {
+            if (typeof shortcut === 'string' && modifiers.length === 0 && shortcut.toLowerCase() === key.toLowerCase()) {
                 return action;
             }
         }
@@ -58,48 +54,95 @@ export const useKeyboardNavigation = () => {
     // Navigation Logic
     const handleNavigation = useCallback((direction: 'up' | 'down' | 'left' | 'right') => {
         const currentScore = days[currentDate];
-        if (!currentScore || !currentScore.taskEntries.length) return;
+        if (!currentScore) return;
 
-        const entries = currentScore.taskEntries;
+        const COLUMNS = ['must-do', 'communications', 'todo', 'scheduled'];
 
-        if (!selectedTaskId) {
-            // Select first
-            if (entries.length > 0) setSelectedTaskId(entries[0].taskId);
+        // 1. Column Navigation (Left/Right)
+        if (direction === 'left' || direction === 'right') {
+            let nextColumnIndex = 0;
+            if (activeColumnId) {
+                const currentIndex = COLUMNS.indexOf(activeColumnId);
+                if (currentIndex !== -1) {
+                    if (direction === 'left') {
+                        nextColumnIndex = (currentIndex - 1 + COLUMNS.length) % COLUMNS.length;
+                    } else {
+                        nextColumnIndex = (currentIndex + 1) % COLUMNS.length;
+                    }
+                }
+            } else {
+                // Default to first column if none active
+                nextColumnIndex = 0;
+            }
+
+            const nextColumnId = COLUMNS[nextColumnIndex];
+            setActiveColumn(nextColumnId);
+
+            // Auto-select first task in new column
+            const columnTasks = currentScore.taskEntries.filter(t => t.category === nextColumnId && !allTasks[t.taskId]?.completed); // Only nav incomplete? Or all? User said "iterate with tasks". Usually all visible.
+            // Let's stick to ALL tasks for now, or maybe incomplete first?
+            // Actually, TaskBoard filters incomplete tasks usually? No, it shows all but maybe styles them.
+            // Let's navigate through VISIBLE tasks.
+            // In TaskBoard: `tasks={currentDayData.taskEntries}`. It passes all entries.
+            // BUT `getCategoryTasks` in DailyPlanner filters `!globalTask.completed` for the header count.
+            // The Column component renders `tasks`. Let's assume we navigate all tasks in the list.
+
+            if (columnTasks.length > 0) {
+                setSelectedTaskId(columnTasks[0].taskId);
+            } else {
+                setSelectedTaskId(null);
+            }
             return;
         }
 
-        const currentIndex = entries.findIndex(t => t.taskId === selectedTaskId);
-        if (currentIndex === -1) {
-            if (entries.length > 0) setSelectedTaskId(entries[0].taskId);
+        // 2. Task Navigation (Up/Down) - Iterate within active column
+        if (!activeColumnId) {
+            // If no column active, activate first one
+            setActiveColumn(COLUMNS[0]);
             return;
         }
 
-        // Simple vertical navigation for now - can enhance for grid later
+        // Get tasks for active column
+        const columnTasks = currentScore.taskEntries.filter(t => {
+            // Important: We need to match the visual order.
+            // If the column filters out completed tasks, we should too.
+            // Checking TaskBoard... it passes `tasks` prop which is ALL entries.
+            // Checking Column.tsx... it maps `tasks`.
+            // So we navigate ALL tasks in that category.
+            return t.category === activeColumnId;
+        });
+
+        if (columnTasks.length === 0) return;
+
+        const currentIndex = columnTasks.findIndex(t => t.taskId === selectedTaskId);
+
         if (direction === 'up') {
-            const nextIndex = Math.max(0, currentIndex - 1);
-            setSelectedTaskId(entries[nextIndex].taskId);
+            if (currentIndex === -1 || currentIndex === 0) {
+                // Wrap around to bottom? or stop? standard is stop.
+                // Let's toggle to last if at top?
+                // For now, stop at top.
+                if (currentIndex === -1) setSelectedTaskId(columnTasks[columnTasks.length - 1].taskId);
+                else setSelectedTaskId(columnTasks[Math.max(0, currentIndex - 1)].taskId);
+            } else {
+                setSelectedTaskId(columnTasks[currentIndex - 1].taskId);
+            }
         } else if (direction === 'down') {
-            const nextIndex = Math.min(entries.length - 1, currentIndex + 1);
-            setSelectedTaskId(entries[nextIndex].taskId);
+            if (currentIndex === -1) {
+                setSelectedTaskId(columnTasks[0].taskId);
+            } else {
+                setSelectedTaskId(columnTasks[Math.min(columnTasks.length - 1, currentIndex + 1)].taskId);
+            }
         }
-        // Left/Right could jump columns or days? For now let's keep it simple or implement column jumping
-        // Actually, column jumping is useful.
-        // But entries are flat list in DayData. We need to know visual layout.
-        // Assuming TaskBoard logic: Must-Do -> Communications -> Todo -> Scheduled
-        // This requires more complex knowledge of layout than the store has.
-        // For iteration 1: All arrow keys nav up/down through the linear list of that day.
 
-    }, [selectedTaskId, days, currentDate, setSelectedTaskId]);
+    }, [activeColumnId, setActiveColumn, days, currentDate, setSelectedTaskId, selectedTaskId, allTasks]);
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
-            // 1. Strict Focus Management: Block Tab
             if (e.key === 'Tab') {
                 e.preventDefault();
                 return;
             }
 
-            // 2. Ignore if input is focused, UNLESS it's Escape (to blur)
             if (isInputFocused()) {
                 if (e.key === 'Escape') {
                     (document.activeElement as HTMLElement).blur();
@@ -110,7 +153,7 @@ export const useKeyboardNavigation = () => {
             const action = getActionFromEvent(e);
             if (!action) return;
 
-            e.preventDefault(); // Prevent default browser scrolling/actions for matched shortcuts
+            e.preventDefault();
 
             switch (action) {
                 case 'navUp':
@@ -131,27 +174,19 @@ export const useKeyboardNavigation = () => {
                 case 'delete':
                     if (selectedTaskId) {
                         deleteTask(selectedTaskId);
-                        setSelectedTaskId(null); // Deselect
+                        setSelectedTaskId(null);
                     }
                     break;
                 case 'escape':
                     setSelectedTaskId(null);
+                    setActiveColumn(null); // Clear column focus too
                     break;
-                case 'edit':
-                    // We might need a way to signal "enter edit mode" to the component
-                    // Store can trigger a flag, or we can emit an event.
-                    // Ideally, selectedTaskId implies visual focus.
-                    // We can add 'editingTaskId' to store or just rely on double click for now?
-                    // User asked for "Settings for each keyboard shortcut", so "Edit" is expected to work.
-                    // I will leave this for now, maybe trigger an event on the window or use a specific store action if I add `isEditing` to store.
-                    break;
-                // Add move logic later
             }
         };
 
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [getActionFromEvent, handleNavigation, selectedTaskId, toggleTask, deleteTask, setSelectedTaskId]);
+    }, [getActionFromEvent, handleNavigation, selectedTaskId, toggleTask, deleteTask, setSelectedTaskId, setActiveColumn]);
 
     return {
         selectedTaskId

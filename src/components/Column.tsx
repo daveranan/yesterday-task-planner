@@ -14,9 +14,10 @@ interface ColumnProps {
     toggleTask: (taskId: string) => void;
     deleteTask: (taskId: string) => void;
     handleEditTask: (taskId: string, newTitle: string) => void;
+    isActive?: boolean;
 }
 
-const Column: React.FC<ColumnProps> = ({ title, category, limit, tasks, allTasks, handleAddTask, toggleTask, deleteTask, handleEditTask }) => {
+const Column: React.FC<ColumnProps> = ({ title, category, limit, tasks, allTasks, handleAddTask, toggleTask, deleteTask, handleEditTask, isActive }) => {
     const [localNewTaskTitle, setLocalNewTaskTitle] = useState('');
 
     const { setNodeRef, isOver } = useDroppable({
@@ -52,11 +53,14 @@ const Column: React.FC<ColumnProps> = ({ title, category, limit, tasks, allTasks
         <div
             ref={setNodeRef}
             className={`flex-1 min-w-[200px] flex flex-col h-full rounded-xl border-dashed transition-all duration-150
+                ${isActive
+                    ? 'border-neutral-500 dark:border-neutral-400'
+                    : 'border-neutral-200 dark:border-neutral-800'}
                 ${isOver
                     /* USE NEUTRAL: Darker drag over feedback */
-                    ? 'bg-neutral-100 dark:bg-neutral-800 border-neutral-400 dark:border-neutral-500 border-2 shadow-lg ring-1 ring-neutral-300 dark:ring-neutral-700'
+                    ? 'bg-neutral-100 dark:bg-neutral-800 border-2 shadow-lg ring-1 ring-neutral-300 dark:ring-neutral-700'
                     /* USE NEUTRAL: Set default column background to neutral-900 (from parent) and darker border */
-                    : 'bg-white/50 dark:bg-neutral-900/50 border-neutral-200 dark:border-neutral-800 border-2'
+                    : 'bg-white/50 dark:bg-neutral-900/50 border-2'
                 }`}
         >
             {/* USE NEUTRAL: Darken header border */}

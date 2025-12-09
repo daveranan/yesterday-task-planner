@@ -41,6 +41,7 @@ const DailyPlanner: React.FC = () => {
         moveTask,
         reorderTask,
         checkRollover,
+        activeColumnId,
     } = useStore();
 
     // Enable Keyboard Navigation
@@ -213,7 +214,7 @@ const DailyPlanner: React.FC = () => {
                                     onUpdateDayData={updateDayData}
                                     showGratefulness={settings.showGratefulness}
                                     showReflection={settings.showReflection}
-                                // Removed manual DnD props
+                                    activeColumnId={activeColumnId}
                                 />
 
                                 <Timeline
@@ -224,7 +225,7 @@ const DailyPlanner: React.FC = () => {
                                     onToggleTask={toggleTask}
                                     onDeleteTask={deleteTask}
                                     onEditTask={updateTaskTitle}
-                                // Removed manual DnD props
+                                    isActive={activeColumnId === 'scheduled'}
                                 />
                             </motion.div>
                         </AnimatePresence>
