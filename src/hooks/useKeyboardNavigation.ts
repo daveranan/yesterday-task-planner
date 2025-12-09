@@ -4,6 +4,7 @@ import { CONFIG } from '../constants/config';
 import confetti from 'canvas-confetti';
 import { TaskEntry } from '../store/types';
 import { playSound } from '../utils/soundUtils';
+import { matchesShortcut } from '../utils/keyboardUtils';
 
 // Helper to check if input is focused
 const isInputFocused = () => {
@@ -31,7 +32,8 @@ export const useKeyboardNavigation = () => {
         setEditingTaskId,
         moveTask,
         reorderTask,
-        hoveredNewTaskCategory
+        hoveredNewTaskCategory,
+        settings
     } = useStore();
 
     // Derived active task (Manipulated or Selected)
@@ -252,33 +254,33 @@ export const useKeyboardNavigation = () => {
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
-            // 1. Global Date Switching (Ctrl + Arrows)
-            // Priority over input focus because it's a modifier key
-            if (e.ctrlKey) {
-                if (e.key === 'ArrowLeft') {
+            const { shortcuts } = settings;
+
+            // 1. Global Date Switching
+            if (matchesShortcut(e, shortcuts.prevDay)) {
+                e.preventDefault();
+                handleDateChange(-1);
+                return;
+            }
+            if (matchesShortcut(e, shortcuts.nextDay)) {
+                e.preventDefault();
+                handleDateChange(1);
+                return;
+            }
+            // Create Task in Active Column
+            if (matchesShortcut(e, shortcuts.newTask)) {
+                if (activeColumnId) {
                     e.preventDefault();
-                    handleDateChange(-1);
-                    return;
+                    const inputId = `new-task-input-${activeColumnId}`;
+                    document.getElementById(inputId)?.focus();
                 }
-                if (e.key === 'ArrowRight') {
-                    e.preventDefault();
-                    handleDateChange(1);
-                    return;
-                }
-                // Ctrl + Enter (Create Task in Active Column)
-                if (e.key === 'Enter') {
-                    if (activeColumnId) {
-                        e.preventDefault();
-                        const inputId = `new-task-input-${activeColumnId}`;
-                        document.getElementById(inputId)?.focus();
-                    }
-                    return;
-                }
+                return;
             }
 
             // Global Ignore inputs for other shortcuts
+            // But allow Escape to blur
             if (isInputFocused()) {
-                if (e.key === 'Escape') {
+                if (matchesShortcut(e, shortcuts.escape)) {
                     (document.activeElement as HTMLElement).blur();
                 }
                 return;
@@ -287,49 +289,65 @@ export const useKeyboardNavigation = () => {
             // 2. Grabbing Mode
             if (grabbedTaskId) {
                 e.preventDefault(); // Block scrolling
-                switch (e.key) {
-                    case 'ArrowUp':
-                        handleGrabbedNavigation('up');
-                        playSound('click');
-                        break;
-                    case 'ArrowDown':
-                        handleGrabbedNavigation('down');
-                        playSound('click');
-                        break;
-                    case 'ArrowLeft':
-                        handleGrabbedNavigation('left');
-                        playSound('click');
-                        break;
-                    case 'ArrowRight':
-                        handleGrabbedNavigation('right');
-                        playSound('click');
-                        break;
-                    case 'g':
-                    case 'Escape':
-                    case 'Enter': // Dropping with Enter is intuitive too
-                        setGrabbedTaskId(null);
-                        playSound('pop');
-                        break;
+
+                if (matchesShortcut(e, shortcuts.navUp)) {
+                    handleGrabbedNavigation('up');
+                    playSound('click');
+                    return;
+                }
+                if (matchesShortcut(e, shortcuts.navDown)) {
+                    handleGrabbedNavigation('down');
+                    playSound('click');
+                    return;
+                }
+                if (matchesShortcut(e, shortcuts.navLeft)) {
+                    handleGrabbedNavigation('left');
+                    playSound('click');
+                    return;
+                }
+                if (matchesShortcut(e, shortcuts.navRight)) {
+                    handleGrabbedNavigation('right');
+                    playSound('click');
+                    return;
+                }
+
+                if (matchesShortcut(e, shortcuts.grab) || matchesShortcut(e, shortcuts.escape) || matchesShortcut(e, 'Enter')) {
+                    setGrabbedTaskId(null);
+                    playSound('pop');
+                    return;
                 }
                 return;
             }
 
             // 3. Independent New Task Bar Hover
-            // "While hovering over an empty 'new task' bar, pressing enter will edit it."
-            if (e.key === 'Enter' && hoveredNewTaskCategory && !e.ctrlKey) {
+            // "While hovering over an empty 'new task' bar, pressing enter (edit) will edit it."
+            if (matchesShortcut(e, shortcuts.edit) && hoveredNewTaskCategory && !e.ctrlKey) {
                 e.preventDefault();
                 const inputId = `new-task-input-${hoveredNewTaskCategory}`;
                 document.getElementById(inputId)?.focus();
                 return;
             }
 
-            // 4. Manipulated Task (Hovered or Selected)
-            // But if we are just navigating (Arrows), we default to standard nav logic
-            if (e.key.startsWith('Arrow')) {
-                // If standard nav
+            // 4. Manipulated Task (Hovered or Selected) - Navigation
+            // Check direction keys for standard navigation
+            if (matchesShortcut(e, shortcuts.navUp)) {
                 e.preventDefault();
-                const dir = e.key.replace('Arrow', '').toLowerCase() as 'up' | 'down' | 'left' | 'right';
-                handleStandardNavigation(dir);
+                handleStandardNavigation('up');
+                return;
+            }
+            if (matchesShortcut(e, shortcuts.navDown)) {
+                e.preventDefault();
+                handleStandardNavigation('down');
+                return;
+            }
+            if (matchesShortcut(e, shortcuts.navLeft)) {
+                e.preventDefault();
+                handleStandardNavigation('left');
+                return;
+            }
+            if (matchesShortcut(e, shortcuts.navRight)) {
+                e.preventDefault();
+                handleStandardNavigation('right');
                 return;
             }
 
@@ -338,58 +356,57 @@ export const useKeyboardNavigation = () => {
                 const task = allTasks[activeTaskId];
                 if (!task) return;
 
-                switch (e.key.toLowerCase()) {
-                    case 'x': // Delete
-                        deleteTask(activeTaskId);
-                        // If it was selected, clear selection
-                        if (selectedTaskId === activeTaskId) setSelectedTaskId(null);
-                        if (hoveredTaskId === activeTaskId) setHoveredTaskId(null);
-                        break;
-                    case 'd': // Duplicate
-                        duplicateTask(activeTaskId);
-                        break;
-                    case 'c': // Copy
-                        copyToClipboard(task.title);
-                        break;
-                    case ' ': // Toggle
-                    case 'spacebar':
-                        e.preventDefault(); // prevent scroll
-                        // Trigger confetti
-                        if (!task.completed) {
-                            const checkbox = document.getElementById(`checkbox-${activeTaskId}`);
-                            if (checkbox) {
-                                const rect = checkbox.getBoundingClientRect();
-                                const x = (rect.left + rect.width / 2) / window.innerWidth;
-                                const y = (rect.top + rect.height / 2) / window.innerHeight;
-                                confetti({
-                                    particleCount: 100,
-                                    spread: 70,
-                                    origin: { x, y }
-                                });
-                            } else {
-                                // Fallback
-                                confetti({
-                                    particleCount: 100,
-                                    spread: 70,
-                                    origin: { y: 0.6 }
-                                });
-                            }
+                if (matchesShortcut(e, shortcuts.delete)) {
+                    deleteTask(activeTaskId);
+                    if (selectedTaskId === activeTaskId) setSelectedTaskId(null);
+                    if (hoveredTaskId === activeTaskId) setHoveredTaskId(null);
+                    return;
+                }
+
+                if (matchesShortcut(e, shortcuts.duplicate)) {
+                    duplicateTask(activeTaskId);
+                    return;
+                }
+
+                if (matchesShortcut(e, shortcuts.copy)) {
+                    copyToClipboard(task.title);
+                    return;
+                }
+
+                if (matchesShortcut(e, shortcuts.toggleComplete)) {
+                    e.preventDefault();
+                    if (!task.completed) {
+                        const checkbox = document.getElementById(`checkbox-${activeTaskId}`);
+                        if (checkbox) {
+                            const rect = checkbox.getBoundingClientRect();
+                            const x = (rect.left + rect.width / 2) / window.innerWidth;
+                            const y = (rect.top + rect.height / 2) / window.innerHeight;
+                            confetti({ particleCount: 100, spread: 70, origin: { x, y } });
+                        } else {
+                            confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
                         }
-                        toggleTask(activeTaskId);
-                        break;
-                    case 'enter': // Edit
-                        e.preventDefault();
-                        setEditingTaskId(activeTaskId);
-                        break;
-                    case 'escape': // Cancel state
-                        setHoveredTaskId(null);
-                        setSelectedTaskId(null);
-                        setActiveColumn(null);
-                        break;
-                    case 'g': // Enter Grab Mode
-                        setGrabbedTaskId(activeTaskId);
-                        playSound('click');
-                        break;
+                    }
+                    toggleTask(activeTaskId);
+                    return;
+                }
+
+                if (matchesShortcut(e, shortcuts.edit)) {
+                    e.preventDefault();
+                    setEditingTaskId(activeTaskId);
+                    return;
+                }
+
+                if (matchesShortcut(e, shortcuts.escape)) {
+                    setHoveredTaskId(null);
+                    setSelectedTaskId(null);
+                    setActiveColumn(null);
+                    return;
+                }
+
+                if (matchesShortcut(e, shortcuts.grab)) {
+                    setGrabbedTaskId(activeTaskId);
+                    playSound('click');
+                    return;
                 }
             }
         };
