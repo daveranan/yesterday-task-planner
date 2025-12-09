@@ -14,6 +14,8 @@ interface TaskItemBaseProps {
     deleteTask: (taskId: string) => void;
     handleEditTask: (taskId: string, newTitle: string) => void;
     hoveredTaskId: string | null;
+    grabbedTaskId: string | null;
+    editingTaskId: string | null;
     setHoveredTaskId: (id: string | null) => void;
     setNodeRef: (element: HTMLElement | null) => void;
     style?: React.CSSProperties;
@@ -33,6 +35,8 @@ export const TaskItemBase: React.FC<TaskItemBaseProps> = ({
     handleEditTask,
     hoveredTaskId,
     setHoveredTaskId,
+    grabbedTaskId,
+    editingTaskId,
     // DnD props
     setNodeRef,
     style,
@@ -42,10 +46,14 @@ export const TaskItemBase: React.FC<TaskItemBaseProps> = ({
     isOverlay, // Helper to styling
     isSelected
 }) => {
-    const [isEditing, setIsEditing] = useState(false);
+    const [localIsEditing, setLocalIsEditing] = useState(false);
+    // Combine local click edit and global shortcut edit
+    const isEditing = localIsEditing || editingTaskId === task.taskId;
+    const setStoreEditing = useStore(state => state.setEditingTaskId);
 
     // Derived state: Is this task being manipulated? (Hovered but not dragging)
     const isManipulated = hoveredTaskId === task.taskId && !isDragging;
+    const isGrabbed = grabbedTaskId === task.taskId;
 
     // Get the original task data from the global store
     const originalTask = allTasks[task.taskId];
@@ -57,7 +65,8 @@ export const TaskItemBase: React.FC<TaskItemBaseProps> = ({
 
     useEffect(() => {
         if (isEditing) {
-            inputRef.current?.focus();
+            // If triggered by store, we might need a tick
+            setTimeout(() => inputRef.current?.focus(), 10);
         }
     }, [isEditing]);
 
@@ -74,9 +83,10 @@ export const TaskItemBase: React.FC<TaskItemBaseProps> = ({
         if (trimmedTitle && trimmedTitle !== (originalTask ? originalTask.title : '')) {
             handleEditTask(task.taskId, trimmedTitle);
         }
-        // Reset local state in case the new title was invalid or the same
+        // Reset local state
         setLocalTitle(originalTask ? originalTask.title : '');
-        setIsEditing(false);
+        setLocalIsEditing(false);
+        if (editingTaskId === task.taskId) setStoreEditing(null);
     };
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -88,7 +98,8 @@ export const TaskItemBase: React.FC<TaskItemBaseProps> = ({
         }
         if (e.key === 'Escape') {
             setLocalTitle(originalTask ? originalTask.title : '');
-            setIsEditing(false);
+            setLocalIsEditing(false);
+            if (editingTaskId === task.taskId) setStoreEditing(null);
         }
     };
 
@@ -115,14 +126,13 @@ export const TaskItemBase: React.FC<TaskItemBaseProps> = ({
             onMouseLeave={() => setHoveredTaskId(null)}
             /* USE NEUTRAL: Task item background/border */
             className={`group flex items-center gap-2 bg-white dark:bg-neutral-800 p-2 rounded border shadow-sm cursor-grab active:cursor-grabbing hover:border-neutral-500 dark:hover:border-neutral-400 transition-all duration-200 touch-none 
-                ${isOverlay ? 'opacity-90 rotate-2 scale-105 shadow-xl' : ''}
+                ${(isOverlay || isGrabbed) ? 'opacity-90 rotate-2 scale-105 shadow-xl' : ''}
                 ${isSelected || (isManipulated && !isSelected)
                     ? 'border-neutral-500 dark:border-neutral-400 relative z-10'
                     : 'border-neutral-200 dark:border-neutral-700'}
             `}
         >
             {/* USE NEUTRAL: Icons and text colors adjusted for deeper contrast against neutral-800 */}
-            {/* Toggle uses the unique taskId to update the global task object */}
             <button
                 onPointerDown={(e) => e.stopPropagation()} // Prevent drag when clicking checkbox
                 onClick={(e) => {
@@ -155,7 +165,7 @@ export const TaskItemBase: React.FC<TaskItemBaseProps> = ({
                 <span
                     className={`flex-1 text-sm cursor-text ${isCompleted ? 'line-through text-neutral-400 dark:text-neutral-500' : 'text-neutral-900 dark:text-neutral-100'}`}
                     onDoubleClick={() => {
-                        if (!isCompleted) setIsEditing(true);
+                        if (!isCompleted) setLocalIsEditing(true);
                     }}
                 >
                     {originalTask.title}
@@ -172,7 +182,6 @@ export const TaskItemBase: React.FC<TaskItemBaseProps> = ({
                 </span>
             )}
 
-            {/* Delete uses the unique taskId to update the global task object and the day list */}
             <button
                 onPointerDown={(e) => e.stopPropagation()} // Prevent drag
                 onClick={() => deleteTask(task.taskId)}
@@ -199,6 +208,8 @@ const TaskItem: React.FC<TaskItemSpecificProps> = (props) => {
     const selectedTaskId = useStore(state => state.selectedTaskId);
     const hoveredTaskId = useStore(state => state.hoveredTaskId);
     const setHoveredTaskId = useStore(state => state.setHoveredTaskId);
+    const grabbedTaskId = useStore(state => state.grabbedTaskId);
+    const editingTaskId = useStore(state => state.editingTaskId);
 
     const {
         attributes,
@@ -228,6 +239,8 @@ const TaskItem: React.FC<TaskItemSpecificProps> = (props) => {
             isSelected={selectedTaskId === props.task.taskId}
             hoveredTaskId={hoveredTaskId}
             setHoveredTaskId={setHoveredTaskId}
+            grabbedTaskId={grabbedTaskId}
+            editingTaskId={editingTaskId}
         />
     );
 };
@@ -237,6 +250,8 @@ export const DraggableTaskItem: React.FC<TaskItemSpecificProps> = (props) => {
     const selectedTaskId = useStore(state => state.selectedTaskId);
     const hoveredTaskId = useStore(state => state.hoveredTaskId);
     const setHoveredTaskId = useStore(state => state.setHoveredTaskId);
+    const grabbedTaskId = useStore(state => state.grabbedTaskId);
+    const editingTaskId = useStore(state => state.editingTaskId);
 
     const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
         id: props.task.taskId,
@@ -258,6 +273,8 @@ export const DraggableTaskItem: React.FC<TaskItemSpecificProps> = (props) => {
             isSelected={selectedTaskId === props.task.taskId}
             hoveredTaskId={hoveredTaskId}
             setHoveredTaskId={setHoveredTaskId}
+            grabbedTaskId={grabbedTaskId}
+            editingTaskId={editingTaskId}
         />
     );
 };

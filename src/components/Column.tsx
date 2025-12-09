@@ -3,6 +3,7 @@ import TaskItem from './TaskItem';
 import { useDroppable } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { TaskEntry, TaskGlobal } from '../store/types';
+import { useStore } from '../store/useStore';
 
 interface ColumnProps {
     title: string;
@@ -49,9 +50,13 @@ const Column: React.FC<ColumnProps> = ({ title, category, limit, tasks, allTasks
         setLocalNewTaskTitle('');
     };
 
+    const setActiveColumn = useStore(state => state.setActiveColumn);
+    const setHoveredNewTaskCategory = useStore(state => state.setHoveredNewTaskCategory);
+
     return (
         <div
             ref={setNodeRef}
+            onMouseEnter={() => setActiveColumn(category)}
             className={`flex-1 min-w-[200px] flex flex-col h-full rounded-xl border-dashed transition-all duration-150
                 ${isActive
                     ? 'border-neutral-500 dark:border-neutral-400'
@@ -89,6 +94,7 @@ const Column: React.FC<ColumnProps> = ({ title, category, limit, tasks, allTasks
                 {/* Inline Add Task Input */}
                 <div className="mt-2 flex gap-2">
                     <input
+                        id={`new-task-input-${category}`}
                         type="text"
                         placeholder={isLimitReached ? `Limit Reached (${limit})` : "+ Add item"}
                         className={`
@@ -102,6 +108,8 @@ const Column: React.FC<ColumnProps> = ({ title, category, limit, tasks, allTasks
                         `}
                         value={localNewTaskTitle}
                         onChange={(e) => setLocalNewTaskTitle(e.target.value)}
+                        onMouseEnter={() => setHoveredNewTaskCategory(category)}
+                        onMouseLeave={() => setHoveredNewTaskCategory(null)}
                         onKeyDown={(e) => {
                             if (e.key === 'Enter') {
                                 addNewTask();

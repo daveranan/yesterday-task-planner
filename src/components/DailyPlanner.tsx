@@ -233,7 +233,6 @@ const DailyPlanner: React.FC = () => {
                 </div>
             </div>
 
-            {/* Drag Overlay: Renders the item following the cursor */}
             <DragOverlay>
                 {activeId && activeTaskEntry ? (
                     <div className="opacity-90 rotate-2 cursor-grabbing pointer-events-none">
@@ -245,6 +244,8 @@ const DailyPlanner: React.FC = () => {
                             handleEditTask={() => { }} // No-op during drag
                             hoveredTaskId={null}
                             setHoveredTaskId={() => { }}
+                            grabbedTaskId={null} // Overlay shouldn't show grabbed state specifically, or maybe yes? But drag overrides grab visual.
+                            editingTaskId={null}
                             setNodeRef={() => { }} // dummy
                             isOverlay
                         />

@@ -39,8 +39,15 @@ export const useStore = create<Store>((set, get) => ({
     activeColumnId: null,
     selectedTaskId: null,
     hoveredTaskId: null,
+    grabbedTaskId: null,
+    editingTaskId: null,
+    hoveredNewTaskCategory: null,
 
     // --- Actions ---
+
+    setHoveredNewTaskCategory: (category: string | null) => {
+        set({ hoveredNewTaskCategory: category });
+    },
 
     setCurrentDate: (newDate: string) => {
         set({ currentDate: newDate });
@@ -123,7 +130,58 @@ export const useStore = create<Store>((set, get) => ({
         set({ hoveredTaskId: taskId });
     },
 
+    setGrabbedTaskId: (taskId: string | null) => {
+        set({ grabbedTaskId: taskId });
+    },
+
+    setEditingTaskId: (taskId: string | null) => {
+        set({ editingTaskId: taskId });
+    },
+
     // Task Actions
+    duplicateTask: (taskId: string) => {
+        const { currentDate, days, tasks } = get();
+        const task = tasks[taskId];
+        if (!task) return;
+
+        const currentDay = days[currentDate];
+        if (!currentDay) return;
+
+        const entryIndex = currentDay.taskEntries.findIndex(t => t.taskId === taskId);
+        if (entryIndex === -1) return;
+
+        const newTaskId = Date.now().toString();
+        const newTaskGlobal: TaskGlobal = {
+            ...task,
+            title: `${task.title} (Copy)`,
+            createdOn: currentDate,
+            completed: false, // duplications are usually uncompleted
+        };
+
+        const originalEntry = currentDay.taskEntries[entryIndex];
+        const newEntry: TaskEntry = {
+            taskId: newTaskId,
+            category: originalEntry.category,
+            slotId: originalEntry.slotId, // If it's scheduled, maybe don't overlap? But for now copy.
+            rolledOverFrom: null,
+        };
+
+        set(state => {
+            const updatedEntries = [...state.days[currentDate].taskEntries];
+            // Insert after original
+            updatedEntries.splice(entryIndex + 1, 0, newEntry);
+
+            const updatedDays = {
+                ...state.days,
+                [currentDate]: { ...currentDay, taskEntries: updatedEntries }
+            };
+
+            const updatedTasks = { ...state.tasks, [newTaskId]: newTaskGlobal };
+
+            saveDataToFile({ tasks: updatedTasks, days: updatedDays, settings: state.settings });
+            return { tasks: updatedTasks, days: updatedDays };
+        });
+    },
     addTask: (category: string, title: string) => {
         const { currentDate, days, tasks } = get();
 

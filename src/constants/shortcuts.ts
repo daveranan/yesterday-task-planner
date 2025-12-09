@@ -3,14 +3,16 @@ export const DEFAULT_SHORTCUTS: Record<string, string> = {
     navDown: 'ArrowDown',
     navLeft: 'ArrowLeft',
     navRight: 'ArrowRight',
-    moveUp: 'Shift+ArrowUp',
-    moveDown: 'Shift+ArrowDown',
-    moveLeft: 'Shift+ArrowLeft',
-    moveRight: 'Shift+ArrowRight',
-    toggleComplete: ' ',
-    delete: 'Delete',
+    toggleComplete: 'Space',
+    delete: 'x',
     edit: 'Enter',
-    escape: 'Escape'
+    escape: 'Escape',
+    duplicate: 'd',
+    copy: 'c',
+    grab: 'g',
+    prevDay: 'Ctrl+ArrowLeft',
+    nextDay: 'Ctrl+ArrowRight',
+    newTask: 'Ctrl+Enter'
 };
 
 export const SHORTCUT_DESCRIPTIONS: Record<string, string> = {
@@ -18,12 +20,14 @@ export const SHORTCUT_DESCRIPTIONS: Record<string, string> = {
     navDown: 'Navigate Down',
     navLeft: 'Navigate Left',
     navRight: 'Navigate Right',
-    moveUp: 'Move Task Up',
-    moveDown: 'Move Task Down',
-    moveLeft: 'Move Task Left',
-    moveRight: 'Move Task Right',
     toggleComplete: 'Toggle Task Completion',
     delete: 'Delete Task',
     edit: 'Edit Task Title',
-    escape: 'Cancel / Deselect'
+    escape: 'Cancel / Deselect',
+    duplicate: 'Duplicate Task',
+    copy: 'Copy Task Title',
+    grab: 'Grab / Move Task',
+    prevDay: 'Previous Day',
+    nextDay: 'Next Day',
+    newTask: 'Create New Task'
 };
