@@ -173,7 +173,7 @@ const Timeline: React.FC<TimelineProps> = ({
                             return (
                                 <div
                                     key={hour}
-                                    className="flex border-b border-neutral-200 dark:border-neutral-800 min-h-[32px] flex-1 bg-neutral-100 dark:bg-neutral-950/50 relative"
+                                    className="flex border-b border-neutral-200 dark:border-neutral-800 min-h-[24px] flex-[0.24] bg-neutral-100 dark:bg-neutral-950/50 relative"
                                 >
                                     {/* Red Current Time Line for Lunch */}
                                     {validPercentage !== null && (
@@ -187,10 +187,10 @@ const Timeline: React.FC<TimelineProps> = ({
                                         </div>
                                     )}
 
-                                    <div className="w-16 p-2 text-right text-xs font-medium text-neutral-400 dark:text-neutral-500 border-r border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900/50 flex items-center justify-end">
+                                    <div className="w-16 p-1 text-right text-xs font-medium text-neutral-400 dark:text-neutral-500 border-r border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900/50 flex items-center justify-end">
                                         {displayTime}
                                     </div>
-                                    <div className="flex-1 p-2 flex items-center justify-center text-neutral-400 dark:text-neutral-600 font-medium tracking-wide uppercase text-xs">
+                                    <div className="flex-1 p-1 flex items-center justify-center text-neutral-400 dark:text-neutral-600 font-medium tracking-wide uppercase text-xs">
                                         Lunch Break
                                     </div>
                                 </div>
