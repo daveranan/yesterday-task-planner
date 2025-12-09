@@ -12,7 +12,10 @@ interface TaskBoardProps {
     onToggleTask: (taskId: string) => void;
     onDeleteTask: (taskId: string) => void;
     onEditTask: (taskId: string, newTitle: string) => void;
+
     onUpdateDayData: (updates: Partial<DayData>) => void;
+    showGratefulness: boolean;
+    showReflection: boolean;
 }
 
 const TaskBoard: React.FC<TaskBoardProps> = ({
@@ -25,7 +28,10 @@ const TaskBoard: React.FC<TaskBoardProps> = ({
     onToggleTask,
     onDeleteTask,
     onEditTask,
-    onUpdateDayData
+
+    onUpdateDayData,
+    showGratefulness,
+    showReflection
 }) => {
     // To maintain existing layout, we need:
     // Row 1: Must-Do, Communications
@@ -81,6 +87,8 @@ const TaskBoard: React.FC<TaskBoardProps> = ({
                 gratefulness={currentDayData.gratefulness || ''}
                 reflections={currentDayData.reflections || ''}
                 onUpdate={onUpdateDayData}
+                showGratefulness={showGratefulness}
+                showReflection={showReflection}
             />
         </div>
     );

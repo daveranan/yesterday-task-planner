@@ -10,6 +10,12 @@ interface PlannerHeaderProps {
     isDarkMode: boolean;
     onToggleTheme: () => void;
     incompleteCount: number;
+    soundEnabled: boolean;
+    onToggleSound: () => void;
+    showGratefulness: boolean;
+    onToggleGratefulness: () => void;
+    showReflection: boolean;
+    onToggleReflection: () => void;
 }
 
 const PlannerHeader: React.FC<PlannerHeaderProps> = ({
@@ -20,7 +26,13 @@ const PlannerHeader: React.FC<PlannerHeaderProps> = ({
     isToday,
     isDarkMode,
     onToggleTheme,
-    incompleteCount
+    incompleteCount,
+    soundEnabled,
+    onToggleSound,
+    showGratefulness,
+    onToggleGratefulness,
+    showReflection,
+    onToggleReflection
 }) => {
     return (
         <div className="h-16 bg-white dark:bg-neutral-900 border-b border-neutral-200 dark:border-neutral-800 flex items-center justify-between px-6 shadow-xl z-20">
@@ -55,6 +67,27 @@ const PlannerHeader: React.FC<PlannerHeaderProps> = ({
                 </button>
             </div>
             <div className="flex items-center gap-4">
+                <button
+                    onClick={onToggleReflection}
+                    className="p-2 rounded-full text-neutral-500 dark:text-neutral-400 hover:text-neutral-800 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition"
+                    title={showReflection ? "Hide Reflections" : "Show Reflections"}
+                >
+                    <Icon name={showReflection ? "BookOpen" : "BookX"} className="w-5 h-5" />
+                </button>
+                <button
+                    onClick={onToggleGratefulness}
+                    className="p-2 rounded-full text-neutral-500 dark:text-neutral-400 hover:text-neutral-800 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition"
+                    title={showGratefulness ? "Hide Gratefulness" : "Show Gratefulness"}
+                >
+                    <Icon name={showGratefulness ? "Heart" : "HeartOff"} className="w-5 h-5" />
+                </button>
+                <button
+                    onClick={onToggleSound}
+                    className="p-2 rounded-full text-neutral-500 dark:text-neutral-400 hover:text-neutral-800 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition"
+                    title={soundEnabled ? "Mute Audio" : "Enable Audio"}
+                >
+                    <Icon name={soundEnabled ? "Volume2" : "VolumeX"} className="w-5 h-5" />
+                </button>
                 <button
                     onClick={onToggleTheme}
                     className="p-2 rounded-full text-neutral-500 dark:text-neutral-400 hover:text-neutral-800 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition"

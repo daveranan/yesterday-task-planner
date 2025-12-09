@@ -1,4 +1,9 @@
+import { useStore } from '../store/useStore';
+
 export const playSound = (type: string): void => {
+    const { settings } = useStore.getState();
+    if (!settings.soundEnabled) return;
+
     try {
         const audio = new Audio(`/assets/sounds/${type}.ogg`);
         audio.volume = 0.5;

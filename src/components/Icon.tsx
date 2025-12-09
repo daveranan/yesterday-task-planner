@@ -1,7 +1,8 @@
 import React, { MouseEventHandler } from 'react';
 import {
     Plus, Clock, Trash2, Calendar, ChevronLeft, ChevronRight,
-    CheckSquare, Square, Sun, Moon, Target, Edit, LucideProps
+    CheckSquare, Square, Sun, Moon, Target, Edit, LucideProps,
+    Volume2, VolumeX, Heart, HeartOff, BookOpen, BookX
 } from 'lucide-react';
 
 const RolloverIcon = (props: LucideProps) => (
@@ -15,7 +16,8 @@ const RolloverIcon = (props: LucideProps) => (
 const icons = {
     Plus, Clock, Trash2, Calendar, ChevronLeft, ChevronRight,
     CheckSquare, Square, Sun, Moon, Target, Edit,
-    Rollover: RolloverIcon
+    Rollover: RolloverIcon,
+    Volume2, VolumeX, Heart, HeartOff, BookOpen, BookX
 };
 
 export type IconName = keyof typeof icons;

@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { CONFIG } from '../constants/config';
-import { loadDataFromFile, saveDataToFile, loadTheme, saveTheme } from '../utils/storage';
+import { loadDataFromFile, saveDataToFile, loadTheme } from '../utils/storage';
 import { getYYYYMMDD, getDateOffset } from '../utils/dateUtils';
 import { Store, StoreState, TaskEntry, TaskGlobal, DayData } from './types';
 
@@ -10,6 +10,15 @@ const getInitialState = (): Partial<StoreState> => {
     // Ensure minimal structure exists
     if (!data.tasks) data.tasks = {};
     if (!data.days) data.days = {};
+    if (!data.settings) {
+        // Default settings
+        data.settings = {
+            isDarkMode: loadTheme(), // Fallback to existing local storage theme if present
+            soundEnabled: true,
+            showGratefulness: true,
+            showReflection: true
+        };
+    }
     return data;
 };
 
@@ -18,7 +27,7 @@ const initialState = getInitialState();
 export const useStore = create<Store>((set, get) => ({
     // --- State ---
     currentDate: getYYYYMMDD(new Date()),
-    isDarkMode: loadTheme(),
+    settings: initialState.settings!, // We ensured it exists in getInitialState
     tasks: initialState.tasks || {},
     days: initialState.days || {},
 
@@ -41,14 +50,41 @@ export const useStore = create<Store>((set, get) => ({
     },
 
     setTheme: (isDark: boolean) => {
-        set({ isDarkMode: isDark });
-        saveTheme(isDark);
+        set(state => {
+            const newSettings = { ...state.settings, isDarkMode: isDark };
+            saveDataToFile({ tasks: state.tasks, days: state.days, settings: newSettings });
+            return { settings: newSettings };
+        });
         document.documentElement.classList.toggle('dark', isDark);
     },
 
     toggleTheme: () => {
-        const newTheme = !get().isDarkMode;
-        get().setTheme(newTheme);
+        const { settings } = get();
+        get().setTheme(!settings.isDarkMode);
+    },
+
+    toggleSound: () => {
+        set(state => {
+            const newSettings = { ...state.settings, soundEnabled: !state.settings.soundEnabled };
+            saveDataToFile({ tasks: state.tasks, days: state.days, settings: newSettings });
+            return { settings: newSettings };
+        });
+    },
+
+    toggleGratefulness: () => {
+        set(state => {
+            const newSettings = { ...state.settings, showGratefulness: !state.settings.showGratefulness };
+            saveDataToFile({ tasks: state.tasks, days: state.days, settings: newSettings });
+            return { settings: newSettings };
+        });
+    },
+
+    toggleReflection: () => {
+        set(state => {
+            const newSettings = { ...state.settings, showReflection: !state.settings.showReflection };
+            saveDataToFile({ tasks: state.tasks, days: state.days, settings: newSettings });
+            return { settings: newSettings };
+        });
     },
 
     // Task Actions
@@ -95,7 +131,7 @@ export const useStore = create<Store>((set, get) => ({
                     }
                 }
             };
-            saveDataToFile({ tasks: newState.tasks, days: newState.days });
+            saveDataToFile({ tasks: newState.tasks, days: newState.days, settings: state.settings });
             return newState;
         });
     },
@@ -110,7 +146,7 @@ export const useStore = create<Store>((set, get) => ({
                 [taskId]: { ...task, completed: !task.completed }
             };
 
-            saveDataToFile({ tasks: updatedTasks, days: state.days });
+            saveDataToFile({ tasks: updatedTasks, days: state.days, settings: state.settings });
             return { tasks: updatedTasks };
         });
     },
@@ -128,7 +164,7 @@ export const useStore = create<Store>((set, get) => ({
                 return acc;
             }, {} as Record<string, DayData>);
 
-            saveDataToFile({ tasks: restTasks, days: updatedDays });
+            saveDataToFile({ tasks: restTasks, days: updatedDays, settings: state.settings });
             return { tasks: restTasks, days: updatedDays };
         });
     },
@@ -139,7 +175,7 @@ export const useStore = create<Store>((set, get) => ({
                 ...state.tasks,
                 [taskId]: { ...state.tasks[taskId], title: newTitle }
             };
-            saveDataToFile({ tasks: updatedTasks, days: state.days });
+            saveDataToFile({ tasks: updatedTasks, days: state.days, settings: state.settings });
             return { tasks: updatedTasks };
         });
     },
@@ -152,7 +188,7 @@ export const useStore = create<Store>((set, get) => ({
                 ...state.days,
                 [currentDate]: { ...currentDay, ...updates }
             };
-            saveDataToFile({ tasks: state.tasks, days: updatedDays });
+            saveDataToFile({ tasks: state.tasks, days: updatedDays, settings: state.settings });
             return { days: updatedDays };
         });
     },
@@ -224,7 +260,7 @@ export const useStore = create<Store>((set, get) => ({
                 [currentDate]: { ...currentDay, taskEntries: updatedEntries }
             };
 
-            saveDataToFile({ tasks: updatedTasks, days: updatedDays });
+            saveDataToFile({ tasks: updatedTasks, days: updatedDays, settings: state.settings });
             return { tasks: updatedTasks, days: updatedDays };
         });
     },
@@ -248,7 +284,7 @@ export const useStore = create<Store>((set, get) => ({
                 ...state.days,
                 [currentDate]: { ...currentDay, taskEntries: updatedEntries }
             };
-            saveDataToFile({ tasks: state.tasks, days: updatedDays });
+            saveDataToFile({ tasks: state.tasks, days: updatedDays, settings: state.settings });
             return { days: updatedDays };
         });
     },
@@ -323,7 +359,7 @@ export const useStore = create<Store>((set, get) => ({
                     rolloverComplete: true
                 }
             };
-            saveDataToFile({ tasks: state.tasks, days: updatedDays });
+            saveDataToFile({ tasks: state.tasks, days: updatedDays, settings: state.settings });
             return { days: updatedDays };
         });
 

@@ -20,14 +20,21 @@ export interface DayData {
     rolloverComplete?: boolean;
 }
 
+export interface PlannerSettings {
+    isDarkMode: boolean;
+    soundEnabled: boolean;
+    showGratefulness: boolean;
+    showReflection: boolean;
+}
+
 export interface PlannerData {
     tasks: Record<string, TaskGlobal>;
     days: Record<string, DayData>;
+    settings: PlannerSettings;
 }
 
 export interface StoreState extends PlannerData {
     currentDate: string;
-    isDarkMode: boolean;
 }
 
 export interface StoreActions {
@@ -36,6 +43,9 @@ export interface StoreActions {
     jumpToToday: () => void;
     setTheme: (isDark: boolean) => void;
     toggleTheme: () => void;
+    toggleSound: () => void;
+    toggleGratefulness: () => void;
+    toggleReflection: () => void;
     addTask: (category: string, title: string) => void;
     toggleTask: (taskId: string) => void;
     deleteTask: (taskId: string) => void;
@@ -47,3 +57,4 @@ export interface StoreActions {
 }
 
 export type Store = StoreState & StoreActions;
+

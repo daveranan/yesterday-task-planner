@@ -7,7 +7,7 @@ const isElectronApp = (): boolean => {
     return typeof window !== 'undefined' && typeof (window as any).require === 'function';
 };
 
-const storageKey = 'daily_planner_data_v2';
+const storageKey = 'daily_planner_data';
 const themeKey = 'planner_theme';
 
 const saveDataToLocalStorage = (key: string, data: any): void => {
@@ -38,7 +38,7 @@ export const saveDataToFile = (data: any): void => {
         const fs = requireFunc('fs');
         const path = requireFunc('path');
         const os = requireFunc('os');
-        const savePath = path.join(os.homedir(), 'DailyPlannerData_v2.json');
+        const savePath = path.join(os.homedir(), 'DailyPlannerData.json');
         fs.writeFileSync(savePath, JSON.stringify(data, null, 2), 'utf-8');
         console.log('Data saved successfully to:', savePath);
     } catch (e) {
@@ -56,7 +56,7 @@ export const loadDataFromFile = (): any => {
         const fs = requireFunc('fs');
         const path = requireFunc('path');
         const os = requireFunc('os');
-        const loadPath = path.join(os.homedir(), 'DailyPlannerData_v2.json');
+        const loadPath = path.join(os.homedir(), 'DailyPlannerData.json');
         if (fs.existsSync(loadPath)) {
             const data = fs.readFileSync(loadPath, 'utf-8');
             console.log('Data loaded successfully from:', loadPath);

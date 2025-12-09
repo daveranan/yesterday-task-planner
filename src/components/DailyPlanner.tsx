@@ -19,8 +19,12 @@ const DailyPlanner: React.FC = () => {
         setCurrentDate,
         handleDateChange,
         jumpToToday,
-        isDarkMode,
+
+        settings,
         toggleTheme,
+        toggleSound,
+        toggleGratefulness,
+        toggleReflection,
         days,
         tasks: allTasks,
         addTask,
@@ -37,6 +41,11 @@ const DailyPlanner: React.FC = () => {
     React.useEffect(() => {
         checkRollover(currentDate);
     }, [currentDate, checkRollover]);
+
+    // Sync theme to DOM on mount and change
+    React.useEffect(() => {
+        document.documentElement.classList.toggle('dark', settings.isDarkMode);
+    }, [settings.isDarkMode]);
 
     // Derived Data
     const currentDayData = days[currentDate] || { taskEntries: [], gratefulness: '', reflections: '' };
@@ -152,7 +161,7 @@ const DailyPlanner: React.FC = () => {
 
     return (
         <DndContext sensors={sensors} onDragStart={handleDragStart} onDragOver={handleDragOver} onDragEnd={handleDragEnd}>
-            <div className={`flex flex-col h-full ${isDarkMode ? 'dark' : ''}`}>
+            <div className={`flex flex-col h-full ${settings.isDarkMode ? 'dark' : ''}`}>
                 <div className="flex flex-col h-full bg-neutral-100 dark:bg-neutral-950 text-neutral-900 dark:text-neutral-100 font-sans overflow-hidden">
 
                     <PlannerHeader
@@ -161,9 +170,15 @@ const DailyPlanner: React.FC = () => {
                         onDateChange={handleDateChange}
                         onJumpToToday={jumpToToday}
                         isToday={isToday}
-                        isDarkMode={isDarkMode}
+                        isDarkMode={settings.isDarkMode}
                         onToggleTheme={toggleTheme}
                         incompleteCount={incompleteCount}
+                        soundEnabled={settings.soundEnabled}
+                        onToggleSound={toggleSound}
+                        showGratefulness={settings.showGratefulness}
+                        onToggleGratefulness={toggleGratefulness}
+                        showReflection={settings.showReflection}
+                        onToggleReflection={toggleReflection}
                     />
 
                     <div className="flex-1 flex overflow-hidden p-6 gap-6">
@@ -186,6 +201,8 @@ const DailyPlanner: React.FC = () => {
                                     onDeleteTask={deleteTask}
                                     onEditTask={updateTaskTitle}
                                     onUpdateDayData={updateDayData}
+                                    showGratefulness={settings.showGratefulness}
+                                    showReflection={settings.showReflection}
                                 // Removed manual DnD props
                                 />
 
