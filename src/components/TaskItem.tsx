@@ -144,6 +144,24 @@ export const TaskItemBase: React.FC<TaskItemBaseProps> = ({
         );
     }
 
+    const getCategoryStyles = () => {
+        if (isDragging || isOverlay) return "bg-card border-primary/50"; // Overlay style override
+
+        // Use originalCategory if active task is scheduled, fall back to current category
+        const effCategory = task.category === 'scheduled' && task.originalCategory
+            ? task.originalCategory
+            : task.category;
+
+        switch (effCategory) {
+            case 'must-do':
+                return "bg-orange-50/50 dark:bg-orange-950/20 border-orange-200 dark:border-orange-800 hover:border-orange-300 dark:hover:border-orange-700";
+            case 'communications':
+                return "bg-sky-50/50 dark:bg-sky-950/20 border-sky-200 dark:border-sky-800 hover:border-sky-300 dark:hover:border-sky-700";
+            default:
+                return "bg-card border-border hover:border-primary/50";
+        }
+    };
+
     return (
         <ContextMenu>
             <ContextMenuTrigger asChild>
@@ -156,13 +174,13 @@ export const TaskItemBase: React.FC<TaskItemBaseProps> = ({
                     onMouseEnter={() => setHoveredTaskId(task.taskId)}
                     onMouseLeave={() => setHoveredTaskId(null)}
                     className={cn(
-                        "group flex items-center gap-2 bg-card p-1.5 rounded-lg border shadow-sm transition-all duration-200 touch-none",
-                        "hover:border-primary/50",
-                        (isOverlay || isGrabbed) && "opacity-90 rotate-2 scale-105 shadow-xl cursor-grabbing",
+                        "group flex items-center gap-2 p-1.5 rounded-lg border shadow-sm transition-all duration-200 touch-none",
+                        getCategoryStyles(),
+                        (isOverlay || isGrabbed) && "opacity-90 rotate-2 scale-105 shadow-xl cursor-grabbing bg-card border-primary", // Ensure overlay looks "lifted"
                         !isOverlay && !isGrabbed && "cursor-grab active:cursor-grabbing",
                         isSelected || (isManipulated && !isSelected)
                             ? "border-primary ring-1 ring-primary relative z-10"
-                            : "border-border"
+                            : ""
                     )}
                 >
                     <div

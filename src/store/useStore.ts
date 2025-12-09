@@ -389,11 +389,25 @@ export const useStore = create<Store>((set, get) => ({
             const updatedEntries = [...state.days[currentDate].taskEntries];
             const [movedEntry] = updatedEntries.splice(taskEntryIndex, 1);
 
+            // Determine originalCategory persistence
+            let originalCategory = movedEntry.originalCategory;
+
+            // If we are entering scheduled state for the first time (or from non-scheduled), save the source category
+            if (targetCategory === 'scheduled' && movedEntry.category !== 'scheduled') {
+                originalCategory = movedEntry.category;
+            }
+            // If moving OUT of scheduled, we typically drop the originalCategory (or it becomes the new category naturally)
+            // But here we are creating a new entry object. If target is NOT scheduled, originalCategory should probably be undefined/cleared.
+            else if (targetCategory !== 'scheduled') {
+                originalCategory = undefined;
+            }
+
             const newEntry: TaskEntry = {
                 ...movedEntry,
                 category: targetCategory,
                 slotId: targetCategory === 'scheduled' ? slotId : null,
-                rolledOverFrom: movedEntry.rolledOverFrom && targetCategory === 'scheduled' ? null : movedEntry.rolledOverFrom
+                rolledOverFrom: movedEntry.rolledOverFrom && targetCategory === 'scheduled' ? null : movedEntry.rolledOverFrom,
+                originalCategory: originalCategory
             };
 
             let insertIndex = updatedEntries.length;

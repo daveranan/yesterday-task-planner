@@ -10,6 +10,7 @@ export interface TaskEntry {
     category: string; // 'must-do' | 'communications' | 'todo' | 'scheduled'
     slotId: string | null;
     rolledOverFrom: string | null; // Date string or null
+    originalCategory?: string; // Persists category when moved to scheduled
     _fallbackCategory?: string; // transient property used during rollover calculation
 }
 
