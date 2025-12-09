@@ -6,8 +6,7 @@ import { CONFIG } from '../constants/config';
 import PlannerHeader from './PlannerHeader';
 import TaskBoard from './TaskBoard';
 import Timeline from './Timeline';
-import { DndContext, useSensor, useSensors, PointerSensor, KeyboardSensor, DragOverlay, DragStartEvent, DragEndEvent, DragOverEvent } from '@dnd-kit/core';
-import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
+import { DndContext, useSensor, useSensors, PointerSensor, DragOverlay, DragStartEvent, DragEndEvent, DragOverEvent } from '@dnd-kit/core';
 import { TaskItemBase } from './TaskItem';
 import { playSound } from '../utils/soundUtils';
 import { TaskEntry } from '../store/types';
@@ -121,9 +120,6 @@ const DailyPlanner: React.FC = () => {
             activationConstraint: {
                 distance: 8, // Require 8px movement to start drag (prevents accidental drags)
             },
-        }),
-        useSensor(KeyboardSensor, {
-            coordinateGetter: sortableKeyboardCoordinates,
         })
     );
 
