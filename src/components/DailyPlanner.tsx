@@ -11,8 +11,13 @@ import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import { TaskItemBase } from './TaskItem';
 import { playSound } from '../utils/soundUtils';
 import { TaskEntry } from '../store/types';
+import { useKeyboardNavigation } from '../hooks/useKeyboardNavigation';
+import { KeyboardSettingsModal } from './settings/KeyboardSettingsModal';
 
 const DailyPlanner: React.FC = () => {
+    // UI State
+    const [isKeyboardSettingsOpen, setIsKeyboardSettingsOpen] = useState(false);
+
     // --- Store Selectors ---
     const {
         currentDate,
@@ -36,6 +41,9 @@ const DailyPlanner: React.FC = () => {
         reorderTask,
         checkRollover,
     } = useStore();
+
+    // Enable Keyboard Navigation
+    useKeyboardNavigation();
 
     // Trigger rollover check on mount (for the current date)
     React.useEffect(() => {
@@ -179,6 +187,7 @@ const DailyPlanner: React.FC = () => {
                         onToggleGratefulness={toggleGratefulness}
                         showReflection={settings.showReflection}
                         onToggleReflection={toggleReflection}
+                        onOpenKeyboardSettings={() => setIsKeyboardSettingsOpen(true)}
                     />
 
                     <div className="flex-1 flex overflow-hidden p-6 gap-6">
@@ -238,6 +247,10 @@ const DailyPlanner: React.FC = () => {
                     </div>
                 ) : null}
             </DragOverlay>
+
+            {isKeyboardSettingsOpen && (
+                <KeyboardSettingsModal onClose={() => setIsKeyboardSettingsOpen(false)} />
+            )}
         </DndContext>
     );
 };

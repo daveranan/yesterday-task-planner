@@ -25,6 +25,7 @@ export interface PlannerSettings {
     soundEnabled: boolean;
     showGratefulness: boolean;
     showReflection: boolean;
+    shortcuts: Record<string, string>;
 }
 
 export interface PlannerData {
@@ -35,6 +36,7 @@ export interface PlannerData {
 
 export interface StoreState extends PlannerData {
     currentDate: string;
+    selectedTaskId: string | null;
 }
 
 export interface StoreActions {
@@ -47,14 +49,4 @@ export interface StoreActions {
     toggleGratefulness: () => void;
     toggleReflection: () => void;
     addTask: (category: string, title: string) => void;
-    toggleTask: (taskId: string) => void;
-    deleteTask: (taskId: string) => void;
-    updateTaskTitle: (taskId: string, newTitle: string) => void;
-    updateDayData: (updates: Partial<DayData>) => void;
-    moveTask: (taskId: string, targetCategory: string, slotId?: string | null, overTaskId?: string | null) => void;
-    reorderTask: (activeTaskId: string, overTaskId: string) => void;
-    checkRollover: (dateToCheck: string) => void;
-}
-
-export type Store = StoreState & StoreActions;
 

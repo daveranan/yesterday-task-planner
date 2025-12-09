@@ -5,6 +5,7 @@ import { useDraggable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
 import confetti from 'canvas-confetti';
 import { TaskEntry, TaskGlobal } from '../store/types';
+import { useStore } from '../store/useStore';
 
 interface TaskItemBaseProps {
     task: TaskEntry;
@@ -18,6 +19,7 @@ interface TaskItemBaseProps {
     listeners?: any;
     isDragging?: boolean;
     isOverlay?: boolean;
+    isSelected?: boolean;
 }
 
 // The UI Component (Pure, no DnD hooks yourself, but accepts refs/styles)
@@ -33,7 +35,8 @@ export const TaskItemBase: React.FC<TaskItemBaseProps> = ({
     attributes,
     listeners,
     isDragging,
-    isOverlay // Helper to styling
+    isOverlay, // Helper to styling
+    isSelected
 }) => {
     const [isEditing, setIsEditing] = useState(false);
 
@@ -102,7 +105,10 @@ export const TaskItemBase: React.FC<TaskItemBaseProps> = ({
             {...listeners}
             {...attributes}
             /* USE NEUTRAL: Task item background/border */
-            className={`group flex items-center gap-2 bg-white dark:bg-neutral-800 p-2 rounded border border-neutral-200 dark:border-neutral-700 shadow-sm cursor-grab active:cursor-grabbing hover:border-neutral-400 dark:hover:border-neutral-500 hover:shadow-md hover:scale-[1.01] transition-all duration-200 touch-none ${isOverlay ? 'opacity-90 rotate-2 scale-105 shadow-xl' : ''}`}
+            className={`group flex items-center gap-2 bg-white dark:bg-neutral-800 p-2 rounded border border-neutral-200 dark:border-neutral-700 shadow-sm cursor-grab active:cursor-grabbing hover:border-neutral-400 dark:hover:border-neutral-500 hover:shadow-md hover:scale-[1.01] transition-all duration-200 touch-none 
+                ${isOverlay ? 'opacity-90 rotate-2 scale-105 shadow-xl' : ''}
+                ${isSelected ? 'ring-2 ring-blue-500 dark:ring-blue-400 border-blue-500 dark:border-blue-400 relative z-10' : ''}
+            `}
         >
             {/* USE NEUTRAL: Icons and text colors adjusted for deeper contrast against neutral-800 */}
             {/* Toggle uses the unique taskId to update the global task object */}
@@ -178,6 +184,9 @@ interface TaskItemSpecificProps {
 
 // The Sortable Wrapper (Default)
 const TaskItem: React.FC<TaskItemSpecificProps> = (props) => {
+    // We need to access selectedTaskId here to pass to Base
+    const selectedTaskId = useStore(state => state.selectedTaskId);
+
     const {
         attributes,
         listeners,
@@ -203,12 +212,15 @@ const TaskItem: React.FC<TaskItemSpecificProps> = (props) => {
             attributes={attributes}
             listeners={listeners}
             isDragging={isDragging}
+            isSelected={selectedTaskId === props.task.taskId}
         />
     );
 };
 
 // The Draggable Wrapper (For Timeline)
 export const DraggableTaskItem: React.FC<TaskItemSpecificProps> = (props) => {
+    const selectedTaskId = useStore(state => state.selectedTaskId);
+
     const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
         id: props.task.taskId,
         data: { type: 'TASK', task: props.task }
@@ -226,6 +238,7 @@ export const DraggableTaskItem: React.FC<TaskItemSpecificProps> = (props) => {
             attributes={attributes}
             listeners={listeners}
             isDragging={isDragging}
+            isSelected={selectedTaskId === props.task.taskId}
         />
     );
 };

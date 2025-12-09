@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { CONFIG } from '../constants/config';
+import { DEFAULT_SHORTCUTS } from '../constants/shortcuts';
 import { loadDataFromFile, saveDataToFile, loadTheme } from '../utils/storage';
 import { getYYYYMMDD, getDateOffset } from '../utils/dateUtils';
 import { Store, StoreState, TaskEntry, TaskGlobal, DayData } from './types';
@@ -16,13 +17,18 @@ const getInitialState = (): Partial<StoreState> => {
             isDarkMode: loadTheme(), // Fallback to existing local storage theme if present
             soundEnabled: true,
             showGratefulness: true,
-            showReflection: true
+            showReflection: true,
+            shortcuts: { ...DEFAULT_SHORTCUTS }
         };
+    } else if (!data.settings.shortcuts) {
+        // Migration: Add shortcuts if missing in existing settings
+        data.settings.shortcuts = { ...DEFAULT_SHORTCUTS };
     }
     return data;
 };
 
 const initialState = getInitialState();
+
 
 export const useStore = create<Store>((set, get) => ({
     // --- State ---
@@ -30,6 +36,7 @@ export const useStore = create<Store>((set, get) => ({
     settings: initialState.settings!, // We ensured it exists in getInitialState
     tasks: initialState.tasks || {},
     days: initialState.days || {},
+    selectedTaskId: null,
 
     // --- Actions ---
 
@@ -85,6 +92,25 @@ export const useStore = create<Store>((set, get) => ({
             saveDataToFile({ tasks: state.tasks, days: state.days, settings: newSettings });
             return { settings: newSettings };
         });
+    },
+
+    // Keyboard & Selection
+    updateShortcut: (actionId: string, newKey: string) => {
+        set(state => {
+            const newSettings = {
+                ...state.settings,
+                shortcuts: {
+                    ...state.settings.shortcuts,
+                    [actionId]: newKey
+                }
+            };
+            saveDataToFile({ tasks: state.tasks, days: state.days, settings: newSettings });
+            return { settings: newSettings };
+        });
+    },
+
+    setSelectedTaskId: (taskId: string | null) => {
+        set({ selectedTaskId: taskId });
     },
 
     // Task Actions
