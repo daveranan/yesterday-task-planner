@@ -33,6 +33,20 @@ const TimeSlot: React.FC<TimeSlotProps> = ({
         id: slotId,
     });
 
+    // Sort tasks: completed tasks first, unfinished tasks at bottom
+    const sortedSlotTasks = [...slotTasks].sort((a, b) => {
+        const taskA = allTasks[a.taskId];
+        const taskB = allTasks[b.taskId];
+
+        if (!taskA || !taskB) return 0;
+
+        // Completed tasks first (unfinished at bottom)
+        if (taskA.completed !== taskB.completed) {
+            return taskA.completed ? -1 : 1;
+        }
+        return 0; // Maintain original order for same completion status
+    });
+
     return (
         <div
             ref={setNodeRef}
@@ -64,10 +78,10 @@ const TimeSlot: React.FC<TimeSlotProps> = ({
                 }`}
             >
                 <SortableContext
-                    items={slotTasks.map(t => t.taskId)}
+                    items={sortedSlotTasks.map(t => t.taskId)}
                     strategy={verticalListSortingStrategy}
                 >
-                    {slotTasks.map(task =>
+                    {sortedSlotTasks.map(task =>
                         <TaskItem
                             key={task.taskId}
                             task={task}

@@ -138,20 +138,34 @@ const Drawer: React.FC = () => {
 // Sub-components for cleaner render
 
 const DroppableInbox: React.FC<{ tasks: DrawerTaskEntry[] }> = ({ tasks }) => {
-    const { toggleDrawerTask, deleteDrawerTask, updateDrawerTaskTitle } = useStore();
+    const { toggleDrawerTask, deleteDrawerTask, updateDrawerTaskTitle, tasks: allTasks } = useStore();
     const { setNodeRef, isOver } = useDroppable({
         id: 'drawer-inbox',
         data: { type: 'DRAWER_INBOX' }
     });
 
+    // Sort tasks: unfinished tasks first, completed tasks last
+    const sortedTasks = [...tasks].sort((a, b) => {
+        const taskA = allTasks[a.taskId];
+        const taskB = allTasks[b.taskId];
+
+        if (!taskA || !taskB) return 0;
+
+        // Unfinished tasks first
+        if (taskA.completed !== taskB.completed) {
+            return taskA.completed ? 1 : -1;
+        }
+        return 0; // Maintain original order for same completion status
+    });
+
     return (
         <div ref={setNodeRef} className={`space-y-1 rounded-md p-1 min-h-[50px] transition-colors ${isOver ? 'bg-primary/10 ring-1 ring-primary' : ''}`}>
             <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Inbox</h3>
-            {tasks.length === 0 && (
+            {sortedTasks.length === 0 && (
                 <p className="text-sm text-muted-foreground italic pl-2">No unassigned tasks</p>
             )}
-            <SortableContext items={tasks.map(t => t.taskId)} strategy={verticalListSortingStrategy}>
-                {tasks.map(task => (
+            <SortableContext items={sortedTasks.map(t => t.taskId)} strategy={verticalListSortingStrategy}>
+                {sortedTasks.map(task => (
                     <DrawerTaskItem
                         key={task.taskId}
                         taskEntry={task}
@@ -264,6 +278,7 @@ const DrawerFolderItem: React.FC<{
     onUpdateTaskTitle: (id: string, title: string) => void;
 }> = ({ folder, tasks, onToggleExpand, onDelete, onRename, onAddTask, onToggleTask, onDeleteTask, onUpdateTaskTitle }) => {
 
+    const allTasks = useStore(state => state.tasks);
     const { setNodeRef, isOver } = useDroppable({
         id: `drawer-folder-${folder.id}`,
         data: { type: 'DRAWER_FOLDER', folderId: folder.id }
@@ -272,6 +287,20 @@ const DrawerFolderItem: React.FC<{
     const [newTaskInput, setNewTaskInput] = useState('');
     const [isRenaming, setIsRenaming] = useState(false);
     const [renameValue, setRenameValue] = useState(folder.name);
+
+    // Sort tasks: unfinished tasks first, completed tasks last
+    const sortedTasks = [...tasks].sort((a, b) => {
+        const taskA = allTasks[a.taskId];
+        const taskB = allTasks[b.taskId];
+
+        if (!taskA || !taskB) return 0;
+
+        // Unfinished tasks first
+        if (taskA.completed !== taskB.completed) {
+            return taskA.completed ? 1 : -1;
+        }
+        return 0; // Maintain original order for same completion status
+    });
 
     const handleRenameSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -324,8 +353,8 @@ const DrawerFolderItem: React.FC<{
 
             {folder.isExpanded && (
                 <div className="ml-4 pl-2 border-l border-border space-y-1">
-                    <SortableContext items={tasks.map(t => t.taskId)} strategy={verticalListSortingStrategy}>
-                        {tasks.map(task => (
+                    <SortableContext items={sortedTasks.map(t => t.taskId)} strategy={verticalListSortingStrategy}>
+                        {sortedTasks.map(task => (
                             <DrawerTaskItem
                                 key={task.taskId}
                                 taskEntry={task}

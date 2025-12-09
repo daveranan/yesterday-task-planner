@@ -45,7 +45,19 @@ const Column: React.FC<ColumnProps> = ({ title, category, limit, tasks, allTasks
         return (globalTask.category || t.category) === category;
     });
 
-    const isLimitReached = !!limit && visibleTasks.length >= limit;
+    // Sort tasks: unfinished tasks first, completed tasks last
+    const sortedTasks = [...visibleTasks].sort((a, b) => {
+        const taskA = allTasks[a.taskId];
+        const taskB = allTasks[b.taskId];
+
+        // Unfinished tasks first
+        if (taskA.completed !== taskB.completed) {
+            return taskA.completed ? 1 : -1;
+        }
+        return 0; // Maintain original order for same completion status
+    });
+
+    const isLimitReached = !!limit && sortedTasks.length >= limit;
 
     const addNewTask = () => {
         if (!localNewTaskTitle.trim()) return;
@@ -72,17 +84,17 @@ const Column: React.FC<ColumnProps> = ({ title, category, limit, tasks, allTasks
             <div className="p-2 border-b border-border flex justify-between items-center">
                 <h3 className="font-semibold text-foreground text-sm">{title}</h3>
                 <span className="text-xs text-muted-foreground">
-                    {visibleTasks.length} {limit ? `| ${limit} max` : ''}
+                    {sortedTasks.length} {limit ? `| ${limit} max` : ''}
                 </span>
             </div>
 
             <div className="p-2 flex-1 overflow-y-auto scrollbar-style flex flex-col gap-1.5">
                 <SortableContext
-                    items={visibleTasks.map(t => t.taskId)}
+                    items={sortedTasks.map(t => t.taskId)}
                     strategy={verticalListSortingStrategy}
                 >
-                    {/* Only map over visible (incomplete and correctly categorized) tasks */}
-                    {visibleTasks.map((task, index) =>
+                    {/* Only map over sorted tasks (unfinished first) */}
+                    {sortedTasks.map((task, index) =>
                         <TaskItem
                             key={task.taskId} // Use taskId as key for consistency
                             index={index}
