@@ -57,6 +57,11 @@ const DailyPlanner: React.FC = () => {
         document.documentElement.classList.toggle('dark', settings.isDarkMode);
     }, [settings.isDarkMode]);
 
+    // Force defocus on mount
+    React.useEffect(() => {
+        (document.activeElement as HTMLElement)?.blur();
+    }, []);
+
     // Derived Data
     const currentDayData = days[currentDate] || { taskEntries: [], gratefulness: '', reflections: '' };
     const isToday = currentDate === getYYYYMMDD(new Date());

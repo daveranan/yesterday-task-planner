@@ -3,6 +3,7 @@ import { useStore } from '../store/useStore';
 import { CONFIG } from '../constants/config';
 import confetti from 'canvas-confetti';
 import { TaskEntry } from '../store/types';
+import { playSound } from '../utils/soundUtils';
 
 // Helper to check if input is focused
 const isInputFocused = () => {
@@ -287,13 +288,27 @@ export const useKeyboardNavigation = () => {
             if (grabbedTaskId) {
                 e.preventDefault(); // Block scrolling
                 switch (e.key) {
-                    case 'ArrowUp': handleGrabbedNavigation('up'); break;
-                    case 'ArrowDown': handleGrabbedNavigation('down'); break;
-                    case 'ArrowLeft': handleGrabbedNavigation('left'); break;
-                    case 'ArrowRight': handleGrabbedNavigation('right'); break;
+                    case 'ArrowUp':
+                        handleGrabbedNavigation('up');
+                        playSound('click');
+                        break;
+                    case 'ArrowDown':
+                        handleGrabbedNavigation('down');
+                        playSound('click');
+                        break;
+                    case 'ArrowLeft':
+                        handleGrabbedNavigation('left');
+                        playSound('click');
+                        break;
+                    case 'ArrowRight':
+                        handleGrabbedNavigation('right');
+                        playSound('click');
+                        break;
                     case 'g':
                     case 'Escape':
+                    case 'Enter': // Dropping with Enter is intuitive too
                         setGrabbedTaskId(null);
+                        playSound('pop');
                         break;
                 }
                 return;
@@ -341,15 +356,24 @@ export const useKeyboardNavigation = () => {
                         e.preventDefault(); // prevent scroll
                         // Trigger confetti
                         if (!task.completed) {
-                            // Find position of task? Hard without ref. 
-                            // Just center or random confetti?
-                            // User "with confetti".
-                            // Let's do a center burst or random.
-                            confetti({
-                                particleCount: 100,
-                                spread: 70,
-                                origin: { y: 0.6 }
-                            });
+                            const checkbox = document.getElementById(`checkbox-${activeTaskId}`);
+                            if (checkbox) {
+                                const rect = checkbox.getBoundingClientRect();
+                                const x = (rect.left + rect.width / 2) / window.innerWidth;
+                                const y = (rect.top + rect.height / 2) / window.innerHeight;
+                                confetti({
+                                    particleCount: 100,
+                                    spread: 70,
+                                    origin: { x, y }
+                                });
+                            } else {
+                                // Fallback
+                                confetti({
+                                    particleCount: 100,
+                                    spread: 70,
+                                    origin: { y: 0.6 }
+                                });
+                            }
                         }
                         toggleTask(activeTaskId);
                         break;
@@ -364,6 +388,7 @@ export const useKeyboardNavigation = () => {
                         break;
                     case 'g': // Enter Grab Mode
                         setGrabbedTaskId(activeTaskId);
+                        playSound('click');
                         break;
                 }
             }

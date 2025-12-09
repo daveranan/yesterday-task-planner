@@ -103,6 +103,20 @@ export const useStore = create<Store>((set, get) => ({
         });
     },
 
+    setWindowSize: (width: number, height: number) => {
+        set(state => {
+            const newSettings = {
+                ...state.settings,
+                windowWidth: width,
+                windowHeight: height
+            };
+            // Debounce save? Store updates frequent. But file write is synchronous in Electron usually if valid.
+            // Ideally we debounce at the component level, so here we just save.
+            saveDataToFile({ tasks: state.tasks, days: state.days, settings: newSettings });
+            return { settings: newSettings };
+        });
+    },
+
     // Keyboard & Selection
     updateShortcut: (actionId: string, newKey: string) => {
         set(state => {
@@ -123,11 +137,11 @@ export const useStore = create<Store>((set, get) => ({
     },
 
     setSelectedTaskId: (taskId: string | null) => {
-        set({ selectedTaskId: taskId });
+        set({ selectedTaskId: taskId, hoveredTaskId: null });
     },
 
     setHoveredTaskId: (taskId: string | null) => {
-        set({ hoveredTaskId: taskId });
+        set({ hoveredTaskId: taskId, selectedTaskId: null });
     },
 
     setGrabbedTaskId: (taskId: string | null) => {

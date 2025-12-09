@@ -134,13 +134,18 @@ export const TaskItemBase: React.FC<TaskItemBaseProps> = ({
         >
             {/* USE NEUTRAL: Icons and text colors adjusted for deeper contrast against neutral-800 */}
             <button
+                id={`checkbox-${task.taskId}`}
                 onPointerDown={(e) => e.stopPropagation()} // Prevent drag when clicking checkbox
                 onClick={(e) => {
                     if (!isCompleted) {
+                        const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                        const x = (rect.left + rect.width / 2) / window.innerWidth;
+                        const y = (rect.top + rect.height / 2) / window.innerHeight;
+
                         confetti({
                             particleCount: 50,
                             spread: 60,
-                            origin: { x: e.clientX / window.innerWidth, y: e.clientY / window.innerHeight }
+                            origin: { x, y }
                         });
                     }
                     toggleTask(task.taskId);

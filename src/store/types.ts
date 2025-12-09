@@ -26,6 +26,8 @@ export interface PlannerSettings {
     showGratefulness: boolean;
     showReflection: boolean;
     shortcuts: Record<string, string>;
+    windowWidth?: number;
+    windowHeight?: number;
 }
 
 export interface PlannerData {
@@ -53,6 +55,7 @@ export interface StoreActions {
     toggleSound: () => void;
     toggleGratefulness: () => void;
     toggleReflection: () => void;
+    setWindowSize: (width: number, height: number) => void; // New action
     addTask: (category: string, title: string) => void;
     setActiveColumn: (columnId: string | null) => void;
     setHoveredTaskId: (taskId: string | null) => void;
