@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { DrawerFolder, DrawerTaskEntry } from '../store/types';
 import { SortableContext, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import confetti from 'canvas-confetti';
 
 const Drawer: React.FC = () => {
     const {
@@ -58,15 +59,16 @@ const Drawer: React.FC = () => {
                 >
                     <div className="w-80 flex flex-col h-full">
                         {/* Header */}
-                        <div className="p-4 border-b border-border flex items-center justify-between flex-shrink-0">
-                            <h2 className="font-semibold text-lg flex items-center gap-2">
-                                <Icon name="Inbox" className="w-5 h-5" />
+                        {/* Header */}
+                        <div className="h-12 border-b border-border flex items-center justify-between px-4 flex-shrink-0 select-none" style={{ WebkitAppRegion: 'drag' } as React.CSSProperties}>
+                            <h2 className="font-semibold text-base flex items-center gap-2">
+                                <Icon name="Inbox" className="w-4 h-4" />
                                 Drawer
                             </h2>
                         </div>
 
                         {/* Content */}
-                        <div className="flex-1 overflow-y-auto p-4 space-y-6">
+                        <div className="flex-1 overflow-y-auto p-4 space-y-6 scrollbar-style">
 
                             {/* Inbox Input */}
                             <div className="space-y-2">
@@ -110,20 +112,22 @@ const Drawer: React.FC = () => {
                                 )}
 
                                 <div className="space-y-1">
-                                    {drawer.folders.map(folder => (
-                                        <DrawerFolderItem
-                                            key={folder.id}
-                                            folder={folder}
-                                            tasks={drawer.tasks.filter(t => t.folderId === folder.id)}
-                                            onToggleExpand={() => toggleDrawerFolder(folder.id)}
-                                            onDelete={() => deleteDrawerFolder(folder.id)}
-                                            onRename={(name) => updateDrawerFolder(folder.id, name)}
-                                            onAddTask={(title) => addDrawerTask(title, folder.id)}
-                                            onToggleTask={toggleDrawerTask}
-                                            onDeleteTask={deleteDrawerTask}
-                                            onUpdateTaskTitle={updateDrawerTaskTitle}
-                                        />
-                                    ))}
+                                    <SortableContext items={drawer.folders.map(f => f.id)} strategy={verticalListSortingStrategy}>
+                                        {drawer.folders.map(folder => (
+                                            <DrawerFolderItem
+                                                key={folder.id}
+                                                folder={folder}
+                                                tasks={drawer.tasks.filter(t => t.folderId === folder.id)}
+                                                onToggleExpand={() => toggleDrawerFolder(folder.id)}
+                                                onDelete={() => deleteDrawerFolder(folder.id)}
+                                                onRename={(name) => updateDrawerFolder(folder.id, name)}
+                                                onAddTask={(title) => addDrawerTask(title, folder.id)}
+                                                onToggleTask={toggleDrawerTask}
+                                                onDeleteTask={deleteDrawerTask}
+                                                onUpdateTaskTitle={updateDrawerTaskTitle}
+                                            />
+                                        ))}
+                                    </SortableContext>
                                 </div>
                             </div>
 
@@ -138,7 +142,7 @@ const Drawer: React.FC = () => {
 // Sub-components for cleaner render
 
 const DroppableInbox: React.FC<{ tasks: DrawerTaskEntry[] }> = ({ tasks }) => {
-    const { toggleDrawerTask, deleteDrawerTask, updateDrawerTaskTitle, tasks: allTasks } = useStore();
+    const { toggleDrawerTask, deleteDrawerTask, updateDrawerTaskTitle, tasks: allTasks, setHoveredTaskId } = useStore();
     const { setNodeRef, isOver } = useDroppable({
         id: 'drawer-inbox',
         data: { type: 'DRAWER_INBOX' }
@@ -172,6 +176,7 @@ const DroppableInbox: React.FC<{ tasks: DrawerTaskEntry[] }> = ({ tasks }) => {
                         onToggle={() => toggleDrawerTask(task.taskId)}
                         onDelete={() => deleteDrawerTask(task.taskId)}
                         onUpdateTitle={(title) => updateDrawerTaskTitle(task.taskId, title)}
+                        onHover={(isHovering) => setHoveredTaskId(isHovering ? task.taskId : null)}
                     />
                 ))}
             </SortableContext>
@@ -184,7 +189,8 @@ const DrawerTaskItem: React.FC<{
     onToggle: () => void;
     onDelete: () => void;
     onUpdateTitle: (title: string) => void;
-}> = ({ taskEntry, onToggle, onDelete, onUpdateTitle }) => {
+    onHover: (isHovering: boolean) => void;
+}> = ({ taskEntry, onToggle, onDelete, onUpdateTitle, onHover }) => {
     // Look up global task data
     const task = useStore(state => state.tasks[taskEntry.taskId]);
 
@@ -226,13 +232,33 @@ const DrawerTaskItem: React.FC<{
 
     return (
         <div
+            id={`task-${taskEntry.taskId}`}
             ref={setNodeRef}
             style={style}
             {...attributes}
             {...listeners}
             className="group flex items-center gap-2 p-1.5 rounded-md hover:bg-muted/50 text-sm touch-none"
+            onMouseEnter={() => onHover(true)}
+            onMouseLeave={() => onHover(false)}
         >
-            <button onClick={(e) => { e.stopPropagation(); onToggle(); }} className={`w-4 h-4 rounded-full border flex items-center justify-center flex-shrink-0 ${task.completed ? 'bg-primary border-primary' : 'border-muted-foreground'}`}>
+            <button
+                id={`checkbox-${taskEntry.taskId}`}
+                onClick={(e) => {
+                    e.stopPropagation();
+                    if (!task.completed) {
+                        const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                        const x = (rect.left + rect.width / 2) / window.innerWidth;
+                        const y = (rect.top + rect.height / 2) / window.innerHeight;
+                        confetti({
+                            particleCount: 50,
+                            spread: 60,
+                            origin: { x, y }
+                        });
+                    }
+                    onToggle();
+                }}
+                className={`w-4 h-4 rounded-full border flex items-center justify-center flex-shrink-0 ${task.completed ? 'bg-primary border-primary' : 'border-muted-foreground'}`}
+            >
                 {task.completed && <Icon name="Check" className="w-2.5 h-2.5 text-primary-foreground" />}
             </button>
 
@@ -278,11 +304,32 @@ const DrawerFolderItem: React.FC<{
     onUpdateTaskTitle: (id: string, title: string) => void;
 }> = ({ folder, tasks, onToggleExpand, onDelete, onRename, onAddTask, onToggleTask, onDeleteTask, onUpdateTaskTitle }) => {
 
+    const { setHoveredTaskId } = useStore();
     const allTasks = useStore(state => state.tasks);
-    const { setNodeRef, isOver } = useDroppable({
-        id: `drawer-folder-${folder.id}`,
+    const {
+        attributes,
+        listeners,
+        setNodeRef,
+        transform,
+        transition,
+        isDragging
+    } = useSortable({
+        id: folder.id,
         data: { type: 'DRAWER_FOLDER', folderId: folder.id }
     });
+
+
+
+    const { setNodeRef: setDroppableRef, isOver } = useDroppable({
+        id: `folder-drop-${folder.id}`,
+        data: { type: 'DRAWER_FOLDER_DROP', folderId: folder.id }
+    });
+
+    const style = {
+        transform: CSS.Translate.toString(transform),
+        transition,
+        opacity: isDragging ? 0.5 : 1
+    };
 
     const [newTaskInput, setNewTaskInput] = useState('');
     const [isRenaming, setIsRenaming] = useState(false);
@@ -319,16 +366,25 @@ const DrawerFolderItem: React.FC<{
     };
 
     return (
-        <div ref={setNodeRef} className={`space-y-1 rounded-md transition-colors ${isOver ? 'bg-primary/10 ring-1 ring-primary' : ''}`}>
-            <div className="flex items-center justify-between group rounded-md p-1 hover:bg-muted">
+        <div ref={setNodeRef} style={style} className={`space-y-1 rounded-md transition-colors`}>
+            <div
+                ref={setDroppableRef}
+                {...attributes}
+                {...listeners}
+                className={`flex items-center justify-between group rounded-md p-1 cursor-grab active:cursor-grabbing outline-none transition-colors ${isOver ? 'bg-primary/20 ring-1 ring-primary' : 'hover:bg-muted'}`}
+            >
                 <div className="flex items-center gap-1 flex-1 min-w-0">
-                    <button onClick={onToggleExpand} className="p-0.5 hover:bg-muted-foreground/10 rounded">
+                    <button
+                        onPointerDown={(e) => e.stopPropagation()} // Prevent drag conflict
+                        onClick={onToggleExpand}
+                        className="p-0.5 hover:bg-muted-foreground/10 rounded cursor-pointer"
+                    >
                         <Icon name={folder.isExpanded ? "ChevronDown" : "ChevronRight"} className="w-3 h-3 text-muted-foreground" />
                     </button>
                     <Icon name="Folder" className="w-3.5 h-3.5 text-blue-500" />
 
                     {isRenaming ? (
-                        <form onSubmit={handleRenameSubmit} className="flex-1">
+                        <form onSubmit={handleRenameSubmit} className="flex-1" onPointerDown={(e) => e.stopPropagation()}>
                             <input
                                 autoFocus
                                 value={renameValue}
@@ -342,10 +398,18 @@ const DrawerFolderItem: React.FC<{
                     )}
                 </div>
                 <div className="opacity-0 group-hover:opacity-100 flex items-center">
-                    <button onClick={() => setIsRenaming(true)} className="p-1 hover:text-blue-500">
+                    <button
+                        onPointerDown={(e) => e.stopPropagation()}
+                        onClick={() => setIsRenaming(true)}
+                        className="p-1 hover:text-blue-500 cursor-pointer"
+                    >
                         <Icon name="Edit2" className="w-3 h-3" />
                     </button>
-                    <button onClick={onDelete} className="p-1 hover:text-red-500">
+                    <button
+                        onPointerDown={(e) => e.stopPropagation()}
+                        onClick={onDelete}
+                        className="p-1 hover:text-red-500 cursor-pointer"
+                    >
                         <Icon name="Trash2" className="w-3 h-3" />
                     </button>
                 </div>
@@ -361,6 +425,7 @@ const DrawerFolderItem: React.FC<{
                                 onToggle={() => onToggleTask(task.taskId)}
                                 onDelete={() => onDeleteTask(task.taskId)}
                                 onUpdateTitle={(title) => onUpdateTaskTitle(task.taskId, title)}
+                                onHover={(isHovering) => setHoveredTaskId(isHovering ? task.taskId : null)}
                             />
                         ))}
                     </SortableContext>

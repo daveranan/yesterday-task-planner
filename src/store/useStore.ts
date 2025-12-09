@@ -245,52 +245,81 @@ export const useStore = create<Store>((set, get) => ({
 
     // Task Actions
     duplicateTask: (taskId: string) => {
-        const { currentDate, days, tasks } = get();
+        const { currentDate, days, tasks, drawer } = get();
         const task = tasks[taskId];
         if (!task) return;
 
+        // 1. Try finding in Current Day
         const currentDay = days[currentDate];
-        if (!currentDay) return;
+        const dayEntryIndex = currentDay ? currentDay.taskEntries.findIndex(t => t.taskId === taskId) : -1;
 
-        const entryIndex = currentDay.taskEntries.findIndex(t => t.taskId === taskId);
-        if (entryIndex === -1) return;
-
-        const newTaskId = Date.now().toString();
-        const newTaskGlobal: TaskGlobal = {
-            ...task,
-            title: `${task.title} (Copy)`,
-            createdOn: currentDate,
-            createdAt: Date.now(),
-            completed: false, // duplications are usually uncompleted
-        };
-
-        const originalEntry = currentDay.taskEntries[entryIndex];
-        const newEntry: TaskEntry = {
-            taskId: newTaskId,
-            category: originalEntry.category,
-            slotId: originalEntry.slotId,
-            rolledOverFrom: null,
-        };
-
-        set((state) => {
-            const past = addToHistory(state, state.past);
-            const updatedEntries = [...state.days[currentDate].taskEntries];
-            // Insert after original
-            updatedEntries.splice(entryIndex + 1, 0, newEntry);
-
-            const updatedDays = {
-                ...state.days,
-                [currentDate]: { ...currentDay, taskEntries: updatedEntries }
+        if (dayEntryIndex !== -1 && currentDay) {
+            // Duplicate Day Task
+            const newTaskId = Date.now().toString();
+            const newTaskGlobal: TaskGlobal = {
+                ...task,
+                title: `${task.title} (Copy)`,
+                createdOn: currentDate,
+                createdAt: Date.now(),
+                completed: false,
+            };
+            const originalEntry = currentDay.taskEntries[dayEntryIndex];
+            const newEntry: TaskEntry = {
+                taskId: newTaskId,
+                category: originalEntry.category,
+                slotId: originalEntry.slotId,
+                rolledOverFrom: null,
             };
 
-            const updatedTasks = { ...state.tasks, [newTaskId]: newTaskGlobal };
+            set((state) => {
+                const past = addToHistory(state, state.past, 'Duplicate Task');
+                const updatedEntries = [...state.days[currentDate].taskEntries];
+                updatedEntries.splice(dayEntryIndex + 1, 0, newEntry);
 
-            saveDataToFile({ tasks: updatedTasks, days: updatedDays, drawer: state.drawer, settings: state.settings });
+                const updatedDays = {
+                    ...state.days,
+                    [currentDate]: { ...currentDay, taskEntries: updatedEntries }
+                };
+                const updatedTasks = { ...state.tasks, [newTaskId]: newTaskGlobal };
+                saveDataToFile({ tasks: updatedTasks, days: updatedDays, drawer: state.drawer, settings: state.settings });
+                toast.success('Task duplicated');
+                return { tasks: updatedTasks, days: updatedDays, past, future: [] };
+            });
+            return;
+        }
 
-            toast.success('Task duplicated');
+        // 2. Try finding in Drawer
+        const drawerEntryIndex = drawer.tasks.findIndex(t => t.taskId === taskId);
+        if (drawerEntryIndex !== -1) {
+            const newTaskId = Date.now().toString();
+            const newTaskGlobal: TaskGlobal = {
+                ...task,
+                title: `${task.title} (Copy)`,
+                createdOn: currentDate,
+                createdAt: Date.now(),
+                completed: false,
+            };
+            const originalEntry = drawer.tasks[drawerEntryIndex];
+            const newDrawerEntry = {
+                taskId: newTaskId,
+                folderId: originalEntry.folderId,
+                addedAt: getYYYYMMDD(new Date())
+            };
 
-            return { tasks: updatedTasks, days: updatedDays, past, future: [] };
-        });
+            set((state) => {
+                const past = addToHistory(state, state.past, 'Duplicate Drawer Task');
+                const updatedDrawerTasks = [...state.drawer.tasks];
+                updatedDrawerTasks.splice(drawerEntryIndex + 1, 0, newDrawerEntry);
+
+                const updatedDrawer = { ...state.drawer, tasks: updatedDrawerTasks };
+                const updatedTasks = { ...state.tasks, [newTaskId]: newTaskGlobal };
+
+                saveDataToFile({ tasks: updatedTasks, days: state.days, drawer: updatedDrawer, settings: state.settings });
+                toast.success('Task duplicated');
+                return { tasks: updatedTasks, drawer: updatedDrawer, past, future: [] };
+            });
+            return;
+        }
     },
     addTask: (category: string, title: string) => {
         const { currentDate, days } = get();
@@ -372,7 +401,7 @@ export const useStore = create<Store>((set, get) => ({
 
     deleteTask: (taskId: string) => {
         set((state) => {
-            const past = addToHistory(state, state.past);
+            const past = addToHistory(state, state.past, 'Delete Task');
             const { [taskId]: _, ...restTasks } = state.tasks;
 
             const updatedDays = Object.entries(state.days).reduce((acc, [date, day]) => {
@@ -383,7 +412,13 @@ export const useStore = create<Store>((set, get) => ({
                 return acc;
             }, {} as Record<string, DayData>);
 
-            saveDataToFile({ tasks: restTasks, days: updatedDays, drawer: state.drawer });
+            // Also remove from Drawer if present
+            const updatedDrawer = {
+                ...state.drawer,
+                tasks: state.drawer.tasks.filter(t => t.taskId !== taskId)
+            };
+
+            saveDataToFile({ tasks: restTasks, days: updatedDays, drawer: updatedDrawer });
 
             toast('Task deleted', {
                 action: {
@@ -392,7 +427,7 @@ export const useStore = create<Store>((set, get) => ({
                 },
             });
 
-            return { tasks: restTasks, days: updatedDays, past, future: [] };
+            return { tasks: restTasks, days: updatedDays, drawer: updatedDrawer, past, future: [] };
         });
     },
 
@@ -773,13 +808,52 @@ export const useStore = create<Store>((set, get) => ({
         get().updateTaskTitle(taskId, newTitle);
     },
 
-    moveDrawerTask: (taskId: string, targetFolderId: string | null) => {
+    moveDrawerTask: (taskId: string, targetFolderId: string | null, targetIndex?: number) => {
         set((state) => {
             const past = addToHistory(state, state.past, 'Move Drawer Task');
-            const updatedTasks = state.drawer.tasks.map(t =>
-                t.taskId === taskId ? { ...t, folderId: targetFolderId } : t
-            );
+            let updatedTasks = [...state.drawer.tasks];
+            const taskIndex = updatedTasks.findIndex(t => t.taskId === taskId);
+            if (taskIndex === -1) return {};
+
+            // Remove from old position
+            const [task] = updatedTasks.splice(taskIndex, 1);
+            task.folderId = targetFolderId;
+
+            // If index is provided, insert at specific position relative to the filtered list
+            if (typeof targetIndex === 'number') {
+                const targetFolderTasks = updatedTasks.filter(t => t.folderId === targetFolderId);
+
+                if (targetIndex >= targetFolderTasks.length) {
+                    updatedTasks.push(task);
+                } else {
+                    const splitTask = targetFolderTasks[targetIndex];
+                    const splitGlobalIndex = updatedTasks.indexOf(splitTask);
+                    updatedTasks.splice(splitGlobalIndex, 0, task);
+                }
+            } else {
+                // Default: Append to end of list (or maybe top? usually end)
+                updatedTasks.push(task);
+            }
+
             const updatedDrawer = { ...state.drawer, tasks: updatedTasks };
+            saveDataToFile({ tasks: state.tasks, days: state.days, drawer: updatedDrawer });
+            return { drawer: updatedDrawer, past, future: [] };
+        });
+    },
+
+    reorderDrawerFolders: (activeId: string, overId: string) => {
+        set((state) => {
+            const past = addToHistory(state, state.past, 'Reorder Drawer Folders');
+            const oldIndex = state.drawer.folders.findIndex(f => f.id === activeId);
+            const newIndex = state.drawer.folders.findIndex(f => f.id === overId);
+
+            if (oldIndex === -1 || newIndex === -1 || oldIndex === newIndex) return {};
+
+            const updatedFolders = [...state.drawer.folders];
+            const [moved] = updatedFolders.splice(oldIndex, 1);
+            updatedFolders.splice(newIndex, 0, moved);
+
+            const updatedDrawer = { ...state.drawer, folders: updatedFolders };
             saveDataToFile({ tasks: state.tasks, days: state.days, drawer: updatedDrawer });
             return { drawer: updatedDrawer, past, future: [] };
         });

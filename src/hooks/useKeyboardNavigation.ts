@@ -304,7 +304,14 @@ export const useKeyboardNavigation = () => {
             }
 
             // Drawer Shortcuts
+            if (e.key === 'Tab' && !isInputFocused()) {
+                e.preventDefault();
+                useStore.getState().toggleDrawer();
+                return;
+            }
+
             if (matchesShortcut(e, shortcuts.openDrawer)) {
+                // Power user: Open and Focus
                 e.preventDefault();
                 openDrawerAndFocus();
                 return;

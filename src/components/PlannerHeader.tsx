@@ -54,7 +54,7 @@ const PlannerHeader: React.FC<PlannerHeaderProps> = ({
                     size="icon"
                     onClick={onToggleDrawer}
                     className={`h-8 w-8 ${isDrawerOpen ? 'bg-muted' : ''}`}
-                    title="Toggle Drawer (Ctrl+T)"
+                    title="Drawer (Tab)"
                 >
                     <Icon name="PanelLeft" className="w-5 h-5" />
                 </Button>

@@ -139,6 +139,7 @@ export interface StoreActions {
     deleteDrawerTask: (taskId: string) => void;
     updateDrawerTaskTitle: (taskId: string, newTitle: string) => void;
     moveDrawerTask: (taskId: string, targetFolderId: string | null, targetIndex?: number) => void; // null = inbox
+    reorderDrawerFolders: (activeId: string, overId: string) => void;
     moveTaskToDrawer: (taskId: string, targetFolderId: string | null, targetIndex?: number) => void;
     moveTaskFromDrawerToDay: (taskId: string, date: string, category: string, index?: number, slotId?: string) => void;
     // Schedule Actions

@@ -43,6 +43,7 @@ const DailyPlanner: React.FC = () => {
         toggleDrawer,
         moveTaskToDrawer,
         moveDrawerTask,
+        reorderDrawerFolders,
         moveTaskFromDrawerToDay,
     } = useStore();
 
@@ -177,32 +178,58 @@ const DailyPlanner: React.FC = () => {
         const overData = over.data.current;
         const activeData = active.data.current;
 
-        // Handle Drop on Drawer Targets
-        if (overData?.type === 'DRAWER_INBOX' || overData?.type === 'DRAWER_FOLDER') {
-            const folderId = overData.folderId || null;
-            moveTaskToDrawer(active.id as string, folderId);
-            return;
-        }
+
 
         // If sorting within same list (and it's a sortable list)
         if (active.id === over.id) return;
 
         const isDrawerTask = activeData?.type === 'DRAWER_TASK';
 
+        // Drawer Folder Reordering
+        if (activeData?.type === 'DRAWER_FOLDER' && overData?.type === 'DRAWER_FOLDER') {
+            if (active.id !== over.id) {
+                reorderDrawerFolders(active.id as string, over.id as string);
+            }
+            return;
+        }
+
         // Helper: Check if dropping ON a drawer task (target is task in drawer)
         if (overData?.type === 'DRAWER_TASK') {
             const targetFolderId = overData.folderId || null;
+            const overTaskId = overData.taskId || over.id;
 
             if (isDrawerTask) {
                 // Reorder / Move within Drawer
-                // Only move if folder is different. Reorder in same folder is visual only for now (unless we add reorder action)
-                if (activeData.folderId !== targetFolderId) {
-                    moveDrawerTask(active.id as string, targetFolderId);
-                }
+                // Calculate index relative to the target folder's list
+                const drawerTasks = useStore.getState().drawer.tasks;
+                const targetFolderTasks = drawerTasks.filter(t => t.folderId === targetFolderId);
+                const overIndex = targetFolderTasks.findIndex(t => t.taskId === overTaskId);
+
+                moveDrawerTask(
+                    active.id as string,
+                    targetFolderId,
+                    overIndex !== -1 ? overIndex : undefined
+                );
             } else {
                 // Board Task -> Drawer Task (equivalent to dropping in Folder)
                 moveTaskToDrawer(active.id as string, targetFolderId);
             }
+            return;
+        }
+
+        // Handle Drop on Drawer Targets (Inbox or Folder) - Catch-all for non-task drops inside drawer
+        if (overData?.type === 'DRAWER_INBOX' || overData?.type === 'DRAWER_FOLDER' || overData?.type === 'DRAWER_FOLDER_DROP') {
+            // If dragging a folder, we already handled reordering above. 
+            // If we are here, it means we are dragging a folder ONTO a folder but maybe didn't trigger reorder? 
+            // OR we are dragging a folder onto INBOX.
+            if (activeData?.type === 'DRAWER_FOLDER') {
+                // Folder dropped on Folder (handled by reorder check mostly, but if no change, just return)
+                // Or Inbox (can't put folder in inbox)
+                return;
+            }
+
+            const folderId = overData.folderId || null;
+            moveTaskToDrawer(active.id as string, folderId);
             return;
         }
 
@@ -371,22 +398,47 @@ const DailyPlanner: React.FC = () => {
             </div>
 
             <DragOverlay>
-                {activeId && activeTaskEntry ? (
-                    <div className="opacity-90 rotate-2 cursor-grabbing pointer-events-none">
-                        <TaskItemBase
-                            task={activeTaskEntry}
-                            allTasks={allTasks}
-                            toggleTask={() => { }} // No-op during drag
-                            deleteTask={() => { }} // No-op during drag
-                            handleEditTask={() => { }} // No-op during drag
-                            hoveredTaskId={null}
-                            setHoveredTaskId={() => { }}
-                            grabbedTaskId={null} // Overlay shouldn't show grabbed state specifically, or maybe yes? But drag overrides grab visual.
-                            editingTaskId={null}
-                            setNodeRef={() => { }} // dummy
-                            isOverlay
-                        />
-                    </div>
+                {activeId ? (
+                    activeTaskEntry ? (
+                        <div className="opacity-90 rotate-2 cursor-grabbing pointer-events-none">
+                            <TaskItemBase
+                                task={activeTaskEntry}
+                                allTasks={allTasks}
+                                toggleTask={() => { }} // No-op during drag
+                                deleteTask={() => { }} // No-op during drag
+                                handleEditTask={() => { }} // No-op during drag
+                                hoveredTaskId={null}
+                                setHoveredTaskId={() => { }}
+                                grabbedTaskId={null} // Overlay shouldn't show grabbed state specifically, or maybe yes? But drag overrides grab visual.
+                                editingTaskId={null}
+                                setNodeRef={() => { }} // dummy
+                                isOverlay
+                            />
+                        </div>
+                    ) : (
+                        // Check for Folder
+                        (() => {
+                            const folder = useStore.getState().drawer.folders.find(f => f.id === activeId);
+                            if (folder) {
+                                return (
+                                    <div className="flex items-center gap-2 p-2 rounded-md bg-card border border-border shadow-xl opacity-90 rotate-2 w-48 pointer-events-none">
+                                        <div className="flex items-center gap-1 flex-1 min-w-0">
+                                            <div className="p-0.5 rounded">
+                                                {/* Using generic SVG since Icon component might need import or passing. 
+                                                     Actually Icon is imported in DailyPlanner? No, in Drawer. 
+                                                     DailyPlanner doesn't look like it imports Icon. 
+                                                     Let's check imports. */}
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3 text-muted-foreground"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                                            </div>
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5 text-blue-500"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 2H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"></path></svg>
+                                            <span className="text-sm font-medium truncate flex-1">{folder.name}</span>
+                                        </div>
+                                    </div>
+                                );
+                            }
+                            return null;
+                        })()
+                    )
                 ) : null}
             </DragOverlay>
 
