@@ -316,13 +316,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
                                             value={settings.schedule.skipHour}
                                             onChange={(e) => updateScheduleSettings({ skipHour: parseInt(e.target.value) })}
                                         />
-                                        <Input
-                                            type="number"
-                                            min={settings.schedule.startHour}
-                                            max={settings.schedule.endHour - 1}
-                                            value={settings.schedule.skipHour}
-                                            onChange={(e) => updateScheduleSettings({ skipHour: parseInt(e.target.value) })}
-                                        />
                                     </div>
                                 )}
 
