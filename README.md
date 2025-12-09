@@ -1,9 +1,8 @@
 # Yesterday
 
-<img width="1512" height="1033" alt="yesterday-screenshot" src="https://github.com/user-attachments/assets/59daa53f-11f5-4a7f-a46a-4aba082726b1" />
-
-
 A beautiful, opinionated daily offline task planner.
+
+<img width="1512" height="1033" alt="yesterday-screenshot" src="https://github.com/user-attachments/assets/59daa53f-11f5-4a7f-a46a-4aba082726b1" />
 
 ## Features
 
