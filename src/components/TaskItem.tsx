@@ -90,7 +90,7 @@ export const TaskItemBase: React.FC<TaskItemBaseProps> = ({
                 ref={setNodeRef}
                 style={style}
                 /* NOTE: Do NOT apply style (transform) here. We want the placeholder to stay in the list. */
-                className="bg-neutral-800 p-2 rounded border border-neutral-600 opacity-50 shadow-xl h-[42px]"
+                className="bg-white dark:bg-neutral-800 p-2 rounded border border-neutral-200 dark:border-neutral-600 opacity-50 shadow-xl h-[42px]"
             />
         );
     }
@@ -102,7 +102,7 @@ export const TaskItemBase: React.FC<TaskItemBaseProps> = ({
             {...listeners}
             {...attributes}
             /* USE NEUTRAL: Task item background/border */
-            className={`group flex items-center gap-2 bg-neutral-800 p-2 rounded border border-neutral-700 shadow-sm cursor-grab active:cursor-grabbing hover:border-neutral-500 hover:shadow-md hover:scale-[1.01] transition-all duration-200 touch-none ${isOverlay ? 'opacity-90 rotate-2 scale-105 shadow-xl' : ''}`}
+            className={`group flex items-center gap-2 bg-white dark:bg-neutral-800 p-2 rounded border border-neutral-200 dark:border-neutral-700 shadow-sm cursor-grab active:cursor-grabbing hover:border-neutral-400 dark:hover:border-neutral-500 hover:shadow-md hover:scale-[1.01] transition-all duration-200 touch-none ${isOverlay ? 'opacity-90 rotate-2 scale-105 shadow-xl' : ''}`}
         >
             {/* USE NEUTRAL: Icons and text colors adjusted for deeper contrast against neutral-800 */}
             {/* Toggle uses the unique taskId to update the global task object */}
@@ -120,7 +120,7 @@ export const TaskItemBase: React.FC<TaskItemBaseProps> = ({
                 }}
                 className="text-neutral-400 hover:text-neutral-300"
             >
-                {isCompleted ? <Icon name="CheckSquare" className="w-5 h-5 text-neutral-400" /> : <Icon name="Square" className="w-5 h-5 text-neutral-400" />}
+                {isCompleted ? <Icon name="CheckSquare" className="w-5 h-5 text-neutral-400" /> : <Icon name="Square" className="w-5 h-5 text-neutral-400 dark:text-neutral-500" />}
             </button>
 
             {isEditing ? (
@@ -131,12 +131,12 @@ export const TaskItemBase: React.FC<TaskItemBaseProps> = ({
                     onChange={(e) => setLocalTitle(e.target.value)}
                     onBlur={saveEdit}
                     onKeyDown={handleKeyDown}
-                    className="flex-1 text-sm p-0 bg-neutral-700 border border-neutral-600 rounded focus:ring-1 focus:ring-neutral-400 focus:border-neutral-500 focus:outline-none text-neutral-100"
+                    className="flex-1 text-sm p-0 bg-neutral-100 dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded focus:ring-1 focus:ring-neutral-400 focus:border-neutral-500 focus:outline-none text-neutral-900 dark:text-neutral-100"
                 />
             ) : (
                 // Display the title from the global task object
                 <span
-                    className={`flex-1 text-sm cursor-text ${isCompleted ? 'line-through text-neutral-500' : 'text-neutral-100'}`}
+                    className={`flex-1 text-sm cursor-text ${isCompleted ? 'line-through text-neutral-400 dark:text-neutral-500' : 'text-neutral-900 dark:text-neutral-100'}`}
                     onDoubleClick={() => {
                         if (!isCompleted) setIsEditing(true);
                     }}
@@ -147,7 +147,7 @@ export const TaskItemBase: React.FC<TaskItemBaseProps> = ({
 
             {task.rolledOverFrom && (
                 <span
-                    className="text-xs text-yellow-500 font-semibold italic bg-neutral-700 px-2 py-0.5 rounded-full whitespace-nowrap"
+                    className="text-xs text-yellow-600 dark:text-yellow-500 font-semibold italic bg-neutral-200 dark:bg-neutral-700 px-2 py-0.5 rounded-full whitespace-nowrap"
                     title={`Originally created on ${task.rolledOverFrom}`}
                 >
                     <Icon name="Rollover" className="w-3 h-3 inline mr-1" />

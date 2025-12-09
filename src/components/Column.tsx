@@ -54,15 +54,15 @@ const Column: React.FC<ColumnProps> = ({ title, category, limit, tasks, allTasks
             className={`flex-1 min-w-[200px] flex flex-col h-full rounded-xl border-dashed transition-all duration-150
                 ${isOver
                     /* USE NEUTRAL: Darker drag over feedback */
-                    ? 'bg-neutral-800 border-neutral-500 border-2 shadow-lg ring-1 ring-neutral-700'
+                    ? 'bg-neutral-100 dark:bg-neutral-800 border-neutral-400 dark:border-neutral-500 border-2 shadow-lg ring-1 ring-neutral-300 dark:ring-neutral-700'
                     /* USE NEUTRAL: Set default column background to neutral-900 (from parent) and darker border */
-                    : 'bg-neutral-900/50 border-neutral-800 border-2'
+                    : 'bg-white/50 dark:bg-neutral-900/50 border-neutral-200 dark:border-neutral-800 border-2'
                 }`}
         >
             {/* USE NEUTRAL: Darken header border */}
-            <div className="p-3 border-b border-neutral-800 flex justify-between items-center">
-                <h3 className="font-semibold text-neutral-100 text-sm">{title}</h3>
-                <span className="text-xs text-neutral-400">{limit} max</span>
+            <div className="p-3 border-b border-neutral-200 dark:border-neutral-800 flex justify-between items-center">
+                <h3 className="font-semibold text-neutral-900 dark:text-neutral-100 text-sm">{title}</h3>
+                <span className="text-xs text-neutral-500 dark:text-neutral-400">{limit} max</span>
             </div>
 
             <div className="p-3 flex-1 overflow-y-auto scrollbar-style flex flex-col gap-2">
@@ -91,11 +91,11 @@ const Column: React.FC<ColumnProps> = ({ title, category, limit, tasks, allTasks
                         className={`
                             w-full text-sm px-2 py-1 
                             /* USE NEUTRAL: Input background to neutral-800, border to neutral-700 */
-                            bg-neutral-800 border-b border-neutral-700 
-                            focus:bg-neutral-900 focus:border-neutral-600 focus:ring-neutral-600 focus:ring-1 
+                            bg-neutral-100 dark:bg-neutral-800 border-b border-neutral-300 dark:border-neutral-700 
+                            focus:bg-white dark:focus:bg-neutral-900 focus:border-neutral-400 dark:focus:border-neutral-600 focus:ring-neutral-400 dark:focus:ring-neutral-600 focus:ring-1 
                             rounded-t-md transition-all duration-150 focus:outline-none
-                            placeholder-neutral-500 text-neutral-100
-                            ${isLimitReached ? 'text-neutral-400 cursor-not-allowed' : ''}
+                            placeholder-neutral-400 dark:placeholder-neutral-500 text-neutral-900 dark:text-neutral-100
+                            ${isLimitReached ? 'text-neutral-400 dark:text-neutral-500 cursor-not-allowed' : ''}
                         `}
                         value={localNewTaskTitle}
                         onChange={(e) => setLocalNewTaskTitle(e.target.value)}

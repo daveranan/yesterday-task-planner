@@ -35,7 +35,7 @@ const TaskBoard: React.FC<TaskBoardProps> = ({
     return (
         <div className="flex-[3] flex flex-col gap-6">
             <div className="flex-[2] flex gap-6 min-h-0">
-                <div className="flex-1 bg-neutral-900 rounded-xl shadow-lg border border-neutral-800 overflow-hidden">
+                <div className="flex-1 bg-white dark:bg-neutral-900 rounded-xl shadow-lg border border-neutral-200 dark:border-neutral-800 overflow-hidden">
                     <Column
                         title="Must-Do's"
                         category="must-do"
@@ -48,7 +48,7 @@ const TaskBoard: React.FC<TaskBoardProps> = ({
                         handleEditTask={onEditTask}
                     />
                 </div>
-                <div className="flex-1 bg-neutral-900 rounded-xl shadow-lg border border-neutral-800 overflow-hidden">
+                <div className="flex-1 bg-white dark:bg-neutral-900 rounded-xl shadow-lg border border-neutral-200 dark:border-neutral-800 overflow-hidden">
                     <Column
                         title="Communications"
                         category="communications"
@@ -63,7 +63,7 @@ const TaskBoard: React.FC<TaskBoardProps> = ({
                 </div>
             </div>
 
-            <div className="flex-[3] bg-neutral-900 rounded-xl shadow-lg border border-neutral-800 overflow-hidden min-h-0">
+            <div className="flex-[3] bg-white dark:bg-neutral-900 rounded-xl shadow-lg border border-neutral-200 dark:border-neutral-800 overflow-hidden min-h-0">
                 <Column
                     title="To-Do's"
                     category="todo"
