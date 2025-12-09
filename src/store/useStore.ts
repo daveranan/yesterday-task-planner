@@ -29,7 +29,9 @@ const getInitialState = (): Partial<StoreState> => {
     const data = loadDataFromFile();
     // Ensure minimal structure exists
     if (!data.tasks) data.tasks = {};
+    if (!data.tasks) data.tasks = {};
     if (!data.days) data.days = {};
+    if (!data.drawer) data.drawer = { folders: [], tasks: [] };
 
     const customSavePath = getCustomSavePath();
 
@@ -64,6 +66,7 @@ export const useStore = create<Store>((set, get) => ({
     settings: initialState.settings!, // We ensured it exists in getInitialState
     tasks: initialState.tasks || {},
     days: initialState.days || {},
+    drawer: initialState.drawer || { folders: [], tasks: [] },
     past: [],
     future: [],
     activeColumnId: null,
@@ -553,6 +556,241 @@ export const useStore = create<Store>((set, get) => ({
         });
 
         console.log(`Rollover executed for ${dateToCheck}. Added ${newRollovers.length} tasks.`);
+    },
+
+    // --- Drawer Actions ---
+
+    toggleDrawer: () => {
+        set((state) => {
+            const newSettings = { ...state.settings, isDrawerOpen: !state.settings.isDrawerOpen };
+            saveSettingsToFile(newSettings);
+            return { settings: newSettings };
+        });
+    },
+
+    addDrawerFolder: (name: string) => {
+        set((state) => {
+            const past = addToHistory(state, state.past, 'Add Drawer Folder');
+            const newFolder = {
+                id: Date.now().toString(),
+                name,
+                isExpanded: true
+            };
+            const updatedDrawer = {
+                ...state.drawer,
+                folders: [...state.drawer.folders, newFolder]
+            };
+            saveDataToFile({ tasks: state.tasks, days: state.days, drawer: updatedDrawer });
+            return { drawer: updatedDrawer, past, future: [] };
+        });
+    },
+
+    deleteDrawerFolder: (folderId: string) => {
+        set((state) => {
+            const past = addToHistory(state, state.past, 'Delete Drawer Folder');
+            // Delete folder and move tasks to Inbox (null folderId)
+            const updatedFolders = state.drawer.folders.filter(f => f.id !== folderId);
+            const updatedTasks = state.drawer.tasks.map(t =>
+                t.folderId === folderId ? { ...t, folderId: null } : t
+            );
+
+            const updatedDrawer = {
+                folders: updatedFolders,
+                tasks: updatedTasks
+            };
+            saveDataToFile({ tasks: state.tasks, days: state.days, drawer: updatedDrawer });
+            return { drawer: updatedDrawer, past, future: [] };
+        });
+    },
+
+    toggleDrawerFolder: (folderId: string) => {
+        set((state) => {
+            const updatedFolders = state.drawer.folders.map(f =>
+                f.id === folderId ? { ...f, isExpanded: !f.isExpanded } : f
+            );
+            const updatedDrawer = { ...state.drawer, folders: updatedFolders };
+            // Folders expansion state is purely UI usually, but we persist it in data struct so valid to save.
+            saveDataToFile({ tasks: state.tasks, days: state.days, drawer: updatedDrawer });
+            return { drawer: updatedDrawer };
+        });
+    },
+
+    updateDrawerFolder: (folderId: string, name: string) => {
+        set((state) => {
+            const past = addToHistory(state, state.past, 'Rename Drawer Folder');
+            const updatedFolders = state.drawer.folders.map(f =>
+                f.id === folderId ? { ...f, name } : f
+            );
+            const updatedDrawer = { ...state.drawer, folders: updatedFolders };
+            saveDataToFile({ tasks: state.tasks, days: state.days, drawer: updatedDrawer });
+            return { drawer: updatedDrawer, past, future: [] };
+        });
+    },
+
+    addDrawerTask: (title: string, folderId: string | null) => {
+        set((state) => {
+            const past = addToHistory(state, state.past, 'Add Drawer Task');
+            const currentDate = getYYYYMMDD(new Date());
+
+            // Create Global Task
+            const newTaskId = Date.now().toString();
+            const newTaskGlobal: TaskGlobal = {
+                title,
+                createdOn: currentDate,
+                completed: false,
+                category: 'drawer', // Marker category
+            };
+
+            // Create Drawer Entry
+            const newDrawerEntry = {
+                taskId: newTaskId,
+                folderId,
+                addedAt: currentDate
+            };
+
+            const updatedTasks = { ...state.tasks, [newTaskId]: newTaskGlobal };
+            const updatedDrawer = {
+                ...state.drawer,
+                tasks: [...state.drawer.tasks, newDrawerEntry]
+            };
+
+            saveDataToFile({ tasks: updatedTasks, days: state.days, drawer: updatedDrawer });
+            return { tasks: updatedTasks, drawer: updatedDrawer, past, future: [] };
+        });
+    },
+
+    toggleDrawerTask: (taskId: string) => {
+        // Just wraps toggleTask but we might want history context?
+        // Actually toggleTask is generic enough.
+        get().toggleTask(taskId);
+    },
+
+    deleteDrawerTask: (taskId: string) => {
+        set((state) => {
+            const past = addToHistory(state, state.past, 'Delete Drawer Task');
+
+            // Remove from Drawer List
+            const updatedDrawerTasks = state.drawer.tasks.filter(t => t.taskId !== taskId);
+            const updatedDrawer = { ...state.drawer, tasks: updatedDrawerTasks };
+
+            // Optional: Remove from global tasks? 
+            // If we treat drawer as just a view, maybe we should keep it unless explicitly deleted?
+            // Use case: "Delete from Drawer" -> likely "Archive/Delete".
+            // Let's delete it fully like normal delete.
+            const { [taskId]: _, ...restTasks } = state.tasks;
+
+            // Also ensure it's gone from any days (if it was somehow there too)
+            const updatedDays = Object.entries(state.days).reduce((acc, [date, day]) => {
+                acc[date] = {
+                    ...day,
+                    taskEntries: day.taskEntries.filter(t => t.taskId !== taskId)
+                };
+                return acc;
+            }, {} as Record<string, DayData>);
+
+
+            saveDataToFile({ tasks: restTasks, days: updatedDays, drawer: updatedDrawer });
+            return { tasks: restTasks, days: updatedDays, drawer: updatedDrawer, past, future: [] };
+        });
+    },
+
+    updateDrawerTaskTitle: (taskId: string, newTitle: string) => {
+        get().updateTaskTitle(taskId, newTitle);
+    },
+
+    moveDrawerTask: (taskId: string, targetFolderId: string | null) => {
+        set((state) => {
+            const past = addToHistory(state, state.past, 'Move Drawer Task');
+            const updatedTasks = state.drawer.tasks.map(t =>
+                t.taskId === taskId ? { ...t, folderId: targetFolderId } : t
+            );
+            const updatedDrawer = { ...state.drawer, tasks: updatedTasks };
+            saveDataToFile({ tasks: state.tasks, days: state.days, drawer: updatedDrawer });
+            return { drawer: updatedDrawer, past, future: [] };
+        });
+    },
+
+    moveTaskToDrawer: (taskId: string, targetFolderId: string | null) => {
+        set((state) => {
+            const past = addToHistory(state, state.past, 'Move Task To Drawer');
+            const currentDate = getYYYYMMDD(new Date());
+
+            // 1. Remove from all Days (clean rollover)
+            const updatedDays = Object.entries(state.days).reduce((acc, [date, day]) => {
+                acc[date] = {
+                    ...day,
+                    taskEntries: day.taskEntries.filter(t => t.taskId !== taskId)
+                };
+                return acc;
+            }, {} as Record<string, DayData>);
+
+            // 2. Add to Drawer (if not exists)
+            let updatedDrawerTasks = [...state.drawer.tasks];
+            if (!updatedDrawerTasks.find(t => t.taskId === taskId)) {
+                updatedDrawerTasks.push({
+                    taskId,
+                    folderId: targetFolderId,
+                    addedAt: currentDate
+                });
+            } else {
+                // Update folder if already there
+                updatedDrawerTasks = updatedDrawerTasks.map(t =>
+                    t.taskId === taskId ? { ...t, folderId: targetFolderId } : t
+                );
+            }
+
+            const updatedDrawer = { ...state.drawer, tasks: updatedDrawerTasks };
+
+            // 3. Update Global Category for housekeeping
+            const updatedTasksGlobal = {
+                ...state.tasks,
+                [taskId]: { ...state.tasks[taskId], category: 'drawer' }
+            };
+
+            saveDataToFile({ tasks: updatedTasksGlobal, days: updatedDays, drawer: updatedDrawer });
+            return { tasks: updatedTasksGlobal, days: updatedDays, drawer: updatedDrawer, past, future: [] };
+        });
+    },
+
+    moveTaskFromDrawerToDay: (taskId: string, date: string, category: string, index?: number, slotId?: string) => {
+        set((state) => {
+            const past = addToHistory(state, state.past, 'Move Task From Drawer');
+
+            // 1. Remove from Drawer
+            const updatedDrawerTasks = state.drawer.tasks.filter(t => t.taskId !== taskId);
+            const updatedDrawer = { ...state.drawer, tasks: updatedDrawerTasks };
+
+            // 2. Update Global Category
+            const updatedTasksGlobal = {
+                ...state.tasks,
+                [taskId]: { ...state.tasks[taskId], category }
+            };
+
+            // 3. Add to Day
+            const dayData = state.days[date] || { taskEntries: [], gratefulness: '', reflections: '' };
+            const newEntry: TaskEntry = {
+                taskId,
+                category,
+                // Use provided slotId, or default for scheduled, or null
+                slotId: slotId || (category === 'scheduled' ? '09:00' : null),
+                rolledOverFrom: null
+            };
+
+            const updatedEntries = [...dayData.taskEntries];
+            if (typeof index === 'number' && index >= 0 && index <= updatedEntries.length) {
+                updatedEntries.splice(index, 0, newEntry);
+            } else {
+                updatedEntries.push(newEntry);
+            }
+
+            const updatedDays = {
+                ...state.days,
+                [date]: { ...dayData, taskEntries: updatedEntries }
+            };
+
+            saveDataToFile({ tasks: updatedTasksGlobal, days: updatedDays, drawer: updatedDrawer });
+            return { tasks: updatedTasksGlobal, days: updatedDays, drawer: updatedDrawer, past, future: [] };
+        });
     }
 
 }));

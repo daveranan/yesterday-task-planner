@@ -1,10 +1,10 @@
 import React, { MouseEventHandler } from 'react';
 import {
-    Plus, Clock, Trash2, Calendar, ChevronLeft, ChevronRight,
-    CheckSquare, Square, Sun, Moon, Target, Edit, LucideProps,
+    Plus, Clock, Trash2, Calendar, ChevronLeft, ChevronRight, ChevronDown,
+    CheckSquare, Square, Sun, Moon, Target, Edit, LucideProps, Check,
     Volume2, VolumeX, Heart, HeartOff, BookOpen, BookX,
     Keyboard, X, Settings, Sliders, HardDrive, Power,
-    Minus, Maximize, Copy
+    Minus, Maximize, Copy, Inbox, Folder, Edit2, PanelLeft
 } from 'lucide-react';
 
 const RolloverIcon = (props: LucideProps) => (
@@ -16,12 +16,12 @@ const RolloverIcon = (props: LucideProps) => (
 );
 
 const icons = {
-    Plus, Clock, Trash2, Calendar, ChevronLeft, ChevronRight,
-    CheckSquare, Square, Sun, Moon, Target, Edit,
+    Plus, Clock, Trash2, Calendar, ChevronLeft, ChevronRight, ChevronDown,
+    CheckSquare, Square, Sun, Moon, Target, Edit, Check,
     Rollover: RolloverIcon,
     Volume2, VolumeX, Heart, HeartOff, BookOpen, BookX,
     Keyboard, X, Settings, Sliders, HardDrive, Power,
-    Minus, Maximize, Copy
+    Minus, Maximize, Copy, Inbox, Folder, Edit2, PanelLeft
 };
 
 export type IconName = keyof typeof icons;

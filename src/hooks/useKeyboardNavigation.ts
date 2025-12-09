@@ -251,6 +251,18 @@ export const useKeyboardNavigation = () => {
         }
     }, []);
 
+    const openDrawerAndFocus = useCallback(() => {
+        const { isDrawerOpen } = useStore.getState().settings;
+        if (!isDrawerOpen) {
+            useStore.getState().toggleDrawer();
+        }
+        // Focus logic: wait for animation/render
+        setTimeout(() => {
+            const input = document.getElementById('drawer-new-task-input');
+            input?.focus();
+        }, 50); // Small delay for React render
+    }, []);
+
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -288,8 +300,22 @@ export const useKeyboardNavigation = () => {
                 return;
             }
 
-            // Create Task in Active Column
+            // Drawer Shortcuts
+            if (matchesShortcut(e, shortcuts.openDrawer)) {
+                e.preventDefault();
+                openDrawerAndFocus();
+                return;
+            }
+
+            // Create Task in Active Column or Drawer
             if (matchesShortcut(e, shortcuts.newTask)) {
+                // If checking hovered task (N on hover) -> Open Drawer
+                if (hoveredTaskId) {
+                    e.preventDefault();
+                    openDrawerAndFocus();
+                    return;
+                }
+
                 if (activeColumnId) {
                     e.preventDefault();
                     const inputId = `new-task-input-${activeColumnId}`;

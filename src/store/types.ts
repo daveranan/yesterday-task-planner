@@ -20,6 +20,18 @@ export interface DayData {
     rolloverComplete?: boolean;
 }
 
+export interface DrawerFolder {
+    id: string;
+    name: string;
+    isExpanded: boolean;
+}
+
+export interface DrawerTaskEntry {
+    taskId: string;
+    folderId: string | null; // null for root/inbox
+    addedAt: string;
+}
+
 export interface PlannerSettings {
     isDarkMode: boolean;
     soundEnabled: boolean;
@@ -29,17 +41,23 @@ export interface PlannerSettings {
     windowWidth?: number;
     windowHeight?: number;
     savePath?: string;
+    isDrawerOpen?: boolean;
 }
 
 export interface PlannerData {
     tasks: Record<string, TaskGlobal>;
     days: Record<string, DayData>;
     settings: PlannerSettings;
+    drawer: {
+        folders: DrawerFolder[];
+        tasks: DrawerTaskEntry[];
+    };
 }
 
 export interface HistorySnapshot {
     tasks: Record<string, TaskGlobal>;
     days: Record<string, DayData>;
+    actionDescription?: string;
 }
 
 export interface StoreState extends PlannerData {
@@ -86,6 +104,20 @@ export interface StoreActions {
     updateDayData: (updates: Partial<DayData>) => void;
     undo: () => void;
     redo: () => void;
+
+    // Drawer Actions
+    toggleDrawer: () => void;
+    addDrawerFolder: (name: string) => void;
+    deleteDrawerFolder: (folderId: string) => void;
+    toggleDrawerFolder: (folderId: string) => void;
+    updateDrawerFolder: (folderId: string, name: string) => void;
+    addDrawerTask: (title: string, folderId: string | null) => void;
+    toggleDrawerTask: (taskId: string) => void;
+    deleteDrawerTask: (taskId: string) => void;
+    updateDrawerTaskTitle: (taskId: string, newTitle: string) => void;
+    moveDrawerTask: (taskId: string, targetFolderId: string | null, targetIndex?: number) => void; // null = inbox
+    moveTaskToDrawer: (taskId: string, targetFolderId: string | null, targetIndex?: number) => void;
+    moveTaskFromDrawerToDay: (taskId: string, date: string, category: string, index?: number, slotId?: string) => void;
 }
 
 export type Store = StoreState & StoreActions;

@@ -25,6 +25,7 @@ const Column: React.FC<ColumnProps> = ({ title, category, limit, tasks, allTasks
 
     const { setNodeRef, isOver } = useDroppable({
         id: category,
+        data: { type: 'COLUMN', id: category }
     });
 
     // FIX: Filter out tasks that don't belong to this category

@@ -10,6 +10,8 @@ interface PlannerHeaderProps {
     isToday: boolean;
     incompleteCount: number;
     onOpenSettings: () => void;
+    onToggleDrawer: () => void;
+    isDrawerOpen: boolean;
 }
 
 const PlannerHeader: React.FC<PlannerHeaderProps> = ({
@@ -19,7 +21,9 @@ const PlannerHeader: React.FC<PlannerHeaderProps> = ({
     onJumpToToday,
     isToday,
     incompleteCount,
-    onOpenSettings
+    onOpenSettings,
+    onToggleDrawer,
+    isDrawerOpen
 }) => {
     const handleMinimize = () => {
         if ((window as any).require) {
@@ -45,6 +49,16 @@ const PlannerHeader: React.FC<PlannerHeaderProps> = ({
     return (
         <div className="h-12 bg-background border-b border-border flex items-center justify-between px-4 shadow-sm z-20 select-none" style={{ WebkitAppRegion: 'drag' } as React.CSSProperties}>
             <div className="flex items-center gap-4" style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}>
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={onToggleDrawer}
+                    className={`h-8 w-8 ${isDrawerOpen ? 'bg-muted' : ''}`}
+                    title="Toggle Drawer (Ctrl+T)"
+                >
+                    <Icon name="PanelLeft" className="w-5 h-5" />
+                </Button>
+
                 <h1 className="flex items-center gap-2">
                     <img src="assets/img/Yesterday_logo.svg" alt="Yesterday" className="h-6 invert dark:invert-0" />
                 </h1>

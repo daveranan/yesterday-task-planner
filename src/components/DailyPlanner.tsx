@@ -13,11 +13,13 @@ import { TaskEntry } from '../store/types';
 import { useKeyboardNavigation } from '../hooks/useKeyboardNavigation';
 import { SettingsModal } from './settings/SettingsModal';
 import ShortcutsToast from './ShortcutsToast';
+import Drawer from './Drawer';
 
 const DailyPlanner: React.FC = () => {
     // UI State
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
+    // --- Store Selectors ---
     // --- Store Selectors ---
     const {
         currentDate,
@@ -37,6 +39,10 @@ const DailyPlanner: React.FC = () => {
         reorderTask,
         checkRollover,
         activeColumnId,
+        toggleDrawer,
+        moveTaskToDrawer,
+        moveDrawerTask,
+        moveTaskFromDrawerToDay,
     } = useStore();
 
     // Enable Keyboard Navigation
@@ -46,6 +52,11 @@ const DailyPlanner: React.FC = () => {
     React.useEffect(() => {
         checkRollover(currentDate);
     }, [currentDate, checkRollover]);
+
+    // Sync theme to DOM on mount and change
+    React.useEffect(() => {
+        document.documentElement.classList.toggle('dark', settings.isDarkMode);
+    }, [settings.isDarkMode]);
 
     // Sync theme to DOM on mount and change
     React.useEffect(() => {
@@ -146,11 +157,88 @@ const DailyPlanner: React.FC = () => {
         // Pop only on drop release (successful drop)
         playSound('pop');
 
+        if (!over) return;
+
+        const overData = over.data.current;
+        const activeData = active.data.current;
+
+        // Handle Drop on Drawer Targets
+        if (overData?.type === 'DRAWER_INBOX' || overData?.type === 'DRAWER_FOLDER') {
+            const folderId = overData.folderId || null;
+            moveTaskToDrawer(active.id as string, folderId);
+            return;
+        }
+
         // If sorting within same list (and it's a sortable list)
         if (active.id === over.id) return;
 
-        const activeData = active.data.current;
-        const overData = over.data.current;
+        const isDrawerTask = activeData?.type === 'DRAWER_TASK';
+
+        // Helper: Check if dropping ON a drawer task (target is task in drawer)
+        if (overData?.type === 'DRAWER_TASK') {
+            const targetFolderId = overData.folderId || null;
+
+            if (isDrawerTask) {
+                // Reorder / Move within Drawer
+                // Only move if folder is different. Reorder in same folder is visual only for now (unless we add reorder action)
+                if (activeData.folderId !== targetFolderId) {
+                    moveDrawerTask(active.id as string, targetFolderId);
+                }
+            } else {
+                // Board Task -> Drawer Task (equivalent to dropping in Folder)
+                moveTaskToDrawer(active.id as string, targetFolderId);
+            }
+            return;
+        }
+
+        // Drawer -> Daily Board
+        if (isDrawerTask) {
+            // Check if dropping on a column or a task in a column
+            const targetCategory = overData?.type === 'COLUMN'
+                ? over.id
+                : (overData?.type === 'TASK' ? (overData?.task as TaskEntry)?.category : null);
+
+            // Allow dropping on timeline slots too
+            const targetSlot = overData?.type === 'SLOT' || (typeof over.id === 'string' && (over.id as string).includes(':'))
+                ? over.id as string
+                : null;
+
+            if (targetCategory || targetSlot) {
+                // Determine standard category if dropped on slot
+                const finalCategory = targetSlot ? 'scheduled' : (targetCategory as string);
+
+                moveTaskFromDrawerToDay(
+                    active.id as string,
+                    currentDate,
+                    finalCategory,
+                    // If dropped on a task, we could try to calculate index, but let's just append/prepend for now unless we do complex index math
+                );
+
+                // If dropped on a slot, we might need a second update or custom action?
+                // moveTaskFromDrawerToDay assigns default slot if category is scheduled.
+                // But if we have a specific targetSlot, we should update it.
+                if (targetSlot) {
+                    // We can just call moveTask immediately after? Or update the action signature?
+                    // The action `moveTaskFromDrawerToDay` has `index` but not `slotId`.
+                    // Let's rely on standard moveTask behavior for now or update logic later.
+                    // Actually, if we drop on a slot, we want it scheduled there.
+                    // Store action `moveTaskFromDrawerToDay` sets `slotId: category === 'scheduled' ? '09:00' : null`.
+                    // This is hardcoded. Ideally we pass slotId.
+                    // Let's quick-fix: call moveTask after? Or just update the task slot after moving.
+
+                    setTimeout(() => {
+                        moveTask(active.id as string, 'scheduled', targetSlot);
+                    }, 50);
+                }
+            }
+            return;
+        }
+
+
+
+        // Reset data refs if not drawer drop for further logic
+        // const activeData = active.data.current; // Re-using above
+        // const overData = over.data.current; // Re-using above
         const isOverTask = overData?.type === 'TASK';
 
         if (isOverTask) {
@@ -195,7 +283,25 @@ const DailyPlanner: React.FC = () => {
     };
 
     // Get the active task object for the overlay
-    const activeTaskEntry = activeId ? currentDayData.taskEntries.find((t: TaskEntry) => t.taskId === activeId) : null;
+    const activeTaskEntry = activeId
+        ? (currentDayData.taskEntries.find((t: TaskEntry) => t.taskId === activeId)
+            || (() => {
+                // Fallback: Check Drawer
+                // We need access to drawer state here. 
+                // Accessing drawer from store hook (need to ensure it's destructured)
+                const drawerTask = useStore.getState().drawer.tasks.find(t => t.taskId === activeId);
+                if (drawerTask) {
+                    return {
+                        taskId: drawerTask.taskId,
+                        category: 'drawer', // Pseudo-category for overlay
+                        slotId: null,
+                        rolledOverFrom: null
+                    } as TaskEntry;
+                }
+                return null;
+            })()
+        )
+        : null;
     // const activeGlobalTask = activeId ? allTasks[activeId] : null; // Ensure we have the global data too
     // Combine them for the TaskItem prop, similar to how it receives props in the list
     // const overlayTask = activeTaskEntry ? { ...activeTaskEntry, ...activeGlobalTask } : null; // TaskItem expects the entry + title from store. Actually TaskItem expects `task` (entry) and looks up `allTasks`.
@@ -206,53 +312,60 @@ const DailyPlanner: React.FC = () => {
             <div className={`flex flex-col h-full ${settings.isDarkMode ? 'dark' : ''}`}>
                 <div className="flex flex-col h-full bg-background text-foreground font-sans overflow-hidden">
 
-                    <PlannerHeader
-                        currentDate={currentDate}
-                        setCurrentDate={setCurrentDate}
-                        onDateChange={handleDateChange}
-                        onJumpToToday={jumpToToday}
-                        isToday={isToday}
-                        incompleteCount={incompleteCount}
-                        onOpenSettings={() => setIsSettingsOpen(true)}
-                    />
+                    <div className="flex-1 flex overflow-hidden">
+                        <Drawer />
+                        <div className="flex-1 flex flex-col overflow-hidden">
+                            <PlannerHeader
+                                currentDate={currentDate}
+                                setCurrentDate={setCurrentDate}
+                                onDateChange={handleDateChange}
+                                onJumpToToday={jumpToToday}
+                                isToday={isToday}
+                                incompleteCount={incompleteCount}
+                                onOpenSettings={() => setIsSettingsOpen(true)}
+                                onToggleDrawer={toggleDrawer}
+                                isDrawerOpen={settings.isDrawerOpen || false}
+                            />
 
-                    <div className="flex-1 flex overflow-hidden p-2 gap-2">
-                        <AnimatePresence mode="wait">
-                            <motion.div
-                                key={currentDate}
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                exit={{ opacity: 0 }}
-                                transition={{ duration: 0.2 }}
-                                className="flex-1 flex overflow-hidden gap-2 w-full h-full"
-                            >
-                                <TaskBoard
-                                    // Use explicit limits from CONFIG
-                                    configLimits={CONFIG.limits}
-                                    currentDayData={currentDayData}
-                                    allTasks={allTasks}
-                                    onAddTask={addTask}
-                                    onToggleTask={toggleTask}
-                                    onDeleteTask={deleteTask}
-                                    onEditTask={updateTaskTitle}
-                                    onUpdateDayData={updateDayData}
-                                    showGratefulness={settings.showGratefulness}
-                                    showReflection={settings.showReflection}
-                                    activeColumnId={activeColumnId}
-                                />
+                            <div className="flex-1 flex overflow-hidden p-2 gap-2">
+                                <AnimatePresence mode="wait">
+                                    <motion.div
+                                        key={currentDate}
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        exit={{ opacity: 0 }}
+                                        transition={{ duration: 0.2 }}
+                                        className="flex-1 flex overflow-hidden gap-2 w-full h-full"
+                                    >
+                                        <TaskBoard
+                                            // Use explicit limits from CONFIG
+                                            configLimits={CONFIG.limits}
+                                            currentDayData={currentDayData}
+                                            allTasks={allTasks}
+                                            onAddTask={addTask}
+                                            onToggleTask={toggleTask}
+                                            onDeleteTask={deleteTask}
+                                            onEditTask={updateTaskTitle}
+                                            onUpdateDayData={updateDayData}
+                                            showGratefulness={settings.showGratefulness}
+                                            showReflection={settings.showReflection}
+                                            activeColumnId={activeColumnId}
+                                        />
 
-                                <Timeline
-                                    currentDayData={currentDayData}
-                                    allTasks={allTasks}
-                                    isToday={isToday}
-                                    config={CONFIG}
-                                    onToggleTask={toggleTask}
-                                    onDeleteTask={deleteTask}
-                                    onEditTask={updateTaskTitle}
-                                    isActive={activeColumnId === 'scheduled'}
-                                />
-                            </motion.div>
-                        </AnimatePresence>
+                                        <Timeline
+                                            currentDayData={currentDayData}
+                                            allTasks={allTasks}
+                                            isToday={isToday}
+                                            config={CONFIG}
+                                            onToggleTask={toggleTask}
+                                            onDeleteTask={deleteTask}
+                                            onEditTask={updateTaskTitle}
+                                            isActive={activeColumnId === 'scheduled'}
+                                        />
+                                    </motion.div>
+                                </AnimatePresence>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
