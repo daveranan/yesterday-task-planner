@@ -118,6 +118,7 @@ export const TaskItemBase: React.FC<TaskItemBaseProps> = ({
 
     return (
         <div
+            id={`task-${task.taskId}`}
             ref={setNodeRef}
             style={style}
             {...listeners}
@@ -132,6 +133,13 @@ export const TaskItemBase: React.FC<TaskItemBaseProps> = ({
                     : 'border-neutral-200 dark:border-neutral-700'}
             `}
         >
+            {/* Scroll Into View Effect */}
+            {React.useEffect(() => {
+                if (isSelected || (isManipulated && !isSelected)) {
+                    document.getElementById(`task-${task.taskId}`)?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+            }, [isSelected, isManipulated, task.taskId])}
+
             {/* USE NEUTRAL: Icons and text colors adjusted for deeper contrast against neutral-800 */}
             <button
                 id={`checkbox-${task.taskId}`}

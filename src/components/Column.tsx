@@ -71,7 +71,9 @@ const Column: React.FC<ColumnProps> = ({ title, category, limit, tasks, allTasks
             {/* USE NEUTRAL: Darken header border */}
             <div className="p-3 border-b border-neutral-200 dark:border-neutral-800 flex justify-between items-center">
                 <h3 className="font-semibold text-neutral-900 dark:text-neutral-100 text-sm">{title}</h3>
-                <span className="text-xs text-neutral-500 dark:text-neutral-400">{limit} max</span>
+                <span className="text-xs text-neutral-500 dark:text-neutral-400">
+                    {visibleTasks.length} {limit ? `| ${limit} max` : ''}
+                </span>
             </div>
 
             <div className="p-3 flex-1 overflow-y-auto scrollbar-style flex flex-col gap-2">
