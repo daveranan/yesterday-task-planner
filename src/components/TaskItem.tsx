@@ -163,14 +163,15 @@ export const TaskItemBase: React.FC<TaskItemBaseProps> = ({
         }
     };
 
+    const isNew = originalTask.createdAt && (Date.now() - originalTask.createdAt < 1000);
+
     return (
         <ContextMenu>
             <ContextMenuTrigger asChild>
                 <motion.div
-                    layout
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}
+                    initial={isNew ? { opacity: 0, scale: 0.9 } : false}
+                    animate={isNew ? { opacity: 1, scale: 1 } : false}
+                    exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.15 } }}
                     transition={{ duration: 0.2 }}
                     id={`task-${task.taskId}`}
                     ref={setNodeRef}

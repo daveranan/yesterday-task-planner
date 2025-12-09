@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { AnimatePresence } from 'framer-motion';
+// import { AnimatePresence } from 'framer-motion';
 import TaskItem from './TaskItem';
 import { useDroppable } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
@@ -68,17 +68,15 @@ const TimeSlot: React.FC<TimeSlotProps> = ({
                     items={slotTasks.map(t => t.taskId)}
                     strategy={verticalListSortingStrategy}
                 >
-                    <AnimatePresence mode='popLayout' initial={false}>
-                        {slotTasks.map(task =>
-                            <TaskItem
-                                key={task.taskId}
-                                task={task}
-                                allTasks={allTasks}
-                                toggleTask={onToggleTask}
-                                deleteTask={onDeleteTask}
-                                handleEditTask={onEditTask}
-                            />)}
-                    </AnimatePresence>
+                    {slotTasks.map(task =>
+                        <TaskItem
+                            key={task.taskId}
+                            task={task}
+                            allTasks={allTasks}
+                            toggleTask={onToggleTask}
+                            deleteTask={onDeleteTask}
+                            handleEditTask={onEditTask}
+                        />)}
                 </SortableContext>
             </div>
         </div >

@@ -1,8 +1,8 @@
-export interface TaskGlobal {
-    title: string;
-    createdOn: string; // YYYY-MM-DD
-    completed: boolean;
-    category: string;
+title: string;
+createdOn: string; // YYYY-MM-DD
+createdAt ?: number; // Timestamp for animation handling
+completed: boolean;
+category: string;
 }
 
 export interface TaskEntry {

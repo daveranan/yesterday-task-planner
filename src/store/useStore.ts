@@ -216,6 +216,7 @@ export const useStore = create<Store>((set, get) => ({
             ...task,
             title: `${task.title} (Copy)`,
             createdOn: currentDate,
+            createdAt: Date.now(),
             completed: false, // duplications are usually uncompleted
         };
 
@@ -256,6 +257,7 @@ export const useStore = create<Store>((set, get) => ({
         const newTaskGlobal: TaskGlobal = {
             title,
             createdOn: currentDate,
+            createdAt: Date.now(),
             completed: false,
             category,
         };
@@ -665,6 +667,7 @@ export const useStore = create<Store>((set, get) => ({
             const newTaskGlobal: TaskGlobal = {
                 title,
                 createdOn: currentDate,
+                createdAt: Date.now(),
                 completed: false,
                 category: 'drawer', // Marker category
             };
