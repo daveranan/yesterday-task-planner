@@ -13,6 +13,8 @@ interface TaskItemBaseProps {
     toggleTask: (taskId: string) => void;
     deleteTask: (taskId: string) => void;
     handleEditTask: (taskId: string, newTitle: string) => void;
+    hoveredTaskId: string | null;
+    setHoveredTaskId: (id: string | null) => void;
     setNodeRef: (element: HTMLElement | null) => void;
     style?: React.CSSProperties;
     attributes?: any;
@@ -29,6 +31,8 @@ export const TaskItemBase: React.FC<TaskItemBaseProps> = ({
     toggleTask,
     deleteTask,
     handleEditTask,
+    hoveredTaskId,
+    setHoveredTaskId,
     // DnD props
     setNodeRef,
     style,
@@ -39,6 +43,9 @@ export const TaskItemBase: React.FC<TaskItemBaseProps> = ({
     isSelected
 }) => {
     const [isEditing, setIsEditing] = useState(false);
+
+    // Derived state: Is this task being manipulated? (Hovered but not dragging)
+    const isManipulated = hoveredTaskId === task.taskId && !isDragging;
 
     // Get the original task data from the global store
     const originalTask = allTasks[task.taskId];
@@ -104,10 +111,13 @@ export const TaskItemBase: React.FC<TaskItemBaseProps> = ({
             style={style}
             {...listeners}
             {...attributes}
+            onMouseEnter={() => setHoveredTaskId(task.taskId)}
+            onMouseLeave={() => setHoveredTaskId(null)}
             /* USE NEUTRAL: Task item background/border */
             className={`group flex items-center gap-2 bg-white dark:bg-neutral-800 p-2 rounded border border-neutral-200 dark:border-neutral-700 shadow-sm cursor-grab active:cursor-grabbing hover:border-neutral-400 dark:hover:border-neutral-500 hover:shadow-md hover:scale-[1.01] transition-all duration-200 touch-none 
                 ${isOverlay ? 'opacity-90 rotate-2 scale-105 shadow-xl' : ''}
                 ${isSelected ? 'ring-2 ring-blue-500 dark:ring-blue-400 border-blue-500 dark:border-blue-400 relative z-10' : ''}
+                ${isManipulated && !isSelected ? 'bg-neutral-50 dark:bg-neutral-750 border-neutral-400 dark:border-neutral-500 shadow-md scale-[1.02]' : ''}
             `}
         >
             {/* USE NEUTRAL: Icons and text colors adjusted for deeper contrast against neutral-800 */}
@@ -186,6 +196,8 @@ interface TaskItemSpecificProps {
 const TaskItem: React.FC<TaskItemSpecificProps> = (props) => {
     // We need to access selectedTaskId here to pass to Base
     const selectedTaskId = useStore(state => state.selectedTaskId);
+    const hoveredTaskId = useStore(state => state.hoveredTaskId);
+    const setHoveredTaskId = useStore(state => state.setHoveredTaskId);
 
     const {
         attributes,
@@ -213,6 +225,8 @@ const TaskItem: React.FC<TaskItemSpecificProps> = (props) => {
             listeners={listeners}
             isDragging={isDragging}
             isSelected={selectedTaskId === props.task.taskId}
+            hoveredTaskId={hoveredTaskId}
+            setHoveredTaskId={setHoveredTaskId}
         />
     );
 };
@@ -220,6 +234,8 @@ const TaskItem: React.FC<TaskItemSpecificProps> = (props) => {
 // The Draggable Wrapper (For Timeline)
 export const DraggableTaskItem: React.FC<TaskItemSpecificProps> = (props) => {
     const selectedTaskId = useStore(state => state.selectedTaskId);
+    const hoveredTaskId = useStore(state => state.hoveredTaskId);
+    const setHoveredTaskId = useStore(state => state.setHoveredTaskId);
 
     const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
         id: props.task.taskId,
@@ -239,6 +255,8 @@ export const DraggableTaskItem: React.FC<TaskItemSpecificProps> = (props) => {
             listeners={listeners}
             isDragging={isDragging}
             isSelected={selectedTaskId === props.task.taskId}
+            hoveredTaskId={hoveredTaskId}
+            setHoveredTaskId={setHoveredTaskId}
         />
     );
 };

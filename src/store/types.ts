@@ -37,6 +37,7 @@ export interface PlannerData {
 export interface StoreState extends PlannerData {
     currentDate: string;
     selectedTaskId: string | null;
+    hoveredTaskId: string | null;
 }
 
 export interface StoreActions {
@@ -49,4 +50,5 @@ export interface StoreActions {
     toggleGratefulness: () => void;
     toggleReflection: () => void;
     addTask: (category: string, title: string) => void;
-
+    setHoveredTaskId: (taskId: string | null) => void;
+}

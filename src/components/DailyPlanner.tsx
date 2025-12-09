@@ -13,6 +13,7 @@ import { playSound } from '../utils/soundUtils';
 import { TaskEntry } from '../store/types';
 import { useKeyboardNavigation } from '../hooks/useKeyboardNavigation';
 import { KeyboardSettingsModal } from './settings/KeyboardSettingsModal';
+import ShortcutsToast from './ShortcutsToast';
 
 const DailyPlanner: React.FC = () => {
     // UI State
@@ -241,6 +242,8 @@ const DailyPlanner: React.FC = () => {
                             toggleTask={() => { }} // No-op during drag
                             deleteTask={() => { }} // No-op during drag
                             handleEditTask={() => { }} // No-op during drag
+                            hoveredTaskId={null}
+                            setHoveredTaskId={() => { }}
                             setNodeRef={() => { }} // dummy
                             isOverlay
                         />
@@ -251,6 +254,7 @@ const DailyPlanner: React.FC = () => {
             {isKeyboardSettingsOpen && (
                 <KeyboardSettingsModal onClose={() => setIsKeyboardSettingsOpen(false)} />
             )}
+            <ShortcutsToast />
         </DndContext>
     );
 };

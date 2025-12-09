@@ -37,6 +37,7 @@ export const useStore = create<Store>((set, get) => ({
     tasks: initialState.tasks || {},
     days: initialState.days || {},
     selectedTaskId: null,
+    hoveredTaskId: null,
 
     // --- Actions ---
 
@@ -111,6 +112,10 @@ export const useStore = create<Store>((set, get) => ({
 
     setSelectedTaskId: (taskId: string | null) => {
         set({ selectedTaskId: taskId });
+    },
+
+    setHoveredTaskId: (taskId: string | null) => {
+        set({ hoveredTaskId: taskId });
     },
 
     // Task Actions
