@@ -169,7 +169,7 @@ export const TaskItemBase: React.FC<TaskItemBaseProps> = ({
                     id={`task-${task.taskId}`}
                     ref={setNodeRef}
                     style={style}
-                    {...listeners}
+                    {...(!isEditing ? listeners : {})}
                     {...attributes}
                     onMouseEnter={() => setHoveredTaskId(task.taskId)}
                     onMouseLeave={() => setHoveredTaskId(null)}
