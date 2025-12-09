@@ -14,10 +14,12 @@ import { useKeyboardNavigation } from '../hooks/useKeyboardNavigation';
 import { SettingsModal } from './settings/SettingsModal';
 import ShortcutsToast from './ShortcutsToast';
 import Drawer from './Drawer';
+import { ScheduleOverrideModal } from './ScheduleOverrideModal'; // Import override modal
 
 const DailyPlanner: React.FC = () => {
     // UI State
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+    const [isOverrideModalOpen, setIsOverrideModalOpen] = useState(false);
 
     // --- Store Selectors ---
     // --- Store Selectors ---
@@ -117,7 +119,21 @@ const DailyPlanner: React.FC = () => {
     const incompleteCount =
         getCategoryTasks('must-do').length +
         getCategoryTasks('communications').length +
+        getCategoryTasks('communications').length +
         getCategoryTasks('todo').length;
+
+    // effective schedule config
+    const effectiveScheduleConfig = React.useMemo(() => {
+        if (currentDayData.scheduleOverride) {
+            return {
+                ...settings.schedule,
+                ...currentDayData.scheduleOverride,
+                // Ensure null skipHour is respected
+                skipHour: currentDayData.scheduleOverride.skipHour
+            };
+        }
+        return settings.schedule;
+    }, [settings.schedule, currentDayData.scheduleOverride]);
 
     // --- Drag and Drop ---
     const [activeId, setActiveId] = useState<string | null>(null); // Track active drag ID
@@ -340,10 +356,11 @@ const DailyPlanner: React.FC = () => {
                                             currentDayData={currentDayData}
                                             allTasks={allTasks}
                                             isToday={isToday}
-                                            config={CONFIG}
+                                            config={effectiveScheduleConfig} // Pass dynamic config
                                             onToggleTask={toggleTask}
                                             onDeleteTask={deleteTask}
                                             onEditTask={updateTaskTitle}
+                                            onOverrideClick={() => setIsOverrideModalOpen(true)}
                                             isActive={activeColumnId === 'scheduled'}
                                         />
                                     </motion.div>
@@ -376,6 +393,12 @@ const DailyPlanner: React.FC = () => {
 
             {isSettingsOpen && (
                 <SettingsModal onClose={() => setIsSettingsOpen(false)} />
+            )}
+            {isOverrideModalOpen && (
+                <ScheduleOverrideModal
+                    date={currentDate}
+                    onClose={() => setIsOverrideModalOpen(false)}
+                />
             )}
             <ShortcutsToast />
         </DndContext>

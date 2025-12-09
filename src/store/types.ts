@@ -1,8 +1,9 @@
-title: string;
-createdOn: string; // YYYY-MM-DD
-createdAt ?: number; // Timestamp for animation handling
-completed: boolean;
-category: string;
+export interface TaskGlobal {
+    title: string;
+    createdOn: string; // YYYY-MM-DD
+    createdAt?: number; // Timestamp for animation handling
+    completed: boolean;
+    category: string;
 }
 
 export interface TaskEntry {
@@ -19,6 +20,21 @@ export interface DayData {
     gratefulness?: string;
     reflections?: string;
     rolloverComplete?: boolean;
+    scheduleOverride?: DayScheduleOverride;
+}
+
+export interface DayScheduleOverride {
+    startHour: number;
+    endHour: number;
+    skipHour: number | null; // null means no lunch break
+    itemDurationMinutes: number;
+}
+
+export interface ScheduleSettings {
+    startHour: number;
+    endHour: number;
+    skipHour: number | null; // null if disabled
+    itemDurationMinutes: number; // For future use, mostly
 }
 
 export interface DrawerFolder {
@@ -43,6 +59,7 @@ export interface PlannerSettings {
     windowHeight?: number;
     savePath?: string;
     isDrawerOpen?: boolean;
+    schedule: ScheduleSettings;
 }
 
 export interface PlannerData {
@@ -123,6 +140,9 @@ export interface StoreActions {
     moveDrawerTask: (taskId: string, targetFolderId: string | null, targetIndex?: number) => void; // null = inbox
     moveTaskToDrawer: (taskId: string, targetFolderId: string | null, targetIndex?: number) => void;
     moveTaskFromDrawerToDay: (taskId: string, date: string, category: string, index?: number, slotId?: string) => void;
+    // Schedule Actions
+    updateScheduleSettings: (settings: Partial<ScheduleSettings>) => void;
+    setDayScheduleOverride: (date: string, override: DayScheduleOverride | null) => void;
 }
 
 export type Store = StoreState & StoreActions;

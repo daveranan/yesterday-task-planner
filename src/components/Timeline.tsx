@@ -3,8 +3,7 @@ import React, { useState, useEffect } from 'react';
 import TaskItem from './TaskItem';
 import { useDroppable } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { DayData, TaskGlobal, TaskEntry } from '../store/types';
-import { CONFIG } from '../constants/config';
+import { DayData, TaskGlobal, TaskEntry, ScheduleSettings } from '../store/types';
 
 interface TimeSlotProps {
     slotId: string;
@@ -87,10 +86,11 @@ interface TimelineProps {
     currentDayData: DayData;
     allTasks: Record<string, TaskGlobal>;
     isToday: boolean;
-    config: typeof CONFIG;
+    config: ScheduleSettings;
     onToggleTask: (taskId: string) => void;
     onDeleteTask: (taskId: string) => void;
     onEditTask: (taskId: string, newTitle: string) => void;
+    onOverrideClick: () => void;
     isActive?: boolean;
 }
 
@@ -102,6 +102,7 @@ const Timeline: React.FC<TimelineProps> = ({
     onToggleTask,
     onDeleteTask,
     onEditTask,
+    onOverrideClick,
     isActive
 }) => {
     const [now, setNow] = useState(new Date());
@@ -124,7 +125,7 @@ const Timeline: React.FC<TimelineProps> = ({
                 <h3 className="font-bold text-neutral-900 dark:text-neutral-100">Work Blocks</h3>
                 <button
                     className="text-xs px-2 py-0.5 bg-white dark:bg-neutral-700 border border-neutral-200 dark:border-neutral-600 rounded text-neutral-600 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-600 transition-colors"
-                    onClick={() => console.log('Override clicked')}
+                    onClick={onOverrideClick}
                 >
                     Override
                 </button>
@@ -139,7 +140,13 @@ const Timeline: React.FC<TimelineProps> = ({
                         const slotId = `${hour}:00`;
                         const displayTime = hour > 12 ? `${hour - 12} PM` : `${hour} ${hour === 12 ? 'PM' : 'AM'}`;
                         const isLunch = hour === config.skipHour;
-                        const isBlockStart = (hour === 10) || (hour === 13) || (hour === 15);
+
+                        // Use itemDurationMinutes to determine blocks (default 60 mins -> 1 hour)
+                        // This logic handles blocks of X hours.
+                        // We check if the current hour is a multiple of the block duration relative to start hour.
+                        const durationMinutes = config.itemDurationMinutes ?? 120;
+                        const durationHours = durationMinutes / 60;
+                        const isBlockStart = durationHours > 0 && ((hour - config.startHour) % durationHours === 0) && !isLunch;
 
                         const slotTasks = currentDayData.taskEntries.filter(t =>
                             t.category === 'scheduled' && t.slotId === slotId

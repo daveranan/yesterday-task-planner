@@ -32,7 +32,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
         toggleGratefulness,
         toggleReflection,
         setSavePath,
-        updateShortcut
+        updateShortcut,
+        updateScheduleSettings
     } = useStore();
 
     const [recordingAction, setRecordingAction] = useState<string | null>(null);
@@ -109,6 +110,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
                             <TabsTrigger value="general" className="gap-2">
                                 <Icon name="Sliders" className="w-4 h-4" />
                                 General
+                            </TabsTrigger>
+                            <TabsTrigger value="schedule" className="gap-2">
+                                <Icon name="Clock" className="w-4 h-4" />
+                                Schedule
                             </TabsTrigger>
                             <TabsTrigger value="shortcuts" className="gap-2">
                                 <Icon name="Keyboard" className="w-4 h-4" />
@@ -221,6 +226,81 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
                                             Apply
                                         </Button>
                                     </div>
+                                </div>
+                            </section>
+                        </TabsContent>
+
+                        <TabsContent value="schedule" className="p-6 m-0 space-y-8">
+                            <section className="space-y-4">
+                                <h4 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Work Schedule</h4>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium">Start Hour (0-23)</label>
+                                        <Input
+                                            type="number"
+                                            min="0"
+                                            max="23"
+                                            value={settings.schedule.startHour}
+                                            onChange={(e) => updateScheduleSettings({ startHour: parseInt(e.target.value) })}
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium">End Hour (0-24)</label>
+                                        <Input
+                                            type="number"
+                                            min="0"
+                                            max="24"
+                                            value={settings.schedule.endHour}
+                                            onChange={(e) => updateScheduleSettings({ endHour: parseInt(e.target.value) })}
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center justify-between p-4 bg-muted/30 rounded-lg border">
+                                    <div>
+                                        <div className="font-medium">Lunch Break</div>
+                                        <div className="text-xs text-muted-foreground">Automatically block out time for lunch</div>
+                                    </div>
+                                    <Switch
+                                        checked={settings.schedule.skipHour !== null}
+                                        onCheckedChange={(checked) => updateScheduleSettings({ skipHour: checked ? 12 : null })}
+                                    />
+                                </div>
+
+                                {settings.schedule.skipHour !== null && (
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium">Lunch Hour</label>
+                                        <Input
+                                            type="number"
+                                            min={settings.schedule.startHour}
+                                            max={settings.schedule.endHour - 1}
+                                            value={settings.schedule.skipHour}
+                                            onChange={(e) => updateScheduleSettings({ skipHour: parseInt(e.target.value) })}
+                                        />
+                                        <Input
+                                            type="number"
+                                            min={settings.schedule.startHour}
+                                            max={settings.schedule.endHour - 1}
+                                            value={settings.schedule.skipHour}
+                                            onChange={(e) => updateScheduleSettings({ skipHour: parseInt(e.target.value) })}
+                                        />
+                                    </div>
+                                )}
+
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium">Hours per Block</label>
+                                    <Input
+                                        type="number"
+                                        min="0"
+                                        step="0.5"
+                                        max="12"
+                                        value={settings.schedule.itemDurationMinutes / 60}
+                                        onChange={(e) => updateScheduleSettings({ itemDurationMinutes: parseFloat(e.target.value) * 60 })}
+                                    />
+                                    <p className="text-xs text-muted-foreground">
+                                        How many hours are grouped together visually. Set to 0 to remove grouping lines.
+                                    </p>
                                 </div>
                             </section>
                         </TabsContent>

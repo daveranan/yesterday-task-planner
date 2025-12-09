@@ -4,7 +4,7 @@ import { DEFAULT_SHORTCUTS } from '../constants/shortcuts';
 import { loadDataFromFile, saveDataToFile, saveSettingsToFile, loadTheme, getCustomSavePath, setCustomSavePath } from '../utils/storage';
 import { getYYYYMMDD, getDateOffset } from '../utils/dateUtils';
 import { toast } from 'sonner';
-import { Store, StoreState, TaskEntry, TaskGlobal, DayData, HistorySnapshot } from './types';
+import { Store, StoreState, TaskEntry, TaskGlobal, DayData, HistorySnapshot, ScheduleSettings, DayScheduleOverride } from './types';
 
 const HISTORY_LIMIT = 100;
 
@@ -44,7 +44,13 @@ const getInitialState = (): Partial<StoreState> => {
             showGratefulness: true,
             showReflection: true,
             shortcuts: { ...DEFAULT_SHORTCUTS },
-            savePath: customSavePath || undefined
+            savePath: customSavePath || undefined,
+            schedule: {
+                startHour: 8,
+                endHour: 17,
+                skipHour: 12,
+                itemDurationMinutes: 120
+            }
         };
     } else {
         // Migration: Merge shortcuts to ensure new defaults exist
@@ -55,6 +61,16 @@ const getInitialState = (): Partial<StoreState> => {
 
         // Ensure savePath is up to date with local storage source of truth
         data.settings.savePath = customSavePath || undefined;
+
+        // Migration: Ensure schedule settings exist
+        if (!data.settings.schedule) {
+            data.settings.schedule = {
+                startHour: 8,
+                endHour: 17,
+                skipHour: 12,
+                itemDurationMinutes: 120
+            };
+        }
     }
     return data;
 };
@@ -798,29 +814,55 @@ export const useStore = create<Store>((set, get) => ({
             };
 
             // 3. Add to Day
-            const dayData = state.days[date] || { taskEntries: [], gratefulness: '', reflections: '' };
-            const newEntry: TaskEntry = {
+            const updatedEntries = [...(state.days[date]?.taskEntries || [])];
+            const newDayEntry: TaskEntry = {
                 taskId,
                 category,
-                // Use provided slotId, or default for scheduled, or null
-                slotId: slotId || (category === 'scheduled' ? '09:00' : null),
-                rolledOverFrom: null
+                slotId: slotId || null,
+                rolledOverFrom: null,
+                // If moving to scheduled, use existing category if known, else undefined?
+                // Actually if we move from drawer to day, we are "resetting" its context usually.
             };
 
-            const updatedEntries = [...dayData.taskEntries];
-            if (typeof index === 'number' && index >= 0 && index <= updatedEntries.length) {
-                updatedEntries.splice(index, 0, newEntry);
+            if (typeof index === 'number') {
+                updatedEntries.splice(index, 0, newDayEntry);
             } else {
-                updatedEntries.push(newEntry);
+                updatedEntries.push(newDayEntry);
             }
 
             const updatedDays = {
                 ...state.days,
-                [date]: { ...dayData, taskEntries: updatedEntries }
+                [date]: { ...state.days[date], taskEntries: updatedEntries }
             };
 
             saveDataToFile({ tasks: updatedTasksGlobal, days: updatedDays, drawer: updatedDrawer });
             return { tasks: updatedTasksGlobal, days: updatedDays, drawer: updatedDrawer, past, future: [] };
+        });
+    },
+
+    updateScheduleSettings: (newScheduleSettings: Partial<ScheduleSettings>) => {
+        set((state) => {
+            const newSettings = {
+                ...state.settings,
+                schedule: {
+                    ...state.settings.schedule,
+                    ...newScheduleSettings
+                }
+            };
+            saveSettingsToFile(newSettings);
+            return { settings: newSettings };
+        });
+    },
+
+    setDayScheduleOverride: (date: string, override: DayScheduleOverride | null) => {
+        set((state) => {
+            const currentDay = state.days[date] || { taskEntries: [], gratefulness: '', reflections: '' };
+            const updatedDays = {
+                ...state.days,
+                [date]: { ...currentDay, scheduleOverride: override || undefined }
+            };
+            saveDataToFile({ tasks: state.tasks, days: updatedDays });
+            return { days: updatedDays };
         });
     }
 
