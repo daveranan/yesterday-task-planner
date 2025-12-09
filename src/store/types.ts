@@ -13,7 +13,6 @@ export interface TaskEntry {
     rolledOverFrom: string | null; // Date string or null
     originalCategory?: string; // Persists category when moved to scheduled
     _fallbackCategory?: string; // transient property used during rollover calculation
-    duration?: number; // Duration in blocks (default 1)
 }
 
 export interface DayData {
@@ -146,7 +145,6 @@ export interface StoreActions {
     updateScheduleSettings: (settings: Partial<ScheduleSettings>) => void;
     setDayScheduleOverride: (date: string, override: DayScheduleOverride | null) => void;
     updateColumnLimits: (limits: Partial<Record<string, number>>) => void;
-    resizeTask: (taskId: string, duration: number) => void;
 }
 
 export type Store = StoreState & StoreActions;
