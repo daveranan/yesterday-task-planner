@@ -39,9 +39,9 @@ const PlannerHeader: React.FC<PlannerHeaderProps> = ({
     return (
         <div className="h-16 bg-white dark:bg-neutral-900 border-b border-neutral-200 dark:border-neutral-800 flex items-center justify-between px-6 shadow-xl z-20">
             <div className="flex items-center gap-4">
-                <h1 className="text-xl font-bold text-neutral-900 dark:text-neutral-100 flex items-center gap-2">
-                    <Icon name="Calendar" className="w-5 h-5 text-neutral-500" />
-                    Daily Planner
+                <h1 className="flex items-center gap-2">
+                    <img src="assets/img/favicon.png" alt="Icon" className="w-8 h-8" />
+                    <img src="assets/img/Yesterday_logo.svg" alt="Yesterday" className="h-8" />
                 </h1>
                 <div className="flex items-center bg-neutral-100 dark:bg-neutral-800 rounded-lg p-1">
                     <button onClick={() => onDateChange(-1)} className="p-1 hover:bg-neutral-200 dark:hover:bg-neutral-700 rounded shadow-sm transition"><Icon name="ChevronLeft" className="w-4 h-4 text-neutral-600 dark:text-neutral-200" /></button>

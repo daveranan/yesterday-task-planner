@@ -33,7 +33,8 @@ function createWindow() {
       // Allows use of Node.js modules in the renderer process (security risk, but needed for simple apps)
       nodeIntegration: true,
       contextIsolation: false,
-    }
+    },
+    icon: path.join(__dirname, 'public/assets/img/favicon.ico')
   });
 
   // Load the app.

@@ -1,7 +1,7 @@
 {
-  "name": "daily-task-planner",
+  "name": "yesterday",
   "version": "1.1.0",
-  "description": "Daily Task Planner Desktop App",
+  "description": "Yesterday - Daily Task Planner",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
@@ -14,16 +14,18 @@
     "dist:win": "tsc && vite build && electron-builder --win"
   },
   "build": {
-    "appId": "com.daily-task-planner.app",
-    "productName": "Daily Task Planner",
+    "appId": "com.yesterday.app",
+    "productName": "Yesterday",
     "directories": {
       "output": "dist-electron"
     },
     "mac": {
-      "target": "dmg"
+      "target": "dmg",
+      "icon": "public/assets/img/android-chrome-512x512.png"
     },
     "win": {
-      "target": "nsis"
+      "target": "nsis",
+      "icon": "public/assets/img/favicon.ico"
     }
   },
   "keywords": [],
