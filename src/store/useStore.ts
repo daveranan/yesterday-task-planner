@@ -50,6 +50,11 @@ const getInitialState = (): Partial<StoreState> => {
                 endHour: 17,
                 skipHour: 12,
                 itemDurationMinutes: 120
+            },
+            columnLimits: {
+                'must-do': 3,
+                'communications': 3,
+                'todo': 7
             }
         };
     } else {
@@ -69,6 +74,15 @@ const getInitialState = (): Partial<StoreState> => {
                 endHour: 17,
                 skipHour: 12,
                 itemDurationMinutes: 120
+            };
+        }
+
+        // Migration: Ensure columnLimits exist
+        if (!data.settings.columnLimits) {
+            data.settings.columnLimits = {
+                'must-do': 3,
+                'communications': 3,
+                'todo': 7
             };
         }
     }
@@ -176,6 +190,20 @@ export const useStore = create<Store>((set, get) => ({
             saveSettingsToFile(newSettings);
             // Also save data to new location
             saveDataToFile({ tasks: state.tasks, days: state.days });
+            return { settings: newSettings };
+        });
+    },
+
+    updateColumnLimits: (limits: Partial<Record<string, number>>) => {
+        set((state) => {
+            const newSettings = {
+                ...state.settings,
+                columnLimits: {
+                    ...state.settings.columnLimits,
+                    ...limits
+                } as Record<string, number>
+            };
+            saveSettingsToFile(newSettings);
             return { settings: newSettings };
         });
     },

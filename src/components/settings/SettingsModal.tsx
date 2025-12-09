@@ -33,7 +33,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
         toggleReflection,
         setSavePath,
         updateShortcut,
-        updateScheduleSettings
+        updateScheduleSettings,
+        updateColumnLimits
     } = useStore();
 
     const [recordingAction, setRecordingAction] = useState<string | null>(null);
@@ -192,6 +193,43 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
                                     </div>
                                     <Switch checked={runOnStartup} onCheckedChange={toggleStartup} />
                                 </div>
+                            </section>
+
+                            {/* Column Limits Section */}
+                            <section className="space-y-4">
+                                <h4 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Task Limits</h4>
+                                <div className="grid grid-cols-3 gap-4">
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium">Must Do</label>
+                                        <Input
+                                            type="number"
+                                            min="0"
+                                            value={settings.columnLimits?.['must-do'] ?? 3}
+                                            onChange={(e) => updateColumnLimits({ 'must-do': parseInt(e.target.value) || 0 })}
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium">Communications</label>
+                                        <Input
+                                            type="number"
+                                            min="0"
+                                            value={settings.columnLimits?.['communications'] ?? 3}
+                                            onChange={(e) => updateColumnLimits({ 'communications': parseInt(e.target.value) || 0 })}
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium">To-Do</label>
+                                        <Input
+                                            type="number"
+                                            min="0"
+                                            value={settings.columnLimits?.['todo'] ?? 7}
+                                            onChange={(e) => updateColumnLimits({ 'todo': parseInt(e.target.value) || 0 })}
+                                        />
+                                    </div>
+                                </div>
+                                <p className="text-xs text-muted-foreground">
+                                    Set the maximum number of active tasks allowed in each column. Set to 0 for no limit (though UI assumes limits).
+                                </p>
                             </section>
 
                             {/* Data Section */}

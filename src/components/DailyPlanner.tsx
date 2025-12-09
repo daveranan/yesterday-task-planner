@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useStore } from '../store/useStore';
 import { getYYYYMMDD } from '../utils/dateUtils';
-import { CONFIG } from '../constants/config';
 import PlannerHeader from './PlannerHeader';
 import TaskBoard from './TaskBoard';
 import Timeline from './Timeline';
@@ -339,7 +338,7 @@ const DailyPlanner: React.FC = () => {
                                     >
                                         <TaskBoard
                                             // Use explicit limits from CONFIG
-                                            configLimits={CONFIG.limits}
+                                            configLimits={settings.columnLimits}
                                             currentDayData={currentDayData}
                                             allTasks={allTasks}
                                             onAddTask={addTask}

@@ -60,6 +60,7 @@ export interface PlannerSettings {
     savePath?: string;
     isDrawerOpen?: boolean;
     schedule: ScheduleSettings;
+    columnLimits: Record<string, number>;
 }
 
 export interface PlannerData {
@@ -143,6 +144,7 @@ export interface StoreActions {
     // Schedule Actions
     updateScheduleSettings: (settings: Partial<ScheduleSettings>) => void;
     setDayScheduleOverride: (date: string, override: DayScheduleOverride | null) => void;
+    updateColumnLimits: (limits: Partial<Record<string, number>>) => void;
 }
 
 export type Store = StoreState & StoreActions;
