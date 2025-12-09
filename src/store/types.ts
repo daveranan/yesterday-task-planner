@@ -28,6 +28,7 @@ export interface PlannerSettings {
     shortcuts: Record<string, string>;
     windowWidth?: number;
     windowHeight?: number;
+    savePath?: string;
 }
 
 export interface PlannerData {
@@ -57,6 +58,7 @@ export interface StoreActions {
     toggleReflection: () => void;
     updateShortcut: (actionId: string, newKey: string) => void;
     setWindowSize: (width: number, height: number) => void; // New action
+    setSavePath: (path: string) => void;
     addTask: (category: string, title: string) => void;
     setActiveColumn: (columnId: string | null) => void;
     setSelectedTaskId: (taskId: string | null) => void;

@@ -7,16 +7,8 @@ interface PlannerHeaderProps {
     onDateChange: (offset: number) => void;
     onJumpToToday: () => void;
     isToday: boolean;
-    isDarkMode: boolean;
-    onToggleTheme: () => void;
     incompleteCount: number;
-    soundEnabled: boolean;
-    onToggleSound: () => void;
-    showGratefulness: boolean;
-    onToggleGratefulness: () => void;
-    showReflection: boolean;
-    onToggleReflection: () => void;
-    onOpenKeyboardSettings: () => void;
+    onOpenSettings: () => void;
 }
 
 const PlannerHeader: React.FC<PlannerHeaderProps> = ({
@@ -25,16 +17,8 @@ const PlannerHeader: React.FC<PlannerHeaderProps> = ({
     onDateChange,
     onJumpToToday,
     isToday,
-    isDarkMode,
-    onToggleTheme,
     incompleteCount,
-    soundEnabled,
-    onToggleSound,
-    showGratefulness,
-    onToggleGratefulness,
-    showReflection,
-    onToggleReflection,
-    onOpenKeyboardSettings
+    onOpenSettings
 }) => {
     return (
         <div className="h-16 bg-white dark:bg-neutral-900 border-b border-neutral-200 dark:border-neutral-800 flex items-center justify-between px-6 shadow-xl z-20">
@@ -69,47 +53,22 @@ const PlannerHeader: React.FC<PlannerHeaderProps> = ({
                 </button>
             </div>
             <div className="flex items-center gap-4">
-                <button
-                    onClick={onToggleReflection}
-                    className="p-2 rounded-full text-neutral-500 dark:text-neutral-400 hover:text-neutral-800 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition"
-                    title={showReflection ? "Hide Reflections" : "Show Reflections"}
-                >
-                    <Icon name={showReflection ? "BookOpen" : "BookX"} className="w-5 h-5" />
-                </button>
-                <button
-                    onClick={onToggleGratefulness}
-                    className="p-2 rounded-full text-neutral-500 dark:text-neutral-400 hover:text-neutral-800 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition"
-                    title={showGratefulness ? "Hide Gratefulness" : "Show Gratefulness"}
-                >
-                    <Icon name={showGratefulness ? "Heart" : "HeartOff"} className="w-5 h-5" />
-                </button>
-                <button
-                    onClick={onToggleSound}
-                    className="p-2 rounded-full text-neutral-500 dark:text-neutral-400 hover:text-neutral-800 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition"
-                    title={soundEnabled ? "Mute Audio" : "Enable Audio"}
-                >
-                    <Icon name={soundEnabled ? "Volume2" : "VolumeX"} className="w-5 h-5" />
-                </button>
-                <button
-                    onClick={onOpenKeyboardSettings}
-                    className="p-2 rounded-full text-neutral-500 dark:text-neutral-400 hover:text-neutral-800 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition"
-                    title="Keyboard Shortcuts"
-                >
-                    <Icon name="Keyboard" className="w-5 h-5" />
-                </button>
-                <button
-                    onClick={onToggleTheme}
-                    className="p-2 rounded-full text-neutral-500 dark:text-neutral-400 hover:text-neutral-800 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition"
-                    title={isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
-                >
-                    <Icon name={isDarkMode ? "Sun" : "Moon"} className="w-5 h-5" />
-                </button>
                 <span className="text-sm text-neutral-500 dark:text-neutral-400 flex items-center gap-2">
                     {isToday ? 'Today' : 'Viewing Past/Future Day'}
                     <span className="ml-2 px-2 py-1 bg-neutral-200 dark:bg-neutral-950 text-neutral-700 dark:text-neutral-300 rounded-full text-xs">
                         {incompleteCount} incomplete tasks
                     </span>
                 </span>
+
+                <div className="w-px h-6 bg-neutral-200 dark:bg-neutral-800 mx-1"></div>
+
+                <button
+                    onClick={onOpenSettings}
+                    className="p-2 rounded-full text-neutral-500 dark:text-neutral-400 hover:text-neutral-800 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition"
+                    title="Settings"
+                >
+                    <Icon name="Settings" className="w-5 h-5" />
+                </button>
             </div>
         </div>
     );

@@ -9,6 +9,7 @@ const isElectronApp = (): boolean => {
 
 const storageKey = 'daily_planner_data';
 const themeKey = 'planner_theme';
+const savePathKey = 'planner_save_path';
 
 const saveDataToLocalStorage = (key: string, data: any): void => {
     try {
@@ -28,6 +29,19 @@ export const loadDataFromLocalStorage = (key: string): any => {
     }
 };
 
+export const getCustomSavePath = (): string | null => {
+    try {
+        const path = localStorage.getItem(savePathKey);
+        return path ? JSON.parse(path) : null;
+    } catch {
+        return null;
+    }
+};
+
+export const setCustomSavePath = (path: string): void => {
+    saveDataToLocalStorage(savePathKey, path);
+};
+
 export const saveDataToFile = (data: any): void => {
     if (!isElectronApp()) {
         saveDataToLocalStorage(storageKey, data);
@@ -38,7 +52,11 @@ export const saveDataToFile = (data: any): void => {
         const fs = requireFunc('fs');
         const path = requireFunc('path');
         const os = requireFunc('os');
-        const savePath = path.join(os.homedir(), 'DailyPlannerData.json');
+
+        const customPath = getCustomSavePath();
+        const saveDir = customPath || os.homedir();
+        const savePath = path.join(saveDir, 'DailyPlannerData.json');
+
         fs.writeFileSync(savePath, JSON.stringify(data, null, 2), 'utf-8');
         console.log('Data saved successfully to:', savePath);
     } catch (e) {
@@ -49,23 +67,27 @@ export const saveDataToFile = (data: any): void => {
 
 export const loadDataFromFile = (): any => {
     if (!isElectronApp()) {
-        return loadDataFromLocalStorage(storageKey) || { tasks: {}, days: {} };
+        return loadDataFromLocalStorage(storageKey) || { tasks: {}, days: {}, settings: {} };
     }
     try {
         const requireFunc = (window as any).require;
         const fs = requireFunc('fs');
         const path = requireFunc('path');
         const os = requireFunc('os');
-        const loadPath = path.join(os.homedir(), 'DailyPlannerData.json');
+
+        const customPath = getCustomSavePath();
+        const loadDir = customPath || os.homedir();
+        const loadPath = path.join(loadDir, 'DailyPlannerData.json');
+
         if (fs.existsSync(loadPath)) {
             const data = fs.readFileSync(loadPath, 'utf-8');
             console.log('Data loaded successfully from:', loadPath);
             return JSON.parse(data);
         }
-        return { tasks: {}, days: {} };
+        return { tasks: {}, days: {}, settings: {} };
     } catch (e) {
         console.error("Error loading file via Electron FS:", e);
-        return loadDataFromLocalStorage(storageKey) || { tasks: {}, days: {} };
+        return loadDataFromLocalStorage(storageKey) || { tasks: {}, days: {}, settings: {} };
     }
 };
 

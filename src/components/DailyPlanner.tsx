@@ -11,12 +11,12 @@ import { TaskItemBase } from './TaskItem';
 import { playSound } from '../utils/soundUtils';
 import { TaskEntry } from '../store/types';
 import { useKeyboardNavigation } from '../hooks/useKeyboardNavigation';
-import { KeyboardSettingsModal } from './settings/KeyboardSettingsModal';
+import { SettingsModal } from './settings/SettingsModal';
 import ShortcutsToast from './ShortcutsToast';
 
 const DailyPlanner: React.FC = () => {
     // UI State
-    const [isKeyboardSettingsOpen, setIsKeyboardSettingsOpen] = useState(false);
+    const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
     // --- Store Selectors ---
     const {
@@ -26,10 +26,6 @@ const DailyPlanner: React.FC = () => {
         jumpToToday,
 
         settings,
-        toggleTheme,
-        toggleSound,
-        toggleGratefulness,
-        toggleReflection,
         days,
         tasks: allTasks,
         addTask,
@@ -216,16 +212,8 @@ const DailyPlanner: React.FC = () => {
                         onDateChange={handleDateChange}
                         onJumpToToday={jumpToToday}
                         isToday={isToday}
-                        isDarkMode={settings.isDarkMode}
-                        onToggleTheme={toggleTheme}
                         incompleteCount={incompleteCount}
-                        soundEnabled={settings.soundEnabled}
-                        onToggleSound={toggleSound}
-                        showGratefulness={settings.showGratefulness}
-                        onToggleGratefulness={toggleGratefulness}
-                        showReflection={settings.showReflection}
-                        onToggleReflection={toggleReflection}
-                        onOpenKeyboardSettings={() => setIsKeyboardSettingsOpen(true)}
+                        onOpenSettings={() => setIsSettingsOpen(true)}
                     />
 
                     <div className="flex-1 flex overflow-hidden p-6 gap-6">
@@ -289,8 +277,8 @@ const DailyPlanner: React.FC = () => {
                 ) : null}
             </DragOverlay>
 
-            {isKeyboardSettingsOpen && (
-                <KeyboardSettingsModal onClose={() => setIsKeyboardSettingsOpen(false)} />
+            {isSettingsOpen && (
+                <SettingsModal onClose={() => setIsSettingsOpen(false)} />
             )}
             <ShortcutsToast />
         </DndContext>

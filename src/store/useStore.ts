@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 // import { CONFIG } from '../constants/config';
 import { DEFAULT_SHORTCUTS } from '../constants/shortcuts';
-import { loadDataFromFile, saveDataToFile, loadTheme } from '../utils/storage';
+import { loadDataFromFile, saveDataToFile, loadTheme, getCustomSavePath, setCustomSavePath } from '../utils/storage';
 import { getYYYYMMDD, getDateOffset } from '../utils/dateUtils';
 import { Store, StoreState, TaskEntry, TaskGlobal, DayData } from './types';
 
@@ -11,6 +11,9 @@ const getInitialState = (): Partial<StoreState> => {
     // Ensure minimal structure exists
     if (!data.tasks) data.tasks = {};
     if (!data.days) data.days = {};
+
+    const customSavePath = getCustomSavePath();
+
     if (!data.settings) {
         // Default settings
         data.settings = {
@@ -18,11 +21,16 @@ const getInitialState = (): Partial<StoreState> => {
             soundEnabled: true,
             showGratefulness: true,
             showReflection: true,
-            shortcuts: { ...DEFAULT_SHORTCUTS }
+            shortcuts: { ...DEFAULT_SHORTCUTS },
+            savePath: customSavePath || undefined
         };
-    } else if (!data.settings.shortcuts) {
-        // Migration: Add shortcuts if missing in existing settings
-        data.settings.shortcuts = { ...DEFAULT_SHORTCUTS };
+    } else {
+        if (!data.settings.shortcuts) {
+            // Migration: Add shortcuts if missing in existing settings
+            data.settings.shortcuts = { ...DEFAULT_SHORTCUTS };
+        }
+        // Ensure savePath is up to date with local storage source of truth
+        data.settings.savePath = customSavePath || undefined;
     }
     return data;
 };
@@ -109,6 +117,19 @@ export const useStore = create<Store>((set, get) => ({
                 windowWidth: width,
                 windowHeight: height
             };
+            saveDataToFile({ tasks: state.tasks, days: state.days, settings: newSettings });
+            return { settings: newSettings };
+        });
+    },
+
+    setSavePath: (path: string) => {
+        setCustomSavePath(path);
+        set((state) => {
+            const newSettings = {
+                ...state.settings,
+                savePath: path
+            };
+            // This will trigger a save to the NEW path immediately
             saveDataToFile({ tasks: state.tasks, days: state.days, settings: newSettings });
             return { settings: newSettings };
         });
