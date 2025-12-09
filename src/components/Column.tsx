@@ -82,9 +82,10 @@ const Column: React.FC<ColumnProps> = ({ title, category, limit, tasks, allTasks
                     strategy={verticalListSortingStrategy}
                 >
                     {/* Only map over visible (incomplete and correctly categorized) tasks */}
-                    {visibleTasks.map(task =>
+                    {visibleTasks.map((task, index) =>
                         <TaskItem
                             key={task.taskId} // Use taskId as key for consistency
+                            index={index}
                             task={task}
                             allTasks={allTasks}
                             toggleTask={toggleTask}

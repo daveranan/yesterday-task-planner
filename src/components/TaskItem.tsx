@@ -24,6 +24,7 @@ interface TaskItemBaseProps {
     isDragging?: boolean;
     isOverlay?: boolean;
     isSelected?: boolean;
+    index?: number;
 }
 
 // The UI Component (Pure, no DnD hooks yourself, but accepts refs/styles)
@@ -44,7 +45,8 @@ export const TaskItemBase: React.FC<TaskItemBaseProps> = ({
     listeners,
     isDragging,
     isOverlay, // Helper to styling
-    isSelected
+    isSelected,
+    index
 }) => {
     const [localIsEditing, setLocalIsEditing] = useState(false);
     // Combine local click edit and global shortcut edit
@@ -103,6 +105,17 @@ export const TaskItemBase: React.FC<TaskItemBaseProps> = ({
         }
     };
 
+    // Scroll Into View Effect - Moved to top level safely
+    useEffect(() => {
+        if (isSelected || (isManipulated && !isSelected) || isGrabbed) {
+            const element = document.getElementById(`task-${task.taskId}`);
+            if (element) {
+                // Use 'auto' for instant scrolling to prevent interruption issues during rapid navigation
+                element.scrollIntoView({ behavior: 'auto', block: 'nearest' });
+            }
+        }
+    }, [isSelected, isManipulated, isGrabbed, task.taskId, index]);
+
     if (!originalTask) return null; // Defensive check for missing task data
 
     if (isDragging) {
@@ -133,13 +146,6 @@ export const TaskItemBase: React.FC<TaskItemBaseProps> = ({
                     : 'border-neutral-200 dark:border-neutral-700'}
             `}
         >
-            {/* Scroll Into View Effect */}
-            {React.useEffect(() => {
-                if (isSelected || (isManipulated && !isSelected)) {
-                    document.getElementById(`task-${task.taskId}`)?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                }
-            }, [isSelected, isManipulated, task.taskId])}
-
             {/* USE NEUTRAL: Icons and text colors adjusted for deeper contrast against neutral-800 */}
             <button
                 id={`checkbox-${task.taskId}`}
@@ -213,6 +219,7 @@ interface TaskItemSpecificProps {
     toggleTask: (taskId: string) => void;
     deleteTask: (taskId: string) => void;
     handleEditTask: (taskId: string, newTitle: string) => void;
+    index?: number;
 }
 
 // The Sortable Wrapper (Default)
@@ -254,6 +261,7 @@ const TaskItem: React.FC<TaskItemSpecificProps> = (props) => {
             setHoveredTaskId={setHoveredTaskId}
             grabbedTaskId={grabbedTaskId}
             editingTaskId={editingTaskId}
+            index={props.index}
         />
     );
 };
@@ -288,6 +296,7 @@ export const DraggableTaskItem: React.FC<TaskItemSpecificProps> = (props) => {
             setHoveredTaskId={setHoveredTaskId}
             grabbedTaskId={grabbedTaskId}
             editingTaskId={editingTaskId}
+            index={props.index}
         />
     );
 };
