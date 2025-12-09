@@ -57,10 +57,45 @@ const DailyPlanner: React.FC = () => {
         document.documentElement.classList.toggle('dark', settings.isDarkMode);
     }, [settings.isDarkMode]);
 
+
+
     // Force defocus on mount
     React.useEffect(() => {
         (document.activeElement as HTMLElement)?.blur();
+
+        // Restore window size if saved
+        if (settings.windowWidth && settings.windowHeight) {
+            try {
+                window.resizeTo(settings.windowWidth, settings.windowHeight);
+            } catch (e) {
+                console.warn('Failed to resize window:', e);
+            }
+        }
     }, []);
+
+    const setWindowSize = useStore(state => state.setWindowSize);
+
+    // Track and save window size
+    React.useEffect(() => {
+        let timeoutId: number;
+
+        const handleResize = () => {
+            clearTimeout(timeoutId);
+            timeoutId = window.setTimeout(() => {
+                setWindowSize(window.innerWidth, window.innerHeight);
+            }, 500); // Save 500ms after resize ends
+        };
+
+        window.addEventListener('resize', handleResize);
+
+        // Save initial size on mount just in case
+        setWindowSize(window.innerWidth, window.innerHeight);
+
+        return () => {
+            window.removeEventListener('resize', handleResize);
+            clearTimeout(timeoutId);
+        };
+    }, [setWindowSize]);
 
     // Derived Data
     const currentDayData = days[currentDate] || { taskEntries: [], gratefulness: '', reflections: '' };
