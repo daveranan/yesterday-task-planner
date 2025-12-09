@@ -54,7 +54,6 @@ const PlannerHeader: React.FC<PlannerHeaderProps> = ({
             </div>
             <div className="flex items-center gap-4">
                 <span className="text-sm text-neutral-500 dark:text-neutral-400 flex items-center gap-2">
-                    {isToday ? 'Today' : 'Viewing Past/Future Day'}
                     <span className="ml-2 px-2 py-1 bg-neutral-200 dark:bg-neutral-950 text-neutral-700 dark:text-neutral-300 rounded-full text-xs">
                         {incompleteCount} incomplete tasks
                     </span>
