@@ -127,19 +127,12 @@ export const useStore = create<Store>((set, get) => ({
     addTask: (category: string, title: string) => {
         const { currentDate, days, tasks } = get();
 
-        // Limit Check
+        // Limit Check - REMOVED (User Request: Suggestion only)
         const currentDayData: DayData = days[currentDate] || { taskEntries: [] };
-        const categoryCount = currentDayData.taskEntries.filter(t => {
-            const task = tasks[t.taskId];
-            return task && !task.completed && t.category === category;
-        }).length;
-
-        // Cast key to keyof typeof CONFIG.limits to satisfy TS if strict
-        const limit = CONFIG.limits[category as keyof typeof CONFIG.limits];
-        if (limit && categoryCount >= limit) {
-            console.warn(`Limit reached for ${category}`);
-            return; // Or throw error / return false to UI
-        }
+        // const categoryCount = currentDayData.taskEntries.filter(t => {
+        //     const task = tasks[t.taskId];
+        //     return task && !task.completed && t.category === category;
+        // }).length;
 
         const newTaskId = Date.now().toString();
         const newTaskGlobal: TaskGlobal = {
@@ -173,17 +166,41 @@ export const useStore = create<Store>((set, get) => ({
     },
 
     toggleTask: (taskId: string) => {
+        const { currentDate, days } = get();
         set(state => {
             const task = state.tasks[taskId];
             if (!task) return state;
 
+            const isCompleting = !task.completed;
             const updatedTasks = {
                 ...state.tasks,
-                [taskId]: { ...task, completed: !task.completed }
+                [taskId]: { ...task, completed: isCompleting }
             };
 
-            saveDataToFile({ tasks: updatedTasks, days: state.days, settings: state.settings });
-            return { tasks: updatedTasks };
+            let updatedDays = state.days;
+
+            // If we are completing the task, check if we need to "adopt" it to the current day
+            // (Remove rolledOverFrom marker)
+            if (isCompleting) {
+                const currentDay = state.days[currentDate];
+                if (currentDay) {
+                    const entryIndex = currentDay.taskEntries.findIndex(t => t.taskId === taskId);
+                    if (entryIndex !== -1 && currentDay.taskEntries[entryIndex].rolledOverFrom) {
+                        const updatedEntries = [...currentDay.taskEntries];
+                        updatedEntries[entryIndex] = {
+                            ...updatedEntries[entryIndex],
+                            rolledOverFrom: null // Adopt to today
+                        };
+                        updatedDays = {
+                            ...state.days,
+                            [currentDate]: { ...currentDay, taskEntries: updatedEntries }
+                        };
+                    }
+                }
+            }
+
+            saveDataToFile({ tasks: updatedTasks, days: updatedDays, settings: state.settings });
+            return { tasks: updatedTasks, days: updatedDays };
         });
     },
 
@@ -238,19 +255,6 @@ export const useStore = create<Store>((set, get) => ({
         const taskEntryIndex = currentDay.taskEntries.findIndex(t => t.taskId === taskId);
         const taskEntry = currentDay.taskEntries[taskEntryIndex];
         if (!taskEntry) return;
-
-        // Limit Check for target category
-        if (targetCategory !== 'scheduled' && targetCategory !== taskEntry.category) {
-            const count = currentDay.taskEntries.filter(t => {
-                const globalTask = tasks[t.taskId];
-                return globalTask && !globalTask.completed && t.category === targetCategory;
-            }).length;
-
-            const limit = CONFIG.limits[targetCategory as keyof typeof CONFIG.limits];
-            if (limit && count >= limit) {
-                return; // Limit reached
-            }
-        }
 
         // Global category update (unless scheduled)
         let newGlobalCategory = tasks[taskId].category;
@@ -357,7 +361,11 @@ export const useStore = create<Store>((set, get) => ({
         // 2. Merge with existing "Keepers"
         const tasksToKeep = dayData.taskEntries.filter(entry => {
             const task = tasks[entry.taskId];
-            return task && (!entry.rolledOverFrom || task.completed || !task.completed);
+            // Fix: If a task was rolled over and is now completed, remove it from this day
+            if (entry.rolledOverFrom && task && task.completed) {
+                return false;
+            }
+            return task;
         });
 
         const existingIds = new Set(tasksToKeep.map(t => t.taskId));
@@ -365,8 +373,13 @@ export const useStore = create<Store>((set, get) => ({
         // Only add tasks that are NOT already in today's list
         const newRollovers = tasksToRollover.filter(t => !existingIds.has(t.taskId));
 
-        if (newRollovers.length === 0) {
-            // Nothing new to add.
+        // Check if we need to update:
+        // 1. If we have new rollovers to add
+        // 2. OR if we filtered out some existing tasks (completed rollovers) - i.e. count changed
+        const hasChanges = newRollovers.length > 0 || tasksToKeep.length !== dayData.taskEntries.length;
+
+        if (!hasChanges) {
+            // Nothing new to add and nothing removed.
             // If we haven't marked rolloverComplete yet, do it.
             if (!dayData.rolloverComplete) {
                 set(state => ({

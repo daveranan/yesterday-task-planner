@@ -24,13 +24,13 @@ const Column: React.FC<ColumnProps> = ({ title, category, limit, tasks, allTasks
         id: category,
     });
 
-    // FIX: Filter out tasks that are completed AND/OR don't belong to this category 
-    // to get the count of INCOMPLETE tasks for this specific column.
+    // FIX: Filter out tasks that don't belong to this category
+    // to get the count of tasks for this specific column.
     const visibleTasks = tasks.filter(t => {
         const globalTask = allTasks[t.taskId];
 
-        // 1. Must check if global task exists and is not completed
-        if (!globalTask || globalTask.completed) return false;
+        // 1. Must check if global task exists
+        if (!globalTask) return false;
 
         // 2. Hide if the local entry is scheduled on the timeline
         if (t.category === 'scheduled') return false;
@@ -91,7 +91,6 @@ const Column: React.FC<ColumnProps> = ({ title, category, limit, tasks, allTasks
                     <input
                         type="text"
                         placeholder={isLimitReached ? `Limit Reached (${limit})` : "+ Add item"}
-                        disabled={isLimitReached}
                         className={`
                             w-full text-sm px-2 py-1 
                             /* USE NEUTRAL: Input background to neutral-800, border to neutral-700 */
@@ -99,7 +98,7 @@ const Column: React.FC<ColumnProps> = ({ title, category, limit, tasks, allTasks
                             focus:bg-white dark:focus:bg-neutral-900 focus:border-neutral-400 dark:focus:border-neutral-600 focus:ring-neutral-400 dark:focus:ring-neutral-600 focus:ring-1 
                             rounded-t-md transition-all duration-150 focus:outline-none
                             placeholder-neutral-400 dark:placeholder-neutral-500 text-neutral-900 dark:text-neutral-100
-                            ${isLimitReached ? 'text-neutral-400 dark:text-neutral-500 cursor-not-allowed' : ''}
+                            ${isLimitReached ? 'text-neutral-500 dark:text-neutral-400' : ''}
                         `}
                         value={localNewTaskTitle}
                         onChange={(e) => setLocalNewTaskTitle(e.target.value)}
