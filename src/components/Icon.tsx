@@ -3,7 +3,8 @@ import {
     Plus, Clock, Trash2, Calendar, ChevronLeft, ChevronRight,
     CheckSquare, Square, Sun, Moon, Target, Edit, LucideProps,
     Volume2, VolumeX, Heart, HeartOff, BookOpen, BookX,
-    Keyboard, X, Settings, Sliders, HardDrive, Power
+    Keyboard, X, Settings, Sliders, HardDrive, Power,
+    Minus, Maximize, Copy
 } from 'lucide-react';
 
 const RolloverIcon = (props: LucideProps) => (
@@ -19,7 +20,8 @@ const icons = {
     CheckSquare, Square, Sun, Moon, Target, Edit,
     Rollover: RolloverIcon,
     Volume2, VolumeX, Heart, HeartOff, BookOpen, BookX,
-    Keyboard, X, Settings, Sliders, HardDrive, Power
+    Keyboard, X, Settings, Sliders, HardDrive, Power,
+    Minus, Maximize, Copy
 };
 
 export type IconName = keyof typeof icons;

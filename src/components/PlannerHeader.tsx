@@ -21,12 +21,33 @@ const PlannerHeader: React.FC<PlannerHeaderProps> = ({
     incompleteCount,
     onOpenSettings
 }) => {
+    const handleMinimize = () => {
+        if ((window as any).require) {
+            const { ipcRenderer } = (window as any).require('electron');
+            ipcRenderer.send('window-minimize');
+        }
+    };
+
+    const handleMaximize = () => {
+        if ((window as any).require) {
+            const { ipcRenderer } = (window as any).require('electron');
+            ipcRenderer.send('window-maximize');
+        }
+    };
+
+    const handleClose = () => {
+        if ((window as any).require) {
+            const { ipcRenderer } = (window as any).require('electron');
+            ipcRenderer.send('window-close');
+        }
+    };
+
     return (
-        <div className="h-12 bg-background border-b border-border flex items-center justify-between px-4 shadow-sm z-20">
-            <div className="flex items-center gap-4">
+        <div className="h-12 bg-background border-b border-border flex items-center justify-between px-4 shadow-sm z-20 select-none" style={{ WebkitAppRegion: 'drag' } as React.CSSProperties}>
+            <div className="flex items-center gap-4" style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}>
                 <h1 className="flex items-center gap-2">
                     <img src="assets/img/favicon.png" alt="Icon" className="w-8 h-8" />
-                    <img src="assets/img/Yesterday_logo.svg" alt="Yesterday" className="h-8" />
+                    <img src="assets/img/Yesterday_logo.svg" alt="Yesterday" className="h-6" />
                 </h1>
                 <div className="flex items-center bg-muted/50 rounded-lg p-1">
                     <Button
@@ -64,7 +85,7 @@ const PlannerHeader: React.FC<PlannerHeaderProps> = ({
                     Today
                 </Button>
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4" style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}>
                 <span className="text-sm text-muted-foreground flex items-center gap-2">
                     <span className="ml-2 px-2 py-1 bg-muted text-muted-foreground rounded-full text-xs font-medium">
                         {incompleteCount} incomplete tasks
@@ -82,6 +103,36 @@ const PlannerHeader: React.FC<PlannerHeaderProps> = ({
                 >
                     <Icon name="Settings" className="w-5 h-5" />
                 </Button>
+
+                <div className="flex items-center gap-1 ml-2">
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={handleMinimize}
+                        className="h-8 w-8 hover:bg-muted"
+                        title="Minimize"
+                    >
+                        <Icon name="Minus" className="w-4 h-4" />
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={handleMaximize}
+                        className="h-8 w-8 hover:bg-muted"
+                        title="Maximize"
+                    >
+                        <Icon name="Square" className="w-3 h-3" />
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={handleClose}
+                        className="h-8 w-8 hover:bg-red-500/10 hover:text-red-500"
+                        title="Close"
+                    >
+                        <Icon name="X" className="w-4 h-4" />
+                    </Button>
+                </div>
             </div>
         </div>
     );

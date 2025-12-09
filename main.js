@@ -28,6 +28,9 @@ function createWindow() {
     height: 800,
     minWidth: 900,
     minHeight: 600,
+    // Frame: false ensures no native window controls or border
+    frame: false,
+    // autoHideMenuBar: true, // Optional if you want to hide it but keep alt access, but removeMenu is safer for total removal
     webPreferences: {
       // preload: path.join(__dirname, 'preload.js'),
       // Allows use of Node.js modules in the renderer process (security risk, but needed for simple apps)
@@ -36,6 +39,9 @@ function createWindow() {
     },
     icon: path.join(__dirname, 'public/assets/img/favicon.ico')
   });
+
+  // Remove the default menu
+  mainWindow.removeMenu();
 
   // Load the app.
   // In development (Vite running), load localhost.
@@ -71,6 +77,23 @@ function createWindow() {
     // When built, Vite puts result in dist/
     mainWindow.loadFile(path.join(__dirname, 'dist/index.html'));
   }
+
+  // --- IPC Handlers for Window Controls ---
+  ipcMain.on('window-minimize', () => {
+    mainWindow.minimize();
+  });
+
+  ipcMain.on('window-maximize', () => {
+    if (mainWindow.isMaximized()) {
+      mainWindow.unmaximize();
+    } else {
+      mainWindow.maximize();
+    }
+  });
+
+  ipcMain.on('window-close', () => {
+    mainWindow.close();
+  });
 }
 
 // When Electron is ready, create the window.
