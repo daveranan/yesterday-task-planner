@@ -1,4 +1,4 @@
-const { app, BrowserWindow, screen } = require('electron');
+const { app, BrowserWindow, screen, ipcMain } = require('electron');
 const path = require('path');
 const isDev = !app.isPackaged; // Simple check for development mode
 
@@ -82,6 +82,19 @@ app.whenReady().then(() => {
     if (BrowserWindow.getAllWindows().length === 0) {
       createWindow();
     }
+  });
+});
+
+// IPC Handlers for Run on Startup
+ipcMain.handle('get-startup-setting', () => {
+  const settings = app.getLoginItemSettings();
+  return settings.openAtLogin;
+});
+
+ipcMain.on('set-startup-setting', (event, openAtLogin) => {
+  app.setLoginItemSettings({
+    openAtLogin: openAtLogin,
+    path: app.getPath('exe'), // Optional: Explicitly set the path to the executable
   });
 });
 

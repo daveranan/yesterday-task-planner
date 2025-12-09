@@ -23,6 +23,30 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
     const [activeTab, setActiveTab] = useState<Tab>('general');
     const [recordingAction, setRecordingAction] = useState<string | null>(null);
     const [tempSavePath, setTempSavePath] = useState(settings.savePath || '');
+    const [runOnStartup, setRunOnStartup] = useState(false);
+
+    React.useEffect(() => {
+        // Fetch initial startup setting
+        try {
+            const { ipcRenderer } = (window as any).require('electron');
+            ipcRenderer.invoke('get-startup-setting').then((isOpenAtLogin: boolean) => {
+                setRunOnStartup(isOpenAtLogin);
+            });
+        } catch (error) {
+            console.error('Failed to get startup setting:', error);
+        }
+    }, []);
+
+    const toggleStartup = () => {
+        const newValue = !runOnStartup;
+        setRunOnStartup(newValue);
+        try {
+            const { ipcRenderer } = (window as any).require('electron');
+            ipcRenderer.send('set-startup-setting', newValue);
+        } catch (error) {
+            console.error('Failed to set startup setting:', error);
+        }
+    };
 
     // Keyboard configuration logic
     const handleKeyDown = (e: React.KeyboardEvent, actionId: string) => {
@@ -68,8 +92,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
                         <button
                             onClick={() => setActiveTab('general')}
                             className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${activeTab === 'general'
-                                    ? 'bg-neutral-200 dark:bg-neutral-800 text-neutral-900 dark:text-white'
-                                    : 'text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-900'
+                                ? 'bg-neutral-200 dark:bg-neutral-800 text-neutral-900 dark:text-white'
+                                : 'text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-900'
                                 }`}
                         >
                             <Icon name="Sliders" className="w-4 h-4" />
@@ -78,8 +102,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
                         <button
                             onClick={() => setActiveTab('shortcuts')}
                             className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${activeTab === 'shortcuts'
-                                    ? 'bg-neutral-200 dark:bg-neutral-800 text-neutral-900 dark:text-white'
-                                    : 'text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-900'
+                                ? 'bg-neutral-200 dark:bg-neutral-800 text-neutral-900 dark:text-white'
+                                : 'text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-900'
                                 }`}
                         >
                             <Icon name="Keyboard" className="w-4 h-4" />
@@ -177,6 +201,24 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
                                             <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${settings.showGratefulness ? 'translate-x-6' : 'translate-x-1'}`} />
                                         </button>
                                     </div>
+
+                                    <div className="flex items-center justify-between p-4 bg-neutral-50 dark:bg-neutral-800/50 rounded-lg border border-neutral-200 dark:border-neutral-800">
+                                        <div className="flex items-center gap-3">
+                                            <div className="p-2 bg-neutral-200 dark:bg-neutral-700 rounded-lg">
+                                                <Icon name="Power" className="w-5 h-5 text-neutral-700 dark:text-neutral-300" />
+                                            </div>
+                                            <div>
+                                                <div className="font-medium text-neutral-900 dark:text-white">Run on Startup</div>
+                                                <div className="text-xs text-neutral-500 dark:text-neutral-400">Automatically start app when you log in</div>
+                                            </div>
+                                        </div>
+                                        <button
+                                            onClick={toggleStartup}
+                                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${runOnStartup ? 'bg-neutral-900 dark:bg-blue-600' : 'bg-neutral-300'}`}
+                                        >
+                                            <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${runOnStartup ? 'translate-x-6' : 'translate-x-1'}`} />
+                                        </button>
+                                    </div>
                                 </section>
 
                                 {/* Data Section */}
@@ -249,7 +291,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
                         )}
                     </div>
                 </div>
-            </div>
-        </div>
+            </div >
+        </div >
     );
 };

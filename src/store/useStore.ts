@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 // import { CONFIG } from '../constants/config';
 import { DEFAULT_SHORTCUTS } from '../constants/shortcuts';
-import { loadDataFromFile, saveDataToFile, loadTheme, getCustomSavePath, setCustomSavePath } from '../utils/storage';
+import { loadDataFromFile, saveDataToFile, saveSettingsToFile, loadTheme, getCustomSavePath, setCustomSavePath } from '../utils/storage';
 import { getYYYYMMDD, getDateOffset } from '../utils/dateUtils';
 import { Store, StoreState, TaskEntry, TaskGlobal, DayData } from './types';
 
@@ -75,7 +75,7 @@ export const useStore = create<Store>((set, get) => ({
     setTheme: (isDark: boolean) => {
         set((state) => {
             const newSettings = { ...state.settings, isDarkMode: isDark };
-            saveDataToFile({ tasks: state.tasks, days: state.days, settings: newSettings });
+            saveSettingsToFile(newSettings);
             return { settings: newSettings };
         });
         document.documentElement.classList.toggle('dark', isDark);
@@ -89,7 +89,7 @@ export const useStore = create<Store>((set, get) => ({
     toggleSound: () => {
         set((state) => {
             const newSettings = { ...state.settings, soundEnabled: !state.settings.soundEnabled };
-            saveDataToFile({ tasks: state.tasks, days: state.days, settings: newSettings });
+            saveSettingsToFile(newSettings);
             return { settings: newSettings };
         });
     },
@@ -97,7 +97,7 @@ export const useStore = create<Store>((set, get) => ({
     toggleGratefulness: () => {
         set((state) => {
             const newSettings = { ...state.settings, showGratefulness: !state.settings.showGratefulness };
-            saveDataToFile({ tasks: state.tasks, days: state.days, settings: newSettings });
+            saveSettingsToFile(newSettings);
             return { settings: newSettings };
         });
     },
@@ -105,7 +105,7 @@ export const useStore = create<Store>((set, get) => ({
     toggleReflection: () => {
         set((state) => {
             const newSettings = { ...state.settings, showReflection: !state.settings.showReflection };
-            saveDataToFile({ tasks: state.tasks, days: state.days, settings: newSettings });
+            saveSettingsToFile(newSettings);
             return { settings: newSettings };
         });
     },
@@ -117,7 +117,7 @@ export const useStore = create<Store>((set, get) => ({
                 windowWidth: width,
                 windowHeight: height
             };
-            saveDataToFile({ tasks: state.tasks, days: state.days, settings: newSettings });
+            saveSettingsToFile(newSettings);
             return { settings: newSettings };
         });
     },
@@ -130,7 +130,9 @@ export const useStore = create<Store>((set, get) => ({
                 savePath: path
             };
             // This will trigger a save to the NEW path immediately
-            saveDataToFile({ tasks: state.tasks, days: state.days, settings: newSettings });
+            saveSettingsToFile(newSettings);
+            // Also save data to new location
+            saveDataToFile({ tasks: state.tasks, days: state.days });
             return { settings: newSettings };
         });
     },
@@ -145,7 +147,7 @@ export const useStore = create<Store>((set, get) => ({
                     [actionId]: newKey
                 }
             };
-            saveDataToFile({ tasks: state.tasks, days: state.days, settings: newSettings });
+            saveSettingsToFile(newSettings);
             return { settings: newSettings };
         });
     },
@@ -245,7 +247,7 @@ export const useStore = create<Store>((set, get) => ({
                     }
                 }
             };
-            saveDataToFile({ tasks: newState.tasks, days: newState.days, settings: state.settings });
+            saveDataToFile({ tasks: newState.tasks, days: newState.days });
             return newState;
         });
     },
@@ -299,7 +301,7 @@ export const useStore = create<Store>((set, get) => ({
                 return acc;
             }, {} as Record<string, DayData>);
 
-            saveDataToFile({ tasks: restTasks, days: updatedDays, settings: state.settings });
+            saveDataToFile({ tasks: restTasks, days: updatedDays });
             return { tasks: restTasks, days: updatedDays };
         });
     },
@@ -310,7 +312,7 @@ export const useStore = create<Store>((set, get) => ({
                 ...state.tasks,
                 [taskId]: { ...state.tasks[taskId], title: newTitle }
             };
-            saveDataToFile({ tasks: updatedTasks, days: state.days, settings: state.settings });
+            saveDataToFile({ tasks: updatedTasks, days: state.days });
             return { tasks: updatedTasks };
         });
     },
@@ -323,7 +325,7 @@ export const useStore = create<Store>((set, get) => ({
                 ...state.days,
                 [currentDate]: { ...currentDay, ...updates }
             };
-            saveDataToFile({ tasks: state.tasks, days: updatedDays, settings: state.settings });
+            saveDataToFile({ tasks: state.tasks, days: updatedDays });
             return { days: updatedDays };
         });
     },
@@ -374,7 +376,7 @@ export const useStore = create<Store>((set, get) => ({
                 [currentDate]: { ...currentDay, taskEntries: updatedEntries }
             };
 
-            saveDataToFile({ tasks: updatedTasks, days: updatedDays, settings: state.settings });
+            saveDataToFile({ tasks: updatedTasks, days: updatedDays });
             return { tasks: updatedTasks, days: updatedDays };
         });
     },
@@ -398,7 +400,7 @@ export const useStore = create<Store>((set, get) => ({
                 ...state.days,
                 [currentDate]: { ...currentDay, taskEntries: updatedEntries }
             };
-            saveDataToFile({ tasks: state.tasks, days: updatedDays, settings: state.settings });
+            saveDataToFile({ tasks: state.tasks, days: updatedDays });
             return { days: updatedDays };
         });
     },
@@ -466,7 +468,7 @@ export const useStore = create<Store>((set, get) => ({
                     rolloverComplete: true
                 }
             };
-            saveDataToFile({ tasks: state.tasks, days: updatedDays, settings: state.settings });
+            saveDataToFile({ tasks: state.tasks, days: updatedDays });
             return { days: updatedDays };
         });
 
