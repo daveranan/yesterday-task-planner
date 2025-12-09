@@ -7,4 +7,4 @@ export const CONFIG = {
         'communications': 3,
         'todo': 7
     }
-};
+} as const;

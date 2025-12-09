@@ -1,9 +1,23 @@
 import React from 'react';
 import Column from './Column';
 import JournalSection from './JournalSection';
+import { DayData, TaskGlobal } from '../store/types';
 
-const TaskBoard = ({
-    categories, // Object containing { id, title, limit, data } or similar map
+interface TaskBoardProps {
+    categories?: any; // unused in implementation
+    currentDayData: DayData;
+    allTasks: Record<string, TaskGlobal>;
+    configLimits: Record<string, number>;
+    onAddTask: (category: string, title: string) => void;
+    onToggleTask: (taskId: string) => void;
+    onDeleteTask: (taskId: string) => void;
+    onEditTask: (taskId: string, newTitle: string) => void;
+    onUpdateDayData: (updates: Partial<DayData>) => void;
+}
+
+const TaskBoard: React.FC<TaskBoardProps> = ({
+    // categories, // Object containing { id, title, limit, data } or similar map -> Unused
+
     currentDayData,
     allTasks,
     configLimits,
@@ -64,8 +78,8 @@ const TaskBoard = ({
             </div>
 
             <JournalSection
-                gratefulness={currentDayData.gratefulness}
-                reflections={currentDayData.reflections}
+                gratefulness={currentDayData.gratefulness || ''}
+                reflections={currentDayData.reflections || ''}
                 onUpdate={onUpdateDayData}
             />
         </div>

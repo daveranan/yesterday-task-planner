@@ -4,9 +4,24 @@ import { useSortable } from '@dnd-kit/sortable';
 import { useDraggable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
 import confetti from 'canvas-confetti';
+import { TaskEntry, TaskGlobal } from '../store/types';
+
+interface TaskItemBaseProps {
+    task: TaskEntry;
+    allTasks: Record<string, TaskGlobal>;
+    toggleTask: (taskId: string) => void;
+    deleteTask: (taskId: string) => void;
+    handleEditTask: (taskId: string, newTitle: string) => void;
+    setNodeRef: (element: HTMLElement | null) => void;
+    style?: React.CSSProperties;
+    attributes?: any;
+    listeners?: any;
+    isDragging?: boolean;
+    isOverlay?: boolean;
+}
 
 // The UI Component (Pure, no DnD hooks yourself, but accepts refs/styles)
-export const TaskItemBase = ({
+export const TaskItemBase: React.FC<TaskItemBaseProps> = ({
     task,
     allTasks,
     toggleTask,
@@ -26,7 +41,7 @@ export const TaskItemBase = ({
     const originalTask = allTasks[task.taskId];
     const [localTitle, setLocalTitle] = useState(originalTask ? originalTask.title : '');
 
-    const inputRef = useRef(null);
+    const inputRef = useRef<HTMLInputElement>(null);
 
     const isCompleted = originalTask ? originalTask.completed : false;
 
@@ -50,11 +65,11 @@ export const TaskItemBase = ({
             handleEditTask(task.taskId, trimmedTitle);
         }
         // Reset local state in case the new title was invalid or the same
-        setLocalTitle(originalTask ? originalTask.title : task?.title);
+        setLocalTitle(originalTask ? originalTask.title : '');
         setIsEditing(false);
     };
 
-    const handleKeyDown = (e) => {
+    const handleKeyDown = (e: React.KeyboardEvent) => {
         // Prevent dnd-kit from interpreting Space/Enter as drag signals
         e.stopPropagation();
 
@@ -62,7 +77,7 @@ export const TaskItemBase = ({
             saveEdit();
         }
         if (e.key === 'Escape') {
-            setLocalTitle(originalTask ? originalTask.title : task?.title);
+            setLocalTitle(originalTask ? originalTask.title : '');
             setIsEditing(false);
         }
     };
@@ -153,8 +168,16 @@ export const TaskItemBase = ({
     );
 };
 
+interface TaskItemSpecificProps {
+    task: TaskEntry;
+    allTasks: Record<string, TaskGlobal>;
+    toggleTask: (taskId: string) => void;
+    deleteTask: (taskId: string) => void;
+    handleEditTask: (taskId: string, newTitle: string) => void;
+}
+
 // The Sortable Wrapper (Default)
-const TaskItem = (props) => {
+const TaskItem: React.FC<TaskItemSpecificProps> = (props) => {
     const {
         attributes,
         listeners,
@@ -185,7 +208,7 @@ const TaskItem = (props) => {
 };
 
 // The Draggable Wrapper (For Timeline)
-export const DraggableTaskItem = (props) => {
+export const DraggableTaskItem: React.FC<TaskItemSpecificProps> = (props) => {
     const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
         id: props.task.taskId,
         data: { type: 'TASK', task: props.task }

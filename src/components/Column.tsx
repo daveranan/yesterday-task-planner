@@ -2,8 +2,21 @@ import React, { useState } from 'react';
 import TaskItem from './TaskItem';
 import { useDroppable } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { TaskEntry, TaskGlobal } from '../store/types';
 
-const Column = ({ title, category, limit, tasks, allTasks, handleAddTask, toggleTask, deleteTask, handleEditTask }) => {
+interface ColumnProps {
+    title: string;
+    category: string;
+    limit?: number;
+    tasks: TaskEntry[];
+    allTasks: Record<string, TaskGlobal>;
+    handleAddTask: (category: string, title: string) => void;
+    toggleTask: (taskId: string) => void;
+    deleteTask: (taskId: string) => void;
+    handleEditTask: (taskId: string, newTitle: string) => void;
+}
+
+const Column: React.FC<ColumnProps> = ({ title, category, limit, tasks, allTasks, handleAddTask, toggleTask, deleteTask, handleEditTask }) => {
     const [localNewTaskTitle, setLocalNewTaskTitle] = useState('');
 
     const { setNodeRef, isOver } = useDroppable({
@@ -26,7 +39,7 @@ const Column = ({ title, category, limit, tasks, allTasks, handleAddTask, toggle
         return (globalTask.category || t.category) === category;
     });
 
-    const isLimitReached = limit && visibleTasks.length >= limit;
+    const isLimitReached = !!limit && visibleTasks.length >= limit;
 
     const addNewTask = () => {
         if (!localNewTaskTitle.trim()) return;

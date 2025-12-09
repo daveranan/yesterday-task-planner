@@ -1,10 +1,24 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import TaskItem from './TaskItem';
 import { useDroppable } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { DayData, TaskGlobal, TaskEntry } from '../store/types';
+import { CONFIG } from '../constants/config';
+
+interface TimeSlotProps {
+    slotId: string;
+    displayTime: string;
+    isBlockStart: boolean;
+    currentTimePercentage: number | null;
+    slotTasks: TaskEntry[];
+    allTasks: Record<string, TaskGlobal>;
+    onToggleTask: (taskId: string) => void;
+    onDeleteTask: (taskId: string) => void;
+    onEditTask: (taskId: string, newTitle: string) => void;
+}
 
 // Helper component for a single droppable time slot
-const TimeSlot = ({
+const TimeSlot: React.FC<TimeSlotProps> = ({
     slotId,
     displayTime,
     isBlockStart,
@@ -68,7 +82,17 @@ const TimeSlot = ({
     );
 };
 
-const Timeline = ({
+interface TimelineProps {
+    currentDayData: DayData;
+    allTasks: Record<string, TaskGlobal>;
+    isToday: boolean;
+    config: typeof CONFIG;
+    onToggleTask: (taskId: string) => void;
+    onDeleteTask: (taskId: string) => void;
+    onEditTask: (taskId: string, newTitle: string) => void;
+}
+
+const Timeline: React.FC<TimelineProps> = ({
     currentDayData,
     allTasks,
     isToday,

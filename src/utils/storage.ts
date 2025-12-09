@@ -1,15 +1,16 @@
-export const isElectron = window && window.process && window.process.type;
+/* eslint-disable @typescript-eslint/no-explicit-any */
+export const isElectron = window && (window as any).process && (window as any).process.type;
 // Note: In strict Electron nodeIntegration:true, window.require is available.
 // However, checking window.process.type is safer for renderer.
 // The original code used window.require check.
-const isElectronApp = () => {
-    return typeof window !== 'undefined' && typeof window.require === 'function';
+const isElectronApp = (): boolean => {
+    return typeof window !== 'undefined' && typeof (window as any).require === 'function';
 };
 
 const storageKey = 'daily_planner_data_v2';
 const themeKey = 'planner_theme';
 
-const saveDataToLocalStorage = (key, data) => {
+const saveDataToLocalStorage = (key: string, data: any): void => {
     try {
         localStorage.setItem(key, JSON.stringify(data));
     } catch (e) {
@@ -17,7 +18,7 @@ const saveDataToLocalStorage = (key, data) => {
     }
 };
 
-export const loadDataFromLocalStorage = (key) => {
+export const loadDataFromLocalStorage = (key: string): any => {
     try {
         const savedData = localStorage.getItem(key);
         return savedData ? JSON.parse(savedData) : null;
@@ -27,15 +28,16 @@ export const loadDataFromLocalStorage = (key) => {
     }
 };
 
-export const saveDataToFile = (data) => {
+export const saveDataToFile = (data: any): void => {
     if (!isElectronApp()) {
         saveDataToLocalStorage(storageKey, data);
         return;
     }
     try {
-        const fs = window.require('fs');
-        const path = window.require('path');
-        const os = window.require('os');
+        const requireFunc = (window as any).require;
+        const fs = requireFunc('fs');
+        const path = requireFunc('path');
+        const os = requireFunc('os');
         const savePath = path.join(os.homedir(), 'DailyPlannerData_v2.json');
         fs.writeFileSync(savePath, JSON.stringify(data, null, 2), 'utf-8');
         console.log('Data saved successfully to:', savePath);
@@ -45,14 +47,15 @@ export const saveDataToFile = (data) => {
     }
 };
 
-export const loadDataFromFile = () => {
+export const loadDataFromFile = (): any => {
     if (!isElectronApp()) {
         return loadDataFromLocalStorage(storageKey) || { tasks: {}, days: {} };
     }
     try {
-        const fs = window.require('fs');
-        const path = window.require('path');
-        const os = window.require('os');
+        const requireFunc = (window as any).require;
+        const fs = requireFunc('fs');
+        const path = requireFunc('path');
+        const os = requireFunc('os');
         const loadPath = path.join(os.homedir(), 'DailyPlannerData_v2.json');
         if (fs.existsSync(loadPath)) {
             const data = fs.readFileSync(loadPath, 'utf-8');
@@ -66,10 +69,10 @@ export const loadDataFromFile = () => {
     }
 };
 
-export const saveTheme = (isDark) => {
+export const saveTheme = (isDark: boolean): void => {
     saveDataToLocalStorage(themeKey, isDark ? 'dark' : 'light');
 };
 
-export const loadTheme = () => {
+export const loadTheme = (): boolean => {
     return loadDataFromLocalStorage(themeKey) === 'dark';
 };

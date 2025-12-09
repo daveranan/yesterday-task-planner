@@ -1,6 +1,12 @@
 import React from 'react';
 
-const JournalSection = ({ gratefulness, reflections, onUpdate }) => {
+interface JournalSectionProps {
+    gratefulness: string;
+    reflections: string;
+    onUpdate: (updates: { gratefulness?: string; reflections?: string }) => void;
+}
+
+const JournalSection: React.FC<JournalSectionProps> = ({ gratefulness, reflections, onUpdate }) => {
     return (
         <div className="flex-[2] flex gap-6 min-h-0">
             <div className="flex-1 bg-neutral-900 rounded-xl shadow-lg border border-neutral-800 p-4 flex flex-col">

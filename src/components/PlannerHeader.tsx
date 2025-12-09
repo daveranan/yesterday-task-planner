@@ -1,7 +1,18 @@
 import React from 'react';
 import { Icon } from './Icon';
 
-const PlannerHeader = ({
+interface PlannerHeaderProps {
+    currentDate: string;
+    setCurrentDate: (date: string) => void;
+    onDateChange: (offset: number) => void;
+    onJumpToToday: () => void;
+    isToday: boolean;
+    isDarkMode: boolean;
+    onToggleTheme: () => void;
+    incompleteCount: number;
+}
+
+const PlannerHeader: React.FC<PlannerHeaderProps> = ({
     currentDate,
     setCurrentDate,
     onDateChange,
