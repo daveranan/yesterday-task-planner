@@ -3,7 +3,26 @@ import { create } from 'zustand';
 import { DEFAULT_SHORTCUTS } from '../constants/shortcuts';
 import { loadDataFromFile, saveDataToFile, saveSettingsToFile, loadTheme, getCustomSavePath, setCustomSavePath } from '../utils/storage';
 import { getYYYYMMDD, getDateOffset } from '../utils/dateUtils';
-import { Store, StoreState, TaskEntry, TaskGlobal, DayData } from './types';
+import { toast } from 'sonner';
+import { Store, StoreState, TaskEntry, TaskGlobal, DayData, HistorySnapshot } from './types';
+
+const HISTORY_LIMIT = 100;
+
+// Helper to snapshot state
+const createSnapshot = (state: StoreState, description: string = 'Unknown Action'): HistorySnapshot => ({
+    tasks: state.tasks,
+    days: state.days,
+    actionDescription: description || 'Unknown Action'
+});
+
+// Helper to add to history
+const addToHistory = (state: StoreState, past: HistorySnapshot[], description: string = 'Unknown Action'): HistorySnapshot[] => {
+    const newPast = [...past, createSnapshot(state, description)];
+    if (newPast.length > HISTORY_LIMIT) {
+        return newPast.slice(newPast.length - HISTORY_LIMIT);
+    }
+    return newPast;
+};
 
 // Helper to get initial state
 const getInitialState = (): Partial<StoreState> => {
@@ -25,10 +44,12 @@ const getInitialState = (): Partial<StoreState> => {
             savePath: customSavePath || undefined
         };
     } else {
-        if (!data.settings.shortcuts) {
-            // Migration: Add shortcuts if missing in existing settings
-            data.settings.shortcuts = { ...DEFAULT_SHORTCUTS };
-        }
+        // Migration: Merge shortcuts to ensure new defaults exist
+        data.settings.shortcuts = {
+            ...DEFAULT_SHORTCUTS,
+            ...(data.settings.shortcuts || {})
+        };
+
         // Ensure savePath is up to date with local storage source of truth
         data.settings.savePath = customSavePath || undefined;
     }
@@ -43,6 +64,8 @@ export const useStore = create<Store>((set, get) => ({
     settings: initialState.settings!, // We ensured it exists in getInitialState
     tasks: initialState.tasks || {},
     days: initialState.days || {},
+    past: [],
+    future: [],
     activeColumnId: null,
     selectedTaskId: null,
     hoveredTaskId: null,
@@ -201,6 +224,7 @@ export const useStore = create<Store>((set, get) => ({
         };
 
         set((state) => {
+            const past = addToHistory(state, state.past);
             const updatedEntries = [...state.days[currentDate].taskEntries];
             // Insert after original
             updatedEntries.splice(entryIndex + 1, 0, newEntry);
@@ -213,7 +237,7 @@ export const useStore = create<Store>((set, get) => ({
             const updatedTasks = { ...state.tasks, [newTaskId]: newTaskGlobal };
 
             saveDataToFile({ tasks: updatedTasks, days: updatedDays, settings: state.settings });
-            return { tasks: updatedTasks, days: updatedDays };
+            return { tasks: updatedTasks, days: updatedDays, past, future: [] };
         });
     },
     addTask: (category: string, title: string) => {
@@ -237,6 +261,7 @@ export const useStore = create<Store>((set, get) => ({
         };
 
         set((state) => {
+            const past = addToHistory(state, state.past);
             const newState = {
                 tasks: { ...state.tasks, [newTaskId]: newTaskGlobal },
                 days: {
@@ -248,7 +273,7 @@ export const useStore = create<Store>((set, get) => ({
                 }
             };
             saveDataToFile({ tasks: newState.tasks, days: newState.days });
-            return newState;
+            return { ...newState, past, future: [] };
         });
     },
 
@@ -257,6 +282,9 @@ export const useStore = create<Store>((set, get) => ({
         set((state) => {
             const task = state.tasks[taskId];
             if (!task) return {};
+
+            // Snapshot before toggling
+            const past = addToHistory(state, state.past);
 
             const isCompleting = !task.completed;
             const updatedTasks = {
@@ -285,12 +313,13 @@ export const useStore = create<Store>((set, get) => ({
             }
 
             saveDataToFile({ tasks: updatedTasks, days: updatedDays, settings: state.settings });
-            return { tasks: updatedTasks, days: updatedDays };
+            return { tasks: updatedTasks, days: updatedDays, past, future: [] };
         });
     },
 
     deleteTask: (taskId: string) => {
         set((state) => {
+            const past = addToHistory(state, state.past);
             const { [taskId]: _, ...restTasks } = state.tasks;
 
             const updatedDays = Object.entries(state.days).reduce((acc, [date, day]) => {
@@ -302,31 +331,33 @@ export const useStore = create<Store>((set, get) => ({
             }, {} as Record<string, DayData>);
 
             saveDataToFile({ tasks: restTasks, days: updatedDays });
-            return { tasks: restTasks, days: updatedDays };
+            return { tasks: restTasks, days: updatedDays, past, future: [] };
         });
     },
 
     updateTaskTitle: (taskId: string, newTitle: string) => {
         set((state) => {
+            const past = addToHistory(state, state.past);
             const updatedTasks = {
                 ...state.tasks,
                 [taskId]: { ...state.tasks[taskId], title: newTitle }
             };
             saveDataToFile({ tasks: updatedTasks, days: state.days });
-            return { tasks: updatedTasks };
+            return { tasks: updatedTasks, past, future: [] };
         });
     },
 
     updateDayData: (updates: Partial<DayData>) => {
         const { currentDate, days } = get();
         set((state) => {
+            const past = addToHistory(state, state.past);
             const currentDay = days[currentDate] || { taskEntries: [], gratefulness: '', reflections: '' };
             const updatedDays = {
                 ...state.days,
                 [currentDate]: { ...currentDay, ...updates }
             };
             saveDataToFile({ tasks: state.tasks, days: updatedDays });
-            return { days: updatedDays };
+            return { days: updatedDays, past, future: [] };
         });
     },
 
@@ -345,6 +376,7 @@ export const useStore = create<Store>((set, get) => ({
         }
 
         set((state) => {
+            const past = addToHistory(state, state.past);
             const updatedTasks = {
                 ...state.tasks,
                 [taskId]: { ...state.tasks[taskId], category: newGlobalCategory }
@@ -377,7 +409,8 @@ export const useStore = create<Store>((set, get) => ({
             };
 
             saveDataToFile({ tasks: updatedTasks, days: updatedDays });
-            return { tasks: updatedTasks, days: updatedDays };
+
+            return { tasks: updatedTasks, days: updatedDays, past, future: [] };
         });
     },
 
@@ -396,12 +429,59 @@ export const useStore = create<Store>((set, get) => ({
         updatedEntries.splice(newIndex, 0, movedItem);
 
         set((state) => {
+            const past = addToHistory(state, state.past);
             const updatedDays = {
                 ...state.days,
                 [currentDate]: { ...currentDay, taskEntries: updatedEntries }
             };
             saveDataToFile({ tasks: state.tasks, days: updatedDays });
-            return { days: updatedDays };
+            return { days: updatedDays, past, future: [] };
+        });
+    },
+
+    undo: () => {
+        set((state) => {
+            const { past, future } = state;
+            if (past.length === 0) return {};
+
+            const previous = past[past.length - 1];
+            const newPast = past.slice(0, past.length - 1);
+
+            // Push current to future
+            const newFuture = [createSnapshot(state), ...future];
+
+            // Restore state
+            saveDataToFile({ tasks: previous.tasks, days: previous.days, settings: state.settings });
+            return {
+                tasks: previous.tasks,
+                days: previous.days,
+                past: newPast,
+                future: newFuture
+            };
+        });
+    },
+
+    redo: () => {
+        set((state) => {
+            const { past, future } = state;
+            if (future.length === 0) return {};
+
+            const next = future[0];
+            const newFuture = future.slice(1);
+
+            // Push current to past
+            const newPast = addToHistory(state, past);
+
+            toast.info('Redid last action');
+
+            // Restore state
+            saveDataToFile({ tasks: next.tasks, days: next.days, settings: state.settings });
+            return {
+                tasks: next.tasks,
+                days: next.days,
+                past: newPast,
+                future: newFuture
+            };
         });
     },
 

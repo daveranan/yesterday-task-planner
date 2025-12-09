@@ -37,8 +37,18 @@ export interface PlannerData {
     settings: PlannerSettings;
 }
 
+export interface HistorySnapshot {
+    tasks: Record<string, TaskGlobal>;
+    days: Record<string, DayData>;
+}
+
 export interface StoreState extends PlannerData {
     currentDate: string;
+
+    // History
+    past: HistorySnapshot[];
+    future: HistorySnapshot[];
+
     activeColumnId: string | null; // 'must-do' | 'communications' | 'todo' | 'scheduled'
     selectedTaskId: string | null;
     hoveredTaskId: string | null;
@@ -74,6 +84,8 @@ export interface StoreActions {
     deleteTask: (taskId: string) => void;
     updateTaskTitle: (taskId: string, newTitle: string) => void;
     updateDayData: (updates: Partial<DayData>) => void;
+    undo: () => void;
+    redo: () => void;
 }
 
 export type Store = StoreState & StoreActions;

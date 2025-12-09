@@ -12,7 +12,9 @@ export const DEFAULT_SHORTCUTS: Record<string, string> = {
     grab: 'g',
     prevDay: 'Ctrl+ArrowLeft',
     nextDay: 'Ctrl+ArrowRight',
-    newTask: 'Ctrl+Enter'
+    newTask: 'Ctrl+Enter',
+    undo: 'Ctrl+z',
+    redo: 'Ctrl+y'
 };
 
 export const SHORTCUT_DESCRIPTIONS: Record<string, string> = {
@@ -29,5 +31,7 @@ export const SHORTCUT_DESCRIPTIONS: Record<string, string> = {
     grab: 'Grab / Move Task',
     prevDay: 'Previous Day',
     nextDay: 'Next Day',
-    newTask: 'Create New Task'
+    newTask: 'Create New Task',
+    undo: 'Undo Last Action',
+    redo: 'Redo Last Action'
 };

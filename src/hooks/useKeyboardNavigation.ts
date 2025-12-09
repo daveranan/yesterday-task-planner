@@ -276,6 +276,18 @@ export const useKeyboardNavigation = () => {
                 handleDateChange(1);
                 return;
             }
+            // Global Undo/Redo
+            if (matchesShortcut(e, shortcuts.undo)) {
+                e.preventDefault();
+                useStore.getState().undo();
+                return;
+            }
+            if (matchesShortcut(e, shortcuts.redo)) {
+                e.preventDefault();
+                useStore.getState().redo();
+                return;
+            }
+
             // Create Task in Active Column
             if (matchesShortcut(e, shortcuts.newTask)) {
                 if (activeColumnId) {
