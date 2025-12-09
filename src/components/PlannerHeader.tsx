@@ -1,5 +1,6 @@
 import React from 'react';
 import { Icon } from './Icon';
+import { Button } from '@/components/ui/button';
 
 interface PlannerHeaderProps {
     currentDate: string;
@@ -21,53 +22,66 @@ const PlannerHeader: React.FC<PlannerHeaderProps> = ({
     onOpenSettings
 }) => {
     return (
-        <div className="h-16 bg-white dark:bg-neutral-900 border-b border-neutral-200 dark:border-neutral-800 flex items-center justify-between px-6 shadow-xl z-20">
+        <div className="h-16 bg-background border-b border-border flex items-center justify-between px-6 shadow-sm z-20">
             <div className="flex items-center gap-4">
                 <h1 className="flex items-center gap-2">
                     <img src="assets/img/favicon.png" alt="Icon" className="w-8 h-8" />
                     <img src="assets/img/Yesterday_logo.svg" alt="Yesterday" className="h-8" />
                 </h1>
-                <div className="flex items-center bg-neutral-100 dark:bg-neutral-800 rounded-lg p-1">
-                    <button onClick={() => onDateChange(-1)} className="p-1 hover:bg-neutral-200 dark:hover:bg-neutral-700 rounded shadow-sm transition"><Icon name="ChevronLeft" className="w-4 h-4 text-neutral-600 dark:text-neutral-200" /></button>
+                <div className="flex items-center bg-muted/50 rounded-lg p-1">
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => onDateChange(-1)}
+                        className="h-7 w-7"
+                    >
+                        <Icon name="ChevronLeft" className="w-4 h-4" />
+                    </Button>
                     <input
                         type="date"
                         value={currentDate}
                         onChange={(e) => setCurrentDate(e.target.value)}
-                        className="bg-transparent border-none text-sm font-medium px-4 py-1 focus:ring-0 cursor-pointer text-neutral-800 dark:text-neutral-200"
+                        className="bg-transparent border-none text-sm font-medium px-4 py-1 focus:ring-0 cursor-pointer text-foreground appearance-none"
                     />
-                    <button onClick={() => onDateChange(1)} className="p-1 hover:bg-neutral-200 dark:hover:bg-neutral-700 rounded shadow-sm transition"><Icon name="ChevronRight" className="w-4 h-4 text-neutral-600 dark:text-neutral-200" /></button>
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => onDateChange(1)}
+                        className="h-7 w-7"
+                    >
+                        <Icon name="ChevronRight" className="w-4 h-4" />
+                    </Button>
                 </div>
-                <button
+                <Button
+                    variant={isToday ? "secondary" : "outline"}
+                    size="sm"
                     onClick={onJumpToToday}
                     disabled={isToday}
-                    className={`
-                        flex items-center gap-1 px-3 py-1 text-xs font-medium rounded-lg shadow-md transition-colors
-                        ${isToday
-                            ? 'bg-neutral-100 dark:bg-neutral-700 text-neutral-400 dark:text-neutral-500 cursor-not-allowed'
-                            : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-white hover:bg-neutral-200 dark:hover:bg-neutral-700'
-                        }`}
+                    className="gap-2"
                     title="Jump to Today"
                 >
                     <Icon name="Target" className="w-4 h-4" />
                     Today
-                </button>
+                </Button>
             </div>
             <div className="flex items-center gap-4">
-                <span className="text-sm text-neutral-500 dark:text-neutral-400 flex items-center gap-2">
-                    <span className="ml-2 px-2 py-1 bg-neutral-200 dark:bg-neutral-950 text-neutral-700 dark:text-neutral-300 rounded-full text-xs">
+                <span className="text-sm text-muted-foreground flex items-center gap-2">
+                    <span className="ml-2 px-2 py-1 bg-muted text-muted-foreground rounded-full text-xs font-medium">
                         {incompleteCount} incomplete tasks
                     </span>
                 </span>
 
-                <div className="w-px h-6 bg-neutral-200 dark:bg-neutral-800 mx-1"></div>
+                <div className="w-px h-6 bg-border mx-1"></div>
 
-                <button
+                <Button
+                    variant="ghost"
+                    size="icon"
                     onClick={onOpenSettings}
-                    className="p-2 rounded-full text-neutral-500 dark:text-neutral-400 hover:text-neutral-800 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition"
+                    className="rounded-full"
                     title="Settings"
                 >
                     <Icon name="Settings" className="w-5 h-5" />
-                </button>
+                </Button>
             </div>
         </div>
     );

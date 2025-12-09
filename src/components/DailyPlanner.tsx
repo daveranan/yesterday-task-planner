@@ -204,7 +204,7 @@ const DailyPlanner: React.FC = () => {
     return (
         <DndContext sensors={sensors} onDragStart={handleDragStart} onDragOver={handleDragOver} onDragEnd={handleDragEnd}>
             <div className={`flex flex-col h-full ${settings.isDarkMode ? 'dark' : ''}`}>
-                <div className="flex flex-col h-full bg-neutral-100 dark:bg-neutral-950 text-neutral-900 dark:text-neutral-100 font-sans overflow-hidden">
+                <div className="flex flex-col h-full bg-background text-foreground font-sans overflow-hidden">
 
                     <PlannerHeader
                         currentDate={currentDate}

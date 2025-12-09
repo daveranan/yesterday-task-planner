@@ -4,6 +4,8 @@ import { useDroppable } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { TaskEntry, TaskGlobal } from '../store/types';
 import { useStore } from '../store/useStore';
+import { cn } from '@/lib/utils';
+import { Input } from '@/components/ui/input';
 
 interface ColumnProps {
     title: string;
@@ -57,21 +59,17 @@ const Column: React.FC<ColumnProps> = ({ title, category, limit, tasks, allTasks
         <div
             ref={setNodeRef}
             onMouseEnter={() => setActiveColumn(category)}
-            className={`flex-1 min-w-[200px] flex flex-col h-full rounded-xl border-dashed transition-all duration-150
-                ${isActive
-                    ? 'border-neutral-500 dark:border-neutral-400'
-                    : 'border-neutral-200 dark:border-neutral-800'}
-                ${isOver
-                    /* USE NEUTRAL: Darker drag over feedback */
-                    ? 'bg-neutral-100 dark:bg-neutral-800 border-2 shadow-lg ring-1 ring-neutral-300 dark:ring-neutral-700'
-                    /* USE NEUTRAL: Set default column background to neutral-900 (from parent) and darker border */
-                    : 'bg-white/50 dark:bg-neutral-900/50 border-2'
-                }`}
+            className={cn(
+                "flex-1 min-w-[200px] flex flex-col h-full rounded-xl border-dashed transition-all duration-150",
+                isActive ? "border-primary/50" : "border-border",
+                isOver
+                    ? "bg-muted/50 border-2 shadow-lg ring-1 ring-primary/20"
+                    : "bg-muted/20 border-2"
+            )}
         >
-            {/* USE NEUTRAL: Darken header border */}
-            <div className="p-3 border-b border-neutral-200 dark:border-neutral-800 flex justify-between items-center">
-                <h3 className="font-semibold text-neutral-900 dark:text-neutral-100 text-sm">{title}</h3>
-                <span className="text-xs text-neutral-500 dark:text-neutral-400">
+            <div className="p-3 border-b border-border flex justify-between items-center">
+                <h3 className="font-semibold text-foreground text-sm">{title}</h3>
+                <span className="text-xs text-muted-foreground">
                     {visibleTasks.length} {limit ? `| ${limit} max` : ''}
                 </span>
             </div>
@@ -96,19 +94,15 @@ const Column: React.FC<ColumnProps> = ({ title, category, limit, tasks, allTasks
 
                 {/* Inline Add Task Input */}
                 <div className="mt-2 flex gap-2">
-                    <input
+                    <Input
                         id={`new-task-input-${category}`}
                         type="text"
                         placeholder={isLimitReached ? `Limit Reached (${limit})` : "+ Add item"}
-                        className={`
-                            w-full text-sm px-2 py-1 
-                            /* USE NEUTRAL: Input background to neutral-800, border to neutral-700 */
-                            bg-neutral-100 dark:bg-neutral-800 border-b border-neutral-300 dark:border-neutral-700 
-                            focus:bg-white dark:focus:bg-neutral-900 focus:border-neutral-400 dark:focus:border-neutral-600 focus:ring-neutral-400 dark:focus:ring-neutral-600 focus:ring-1 
-                            rounded-t-md transition-all duration-150 focus:outline-none
-                            placeholder-neutral-400 dark:placeholder-neutral-500 text-neutral-900 dark:text-neutral-100
-                            ${isLimitReached ? 'text-neutral-500 dark:text-neutral-400' : ''}
-                        `}
+                        className={cn(
+                            "w-full h-8 text-sm px-2 py-1 bg-background border-border",
+                            "focus-visible:ring-1 focus-visible:ring-ring",
+                            isLimitReached && "text-muted-foreground cursor-not-allowed"
+                        )}
                         value={localNewTaskTitle}
                         onChange={(e) => setLocalNewTaskTitle(e.target.value)}
                         onMouseEnter={() => setHoveredNewTaskCategory(category)}
@@ -118,6 +112,7 @@ const Column: React.FC<ColumnProps> = ({ title, category, limit, tasks, allTasks
                                 addNewTask();
                             }
                         }}
+                        disabled={isLimitReached}
                     />
                 </div>
             </div>

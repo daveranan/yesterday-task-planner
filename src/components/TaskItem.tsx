@@ -6,6 +6,9 @@ import { CSS } from '@dnd-kit/utilities';
 import confetti from 'canvas-confetti';
 import { TaskEntry, TaskGlobal } from '../store/types';
 import { useStore } from '../store/useStore';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
+import { cn } from '@/lib/utils';
 
 interface TaskItemBaseProps {
     task: TaskEntry;
@@ -138,51 +141,59 @@ export const TaskItemBase: React.FC<TaskItemBaseProps> = ({
             {...attributes}
             onMouseEnter={() => setHoveredTaskId(task.taskId)}
             onMouseLeave={() => setHoveredTaskId(null)}
-            /* USE NEUTRAL: Task item background/border */
-            className={`group flex items-center gap-2 bg-white dark:bg-neutral-800 p-2 rounded border shadow-sm cursor-grab active:cursor-grabbing hover:border-neutral-500 dark:hover:border-neutral-400 transition-all duration-200 touch-none 
-                ${(isOverlay || isGrabbed) ? 'opacity-90 rotate-2 scale-105 shadow-xl' : ''}
-                ${isSelected || (isManipulated && !isSelected)
-                    ? 'border-neutral-500 dark:border-neutral-400 relative z-10'
-                    : 'border-neutral-200 dark:border-neutral-700'}
-            `}
+            className={cn(
+                "group flex items-center gap-2 bg-card p-3 rounded-lg border shadow-sm transition-all duration-200 touch-none",
+                "hover:border-primary/50",
+                (isOverlay || isGrabbed) && "opacity-90 rotate-2 scale-105 shadow-xl cursor-grabbing",
+                !isOverlay && !isGrabbed && "cursor-grab active:cursor-grabbing",
+                isSelected || (isManipulated && !isSelected)
+                    ? "border-primary ring-1 ring-primary relative z-10"
+                    : "border-border"
+            )}
         >
-            {/* USE NEUTRAL: Icons and text colors adjusted for deeper contrast against neutral-800 */}
-            <button
-                id={`checkbox-${task.taskId}`}
-                onPointerDown={(e) => e.stopPropagation()} // Prevent drag when clicking checkbox
-                onClick={(e) => {
-                    if (!isCompleted) {
-                        const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-                        const x = (rect.left + rect.width / 2) / window.innerWidth;
-                        const y = (rect.top + rect.height / 2) / window.innerHeight;
-
-                        confetti({
-                            particleCount: 50,
-                            spread: 60,
-                            origin: { x, y }
-                        });
-                    }
-                    toggleTask(task.taskId);
-                }}
-                className="text-neutral-400 hover:text-neutral-300"
+            <div
+                className="flex items-center justify-center p-1"
+                onPointerDown={(e) => e.stopPropagation()}
             >
-                {isCompleted ? <Icon name="CheckSquare" className="w-5 h-5 text-neutral-400" /> : <Icon name="Square" className="w-5 h-5 text-neutral-400 dark:text-neutral-500" />}
-            </button>
+                <Checkbox
+                    id={`checkbox-${task.taskId}`}
+                    checked={isCompleted}
+                    onCheckedChange={() => {
+                        toggleTask(task.taskId);
+                    }}
+                    onClick={(e) => {
+                        if (!isCompleted) {
+                            const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                            const x = (rect.left + rect.width / 2) / window.innerWidth;
+                            const y = (rect.top + rect.height / 2) / window.innerHeight;
+
+                            confetti({
+                                particleCount: 50,
+                                spread: 60,
+                                origin: { x, y }
+                            });
+                        }
+                    }}
+                    className="data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground border-muted-foreground/50"
+                />
+            </div>
 
             {isEditing ? (
-                <input
+                <Input
                     ref={inputRef}
                     type="text"
                     value={localTitle}
                     onChange={(e) => setLocalTitle(e.target.value)}
                     onBlur={saveEdit}
                     onKeyDown={handleKeyDown}
-                    className="flex-1 text-sm p-0 bg-neutral-100 dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded focus:ring-1 focus:ring-neutral-400 focus:border-neutral-500 focus:outline-none text-neutral-900 dark:text-neutral-100"
+                    className="flex-1 h-7 text-sm p-1 bg-background border-input focus-visible:ring-1 focus-visible:ring-ring"
                 />
             ) : (
-                // Display the title from the global task object
                 <span
-                    className={`flex-1 text-sm cursor-text ${isCompleted ? 'line-through text-neutral-400 dark:text-neutral-500' : 'text-neutral-900 dark:text-neutral-100'}`}
+                    className={cn(
+                        "flex-1 text-sm cursor-text transition-colors",
+                        isCompleted ? "line-through text-muted-foreground" : "text-foreground"
+                    )}
                     onDoubleClick={() => {
                         if (!isCompleted) setLocalIsEditing(true);
                     }}
@@ -193,10 +204,10 @@ export const TaskItemBase: React.FC<TaskItemBaseProps> = ({
 
             {task.rolledOverFrom && (
                 <span
-                    className="text-xs text-yellow-600 dark:text-yellow-500 font-semibold italic bg-neutral-200 dark:bg-neutral-700 px-2 py-0.5 rounded-full whitespace-nowrap"
+                    className="flex items-center gap-1 text-xs text-amber-600 dark:text-amber-500 font-medium italic bg-amber-50 dark:bg-amber-950/30 px-2 py-0.5 rounded-full whitespace-nowrap border border-amber-200 dark:border-amber-800"
                     title={`Originally created on ${task.rolledOverFrom}`}
                 >
-                    <Icon name="Rollover" className="w-3 h-3 inline mr-1" />
+                    <Icon name="Rollover" className="w-3 h-3" />
                     Rolled Over
                 </span>
             )}
@@ -204,7 +215,7 @@ export const TaskItemBase: React.FC<TaskItemBaseProps> = ({
             <button
                 onPointerDown={(e) => e.stopPropagation()} // Prevent drag
                 onClick={() => deleteTask(task.taskId)}
-                className="opacity-0 group-hover:opacity-100 text-neutral-400 hover:text-red-400 transition-colors"
+                className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-colors p-1"
                 aria-label="Delete Task"
             >
                 <Icon name="Trash2" className="w-4 h-4" />
