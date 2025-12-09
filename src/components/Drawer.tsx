@@ -12,7 +12,6 @@ const Drawer: React.FC = () => {
     const {
         settings,
         drawer,
-        toggleDrawer,
         addDrawerFolder,
         deleteDrawerFolder,
         toggleDrawerFolder,
@@ -64,9 +63,6 @@ const Drawer: React.FC = () => {
                                 <Icon name="Inbox" className="w-5 h-5" />
                                 Drawer
                             </h2>
-                            <Button variant="ghost" size="icon" onClick={toggleDrawer}>
-                                <Icon name="X" className="w-4 h-4" />
-                            </Button>
                         </div>
 
                         {/* Content */}

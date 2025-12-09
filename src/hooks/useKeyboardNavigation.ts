@@ -307,6 +307,12 @@ export const useKeyboardNavigation = () => {
                 return;
             }
 
+            if (matchesShortcut(e, shortcuts.toggleDrawer)) {
+                e.preventDefault();
+                useStore.getState().toggleDrawer();
+                return;
+            }
+
             // Create Task in Active Column or Drawer
             if (matchesShortcut(e, shortcuts.newTask)) {
                 // If checking hovered task (N on hover) -> Open Drawer

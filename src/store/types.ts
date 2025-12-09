@@ -57,6 +57,10 @@ export interface PlannerData {
 export interface HistorySnapshot {
     tasks: Record<string, TaskGlobal>;
     days: Record<string, DayData>;
+    drawer: {
+        folders: DrawerFolder[];
+        tasks: DrawerTaskEntry[];
+    };
     actionDescription?: string;
 }
 

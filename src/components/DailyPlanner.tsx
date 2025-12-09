@@ -211,25 +211,9 @@ const DailyPlanner: React.FC = () => {
                     active.id as string,
                     currentDate,
                     finalCategory,
-                    // If dropped on a task, we could try to calculate index, but let's just append/prepend for now unless we do complex index math
+                    undefined,
+                    targetSlot || undefined
                 );
-
-                // If dropped on a slot, we might need a second update or custom action?
-                // moveTaskFromDrawerToDay assigns default slot if category is scheduled.
-                // But if we have a specific targetSlot, we should update it.
-                if (targetSlot) {
-                    // We can just call moveTask immediately after? Or update the action signature?
-                    // The action `moveTaskFromDrawerToDay` has `index` but not `slotId`.
-                    // Let's rely on standard moveTask behavior for now or update logic later.
-                    // Actually, if we drop on a slot, we want it scheduled there.
-                    // Store action `moveTaskFromDrawerToDay` sets `slotId: category === 'scheduled' ? '09:00' : null`.
-                    // This is hardcoded. Ideally we pass slotId.
-                    // Let's quick-fix: call moveTask after? Or just update the task slot after moving.
-
-                    setTimeout(() => {
-                        moveTask(active.id as string, 'scheduled', targetSlot);
-                    }, 50);
-                }
             }
             return;
         }

@@ -12,6 +12,7 @@ const HISTORY_LIMIT = 100;
 const createSnapshot = (state: StoreState, description: string = 'Unknown Action'): HistorySnapshot => ({
     tasks: state.tasks,
     days: state.days,
+    drawer: state.drawer,
     actionDescription: description || 'Unknown Action'
 });
 
@@ -454,10 +455,11 @@ export const useStore = create<Store>((set, get) => ({
             const newFuture = [createSnapshot(state), ...future];
 
             // Restore state
-            saveDataToFile({ tasks: previous.tasks, days: previous.days, settings: state.settings });
+            saveDataToFile({ tasks: previous.tasks, days: previous.days, drawer: previous.drawer, settings: state.settings });
             return {
                 tasks: previous.tasks,
                 days: previous.days,
+                drawer: previous.drawer,
                 past: newPast,
                 future: newFuture
             };
@@ -478,10 +480,11 @@ export const useStore = create<Store>((set, get) => ({
             toast.info('Redid last action');
 
             // Restore state
-            saveDataToFile({ tasks: next.tasks, days: next.days, settings: state.settings });
+            saveDataToFile({ tasks: next.tasks, days: next.days, drawer: next.drawer, settings: state.settings });
             return {
                 tasks: next.tasks,
                 days: next.days,
+                drawer: next.drawer,
                 past: newPast,
                 future: newFuture
             };

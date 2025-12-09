@@ -14,7 +14,9 @@ export const DEFAULT_SHORTCUTS: Record<string, string> = {
     nextDay: 'Ctrl+ArrowRight',
     newTask: 'Ctrl+Enter',
     undo: 'Ctrl+z',
-    redo: 'Ctrl+y'
+    redo: 'Ctrl+y',
+    openDrawer: 'Ctrl+t',
+    toggleDrawer: 'Tab'
 };
 
 export const SHORTCUT_DESCRIPTIONS: Record<string, string> = {
@@ -33,5 +35,7 @@ export const SHORTCUT_DESCRIPTIONS: Record<string, string> = {
     nextDay: 'Next Day',
     newTask: 'Create New Task',
     undo: 'Undo Last Action',
-    redo: 'Redo Last Action'
+    redo: 'Redo Last Action',
+    openDrawer: 'Open Drawer / Create Task',
+    toggleDrawer: 'Toggle Drawer'
 };
