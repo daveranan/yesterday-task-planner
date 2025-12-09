@@ -1,6 +1,6 @@
 {
   "name": "daily-task-planner",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Daily Task Planner Desktop App",
   "main": "main.js",
   "scripts": {
@@ -8,7 +8,23 @@
     "dev": "concurrently -k \"vite\" \"wait-on tcp:5173 && electron .\"",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "dist": "tsc && vite build && electron-builder",
+    "dist:mac": "tsc && vite build && electron-builder --mac",
+    "dist:win": "tsc && vite build && electron-builder --win"
+  },
+  "build": {
+    "appId": "com.daily-task-planner.app",
+    "productName": "Daily Task Planner",
+    "directories": {
+      "output": "dist-electron"
+    },
+    "mac": {
+      "target": "dmg"
+    },
+    "win": {
+      "target": "nsis"
+    }
   },
   "keywords": [],
   "author": "",
@@ -19,7 +35,6 @@
     "@dnd-kit/utilities": "^3.2.2",
     "canvas-confetti": "^1.9.4",
     "clsx": "^2.1.0",
-    "electron": "^33.2.1",
     "framer-motion": "^12.23.25",
     "lucide-react": "^0.344.0",
     "react": "^18.2.0",
@@ -29,12 +44,14 @@
   },
   "devDependencies": {
     "@types/canvas-confetti": "^1.9.0",
+    "electron": "^33.2.1",
     "@types/node": "^24.10.2",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^4.2.1",
     "autoprefixer": "^10.4.18",
     "concurrently": "^9.1.0",
+    "electron-builder": "^26.0.12",
     "postcss": "^8.4.35",
     "tailwindcss": "^3.4.1",
     "typescript": "^5.9.3",

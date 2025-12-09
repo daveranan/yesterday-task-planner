@@ -5,7 +5,7 @@ export const playSound = (type: string): void => {
     if (!settings.soundEnabled) return;
 
     try {
-        const audio = new Audio(`/assets/sounds/${type}.ogg`);
+        const audio = new Audio(`assets/sounds/${type}.ogg`);
         audio.volume = 0.5;
         // Pitch variance: random between 0.9 and 1.1
         audio.playbackRate = 0.9 + Math.random() * 0.2;

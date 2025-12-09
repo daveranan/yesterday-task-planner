@@ -102,7 +102,7 @@ const DailyPlanner: React.FC = () => {
     const isToday = currentDate === getYYYYMMDD(new Date());
 
     const getCategoryTasks = (category: string) => {
-        return currentDayData.taskEntries.filter(t => {
+        return currentDayData.taskEntries.filter((t: TaskEntry) => {
             const globalTask = allTasks[t.taskId];
             return globalTask && t.category === category && !globalTask.completed;
         });
@@ -203,7 +203,7 @@ const DailyPlanner: React.FC = () => {
     };
 
     // Get the active task object for the overlay
-    const activeTaskEntry = activeId ? currentDayData.taskEntries.find(t => t.taskId === activeId) : null;
+    const activeTaskEntry = activeId ? currentDayData.taskEntries.find((t: TaskEntry) => t.taskId === activeId) : null;
     // const activeGlobalTask = activeId ? allTasks[activeId] : null; // Ensure we have the global data too
     // Combine them for the TaskItem prop, similar to how it receives props in the list
     // const overlayTask = activeTaskEntry ? { ...activeTaskEntry, ...activeGlobalTask } : null; // TaskItem expects the entry + title from store. Actually TaskItem expects `task` (entry) and looks up `allTasks`.

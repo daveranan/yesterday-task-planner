@@ -74,7 +74,7 @@ export const KeyboardSettingsModal: React.FC<KeyboardSettingsModalProps> = ({ on
                                         className="w-32 px-3 py-1.5 text-sm font-mono text-center bg-white dark:bg-neutral-900 border border-neutral-300 dark:border-neutral-700 rounded hover:border-neutral-400 dark:hover:border-neutral-600 hover:shadow-sm transition-all text-neutral-600 dark:text-neutral-400"
                                         title="Click to remap"
                                     >
-                                        {currentKey}
+                                        {currentKey as string}
                                     </button>
                                 )}
                             </div>

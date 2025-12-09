@@ -55,9 +55,11 @@ export interface StoreActions {
     toggleSound: () => void;
     toggleGratefulness: () => void;
     toggleReflection: () => void;
+    updateShortcut: (actionId: string, newKey: string) => void;
     setWindowSize: (width: number, height: number) => void; // New action
     addTask: (category: string, title: string) => void;
     setActiveColumn: (columnId: string | null) => void;
+    setSelectedTaskId: (taskId: string | null) => void;
     setHoveredTaskId: (taskId: string | null) => void;
     setHoveredNewTaskCategory: (category: string | null) => void;
     setGrabbedTaskId: (taskId: string | null) => void;
@@ -69,4 +71,7 @@ export interface StoreActions {
     toggleTask: (taskId: string) => void;
     deleteTask: (taskId: string) => void;
     updateTaskTitle: (taskId: string, newTitle: string) => void;
+    updateDayData: (updates: Partial<DayData>) => void;
 }
+
+export type Store = StoreState & StoreActions;

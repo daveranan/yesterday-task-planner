@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { CONFIG } from '../constants/config';
+// import { CONFIG } from '../constants/config';
 import { DEFAULT_SHORTCUTS } from '../constants/shortcuts';
 import { loadDataFromFile, saveDataToFile, loadTheme } from '../utils/storage';
 import { getYYYYMMDD, getDateOffset } from '../utils/dateUtils';
@@ -28,7 +28,6 @@ const getInitialState = (): Partial<StoreState> => {
 };
 
 const initialState = getInitialState();
-
 
 export const useStore = create<Store>((set, get) => ({
     // --- State ---
@@ -66,7 +65,7 @@ export const useStore = create<Store>((set, get) => ({
     },
 
     setTheme: (isDark: boolean) => {
-        set(state => {
+        set((state) => {
             const newSettings = { ...state.settings, isDarkMode: isDark };
             saveDataToFile({ tasks: state.tasks, days: state.days, settings: newSettings });
             return { settings: newSettings };
@@ -80,7 +79,7 @@ export const useStore = create<Store>((set, get) => ({
     },
 
     toggleSound: () => {
-        set(state => {
+        set((state) => {
             const newSettings = { ...state.settings, soundEnabled: !state.settings.soundEnabled };
             saveDataToFile({ tasks: state.tasks, days: state.days, settings: newSettings });
             return { settings: newSettings };
@@ -88,7 +87,7 @@ export const useStore = create<Store>((set, get) => ({
     },
 
     toggleGratefulness: () => {
-        set(state => {
+        set((state) => {
             const newSettings = { ...state.settings, showGratefulness: !state.settings.showGratefulness };
             saveDataToFile({ tasks: state.tasks, days: state.days, settings: newSettings });
             return { settings: newSettings };
@@ -96,7 +95,7 @@ export const useStore = create<Store>((set, get) => ({
     },
 
     toggleReflection: () => {
-        set(state => {
+        set((state) => {
             const newSettings = { ...state.settings, showReflection: !state.settings.showReflection };
             saveDataToFile({ tasks: state.tasks, days: state.days, settings: newSettings });
             return { settings: newSettings };
@@ -104,14 +103,12 @@ export const useStore = create<Store>((set, get) => ({
     },
 
     setWindowSize: (width: number, height: number) => {
-        set(state => {
+        set((state) => {
             const newSettings = {
                 ...state.settings,
                 windowWidth: width,
                 windowHeight: height
             };
-            // Debounce save? Store updates frequent. But file write is synchronous in Electron usually if valid.
-            // Ideally we debounce at the component level, so here we just save.
             saveDataToFile({ tasks: state.tasks, days: state.days, settings: newSettings });
             return { settings: newSettings };
         });
@@ -119,7 +116,7 @@ export const useStore = create<Store>((set, get) => ({
 
     // Keyboard & Selection
     updateShortcut: (actionId: string, newKey: string) => {
-        set(state => {
+        set((state) => {
             const newSettings = {
                 ...state.settings,
                 shortcuts: {
@@ -176,11 +173,11 @@ export const useStore = create<Store>((set, get) => ({
         const newEntry: TaskEntry = {
             taskId: newTaskId,
             category: originalEntry.category,
-            slotId: originalEntry.slotId, // If it's scheduled, maybe don't overlap? But for now copy.
+            slotId: originalEntry.slotId,
             rolledOverFrom: null,
         };
 
-        set(state => {
+        set((state) => {
             const updatedEntries = [...state.days[currentDate].taskEntries];
             // Insert after original
             updatedEntries.splice(entryIndex + 1, 0, newEntry);
@@ -197,14 +194,9 @@ export const useStore = create<Store>((set, get) => ({
         });
     },
     addTask: (category: string, title: string) => {
-        const { currentDate, days, tasks } = get();
+        const { currentDate, days } = get();
 
-        // Limit Check - REMOVED (User Request: Suggestion only)
         const currentDayData: DayData = days[currentDate] || { taskEntries: [] };
-        // const categoryCount = currentDayData.taskEntries.filter(t => {
-        //     const task = tasks[t.taskId];
-        //     return task && !task.completed && t.category === category;
-        // }).length;
 
         const newTaskId = Date.now().toString();
         const newTaskGlobal: TaskGlobal = {
@@ -221,7 +213,7 @@ export const useStore = create<Store>((set, get) => ({
             rolledOverFrom: null,
         };
 
-        set(state => {
+        set((state) => {
             const newState = {
                 tasks: { ...state.tasks, [newTaskId]: newTaskGlobal },
                 days: {
@@ -238,10 +230,10 @@ export const useStore = create<Store>((set, get) => ({
     },
 
     toggleTask: (taskId: string) => {
-        const { currentDate, days } = get();
-        set(state => {
+        const { currentDate } = get();
+        set((state) => {
             const task = state.tasks[taskId];
-            if (!task) return state;
+            if (!task) return {};
 
             const isCompleting = !task.completed;
             const updatedTasks = {
@@ -251,8 +243,6 @@ export const useStore = create<Store>((set, get) => ({
 
             let updatedDays = state.days;
 
-            // If we are completing the task, check if we need to "adopt" it to the current day
-            // (Remove rolledOverFrom marker)
             if (isCompleting) {
                 const currentDay = state.days[currentDate];
                 if (currentDay) {
@@ -277,10 +267,9 @@ export const useStore = create<Store>((set, get) => ({
     },
 
     deleteTask: (taskId: string) => {
-        set(state => {
+        set((state) => {
             const { [taskId]: _, ...restTasks } = state.tasks;
 
-            // Clean up daily references
             const updatedDays = Object.entries(state.days).reduce((acc, [date, day]) => {
                 acc[date] = {
                     ...day,
@@ -295,7 +284,7 @@ export const useStore = create<Store>((set, get) => ({
     },
 
     updateTaskTitle: (taskId: string, newTitle: string) => {
-        set(state => {
+        set((state) => {
             const updatedTasks = {
                 ...state.tasks,
                 [taskId]: { ...state.tasks[taskId], title: newTitle }
@@ -307,7 +296,7 @@ export const useStore = create<Store>((set, get) => ({
 
     updateDayData: (updates: Partial<DayData>) => {
         const { currentDate, days } = get();
-        set(state => {
+        set((state) => {
             const currentDay = days[currentDate] || { taskEntries: [], gratefulness: '', reflections: '' };
             const updatedDays = {
                 ...state.days,
@@ -318,7 +307,6 @@ export const useStore = create<Store>((set, get) => ({
         });
     },
 
-    // Move logic (Drag and Drop Helper)
     moveTask: (taskId: string, targetCategory: string, slotId: string | null = null, overTaskId: string | null = null) => {
         const { currentDate, days, tasks } = get();
         const currentDay = days[currentDate];
@@ -328,34 +316,28 @@ export const useStore = create<Store>((set, get) => ({
         const taskEntry = currentDay.taskEntries[taskEntryIndex];
         if (!taskEntry) return;
 
-        // Global category update (unless scheduled)
         let newGlobalCategory = tasks[taskId].category;
         if (targetCategory !== 'scheduled') {
             newGlobalCategory = targetCategory;
         }
 
-        set(state => {
+        set((state) => {
             const updatedTasks = {
                 ...state.tasks,
                 [taskId]: { ...state.tasks[taskId], category: newGlobalCategory }
             };
 
             const updatedEntries = [...state.days[currentDate].taskEntries];
-
-            // Remove from old position
             const [movedEntry] = updatedEntries.splice(taskEntryIndex, 1);
 
-            // Update entry data
             const newEntry: TaskEntry = {
                 ...movedEntry,
                 category: targetCategory,
                 slotId: targetCategory === 'scheduled' ? slotId : null,
-                // Preserve rollover unless specifically cleared or loop logic requires it
                 rolledOverFrom: movedEntry.rolledOverFrom && targetCategory === 'scheduled' ? null : movedEntry.rolledOverFrom
             };
 
-            // Calculate insert position
-            let insertIndex = updatedEntries.length; // Default to append
+            let insertIndex = updatedEntries.length;
 
             if (overTaskId) {
                 const overIndex = updatedEntries.findIndex(t => t.taskId === overTaskId);
@@ -364,7 +346,6 @@ export const useStore = create<Store>((set, get) => ({
                 }
             }
 
-            // Insert at new position
             updatedEntries.splice(insertIndex, 0, newEntry);
 
             const updatedDays = {
@@ -391,7 +372,7 @@ export const useStore = create<Store>((set, get) => ({
         const [movedItem] = updatedEntries.splice(oldIndex, 1);
         updatedEntries.splice(newIndex, 0, movedItem);
 
-        set(state => {
+        set((state) => {
             const updatedDays = {
                 ...state.days,
                 [currentDate]: { ...currentDay, taskEntries: updatedEntries }
@@ -401,7 +382,6 @@ export const useStore = create<Store>((set, get) => ({
         });
     },
 
-    // Rollover Logic
     checkRollover: (dateToCheck: string) => {
         const { days, tasks } = get();
         const dayData = days[dateToCheck] || { taskEntries: [], gratefulness: '', reflections: '', rolloverComplete: false };
@@ -409,31 +389,24 @@ export const useStore = create<Store>((set, get) => ({
         const prevDateString = getDateOffset(dateToCheck, -1);
         const prevDayData = days[prevDateString];
 
-        // Ensure previous day actually exists or has data
         if (!prevDayData) return;
 
-        // 1. Identify rollover candidates
         const tasksToRollover = prevDayData.taskEntries.filter(entry => {
             const task = tasks[entry.taskId];
             return task && !task.completed;
         }).map(entry => {
             const task = tasks[entry.taskId];
-
-            // Actually entry is TaskEntry.
-
             return {
                 taskId: entry.taskId,
-                category: task.category, // Reset to global category
+                category: task.category,
                 slotId: null,
                 rolledOverFrom: prevDateString,
                 _fallbackCategory: task.category
             };
         });
 
-        // 2. Merge with existing "Keepers"
         const tasksToKeep = dayData.taskEntries.filter(entry => {
             const task = tasks[entry.taskId];
-            // Fix: If a task was rolled over and is now completed, remove it from this day
             if (entry.rolledOverFrom && task && task.completed) {
                 return false;
             }
@@ -441,20 +414,12 @@ export const useStore = create<Store>((set, get) => ({
         });
 
         const existingIds = new Set(tasksToKeep.map(t => t.taskId));
-
-        // Only add tasks that are NOT already in today's list
         const newRollovers = tasksToRollover.filter(t => !existingIds.has(t.taskId));
-
-        // Check if we need to update:
-        // 1. If we have new rollovers to add
-        // 2. OR if we filtered out some existing tasks (completed rollovers) - i.e. count changed
         const hasChanges = newRollovers.length > 0 || tasksToKeep.length !== dayData.taskEntries.length;
 
         if (!hasChanges) {
-            // Nothing new to add and nothing removed.
-            // If we haven't marked rolloverComplete yet, do it.
             if (!dayData.rolloverComplete) {
-                set(state => ({
+                set((state) => ({
                     days: {
                         ...state.days,
                         [dateToCheck]: { ...dayData, rolloverComplete: true }
@@ -466,12 +431,12 @@ export const useStore = create<Store>((set, get) => ({
 
         const finalEntries: TaskEntry[] = [...tasksToKeep, ...newRollovers].map(entry => ({
             taskId: entry.taskId,
-            category: entry.category || (entry as any)._fallbackCategory || 'todo', // Ensure string
+            category: entry.category || (entry as any)._fallbackCategory || 'todo',
             slotId: entry.slotId,
             rolledOverFrom: entry.rolledOverFrom
         }));
 
-        set(state => {
+        set((state) => {
             const updatedDays = {
                 ...state.days,
                 [dateToCheck]: {
