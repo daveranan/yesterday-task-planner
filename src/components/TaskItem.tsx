@@ -9,6 +9,16 @@ import { useStore } from '../store/useStore';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
+import {
+    ContextMenu,
+    ContextMenuContent,
+    ContextMenuItem,
+    ContextMenuSeparator,
+    ContextMenuTrigger,
+    ContextMenuSub,
+    ContextMenuSubContent,
+    ContextMenuSubTrigger,
+} from "@/components/ui/context-menu";
 
 interface TaskItemBaseProps {
     task: TaskEntry;
@@ -55,6 +65,8 @@ export const TaskItemBase: React.FC<TaskItemBaseProps> = ({
     // Combine local click edit and global shortcut edit
     const isEditing = localIsEditing || editingTaskId === task.taskId;
     const setStoreEditing = useStore(state => state.setEditingTaskId);
+    const duplicateTask = useStore(state => state.duplicateTask);
+    const moveTask = useStore(state => state.moveTask);
 
     // Derived state: Is this task being manipulated? (Hovered but not dragging)
     const isManipulated = hoveredTaskId === task.taskId && !isDragging;
@@ -133,94 +145,135 @@ export const TaskItemBase: React.FC<TaskItemBaseProps> = ({
     }
 
     return (
-        <div
-            id={`task-${task.taskId}`}
-            ref={setNodeRef}
-            style={style}
-            {...listeners}
-            {...attributes}
-            onMouseEnter={() => setHoveredTaskId(task.taskId)}
-            onMouseLeave={() => setHoveredTaskId(null)}
-            className={cn(
-                "group flex items-center gap-2 bg-card p-1.5 rounded-lg border shadow-sm transition-all duration-200 touch-none",
-                "hover:border-primary/50",
-                (isOverlay || isGrabbed) && "opacity-90 rotate-2 scale-105 shadow-xl cursor-grabbing",
-                !isOverlay && !isGrabbed && "cursor-grab active:cursor-grabbing",
-                isSelected || (isManipulated && !isSelected)
-                    ? "border-primary ring-1 ring-primary relative z-10"
-                    : "border-border"
-            )}
-        >
-            <div
-                className="flex items-center justify-center p-1"
-                onPointerDown={(e) => e.stopPropagation()}
-            >
-                <Checkbox
-                    id={`checkbox-${task.taskId}`}
-                    checked={isCompleted}
-                    onCheckedChange={() => {
-                        toggleTask(task.taskId);
-                    }}
-                    onClick={(e) => {
-                        if (!isCompleted) {
-                            const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-                            const x = (rect.left + rect.width / 2) / window.innerWidth;
-                            const y = (rect.top + rect.height / 2) / window.innerHeight;
-
-                            confetti({
-                                particleCount: 50,
-                                spread: 60,
-                                origin: { x, y }
-                            });
-                        }
-                    }}
-                    className="data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground border-muted-foreground/50"
-                />
-            </div>
-
-            {isEditing ? (
-                <Input
-                    ref={inputRef}
-                    type="text"
-                    value={localTitle}
-                    onChange={(e) => setLocalTitle(e.target.value)}
-                    onBlur={saveEdit}
-                    onKeyDown={handleKeyDown}
-                    className="flex-1 h-7 text-sm p-1 bg-background border-input focus-visible:ring-1 focus-visible:ring-ring"
-                />
-            ) : (
-                <span
+        <ContextMenu>
+            <ContextMenuTrigger asChild>
+                <div
+                    id={`task-${task.taskId}`}
+                    ref={setNodeRef}
+                    style={style}
+                    {...listeners}
+                    {...attributes}
+                    onMouseEnter={() => setHoveredTaskId(task.taskId)}
+                    onMouseLeave={() => setHoveredTaskId(null)}
                     className={cn(
-                        "flex-1 text-sm cursor-text transition-colors",
-                        isCompleted ? "line-through text-muted-foreground" : "text-foreground"
+                        "group flex items-center gap-2 bg-card p-1.5 rounded-lg border shadow-sm transition-all duration-200 touch-none",
+                        "hover:border-primary/50",
+                        (isOverlay || isGrabbed) && "opacity-90 rotate-2 scale-105 shadow-xl cursor-grabbing",
+                        !isOverlay && !isGrabbed && "cursor-grab active:cursor-grabbing",
+                        isSelected || (isManipulated && !isSelected)
+                            ? "border-primary ring-1 ring-primary relative z-10"
+                            : "border-border"
                     )}
-                    onDoubleClick={() => {
-                        if (!isCompleted) setLocalIsEditing(true);
-                    }}
                 >
-                    {originalTask.title}
-                </span>
-            )}
+                    <div
+                        className="flex items-center justify-center p-1"
+                        onPointerDown={(e) => e.stopPropagation()}
+                    >
+                        <Checkbox
+                            id={`checkbox-${task.taskId}`}
+                            checked={isCompleted}
+                            onCheckedChange={() => {
+                                toggleTask(task.taskId);
+                            }}
+                            onClick={(e) => {
+                                if (!isCompleted) {
+                                    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                                    const x = (rect.left + rect.width / 2) / window.innerWidth;
+                                    const y = (rect.top + rect.height / 2) / window.innerHeight;
 
-            {task.rolledOverFrom && (
-                <span
-                    className="flex items-center gap-1 text-xs text-amber-600 dark:text-amber-500 font-medium italic bg-amber-50 dark:bg-amber-950/30 px-2 py-0.5 rounded-full whitespace-nowrap border border-amber-200 dark:border-amber-800"
-                    title={`Originally created on ${task.rolledOverFrom}`}
-                >
-                    <Icon name="Rollover" className="w-3 h-3" />
-                    Rolled Over
-                </span>
-            )}
+                                    confetti({
+                                        particleCount: 50,
+                                        spread: 60,
+                                        origin: { x, y }
+                                    });
+                                }
+                            }}
+                            className="data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground border-muted-foreground/50"
+                        />
+                    </div>
 
-            <button
-                onPointerDown={(e) => e.stopPropagation()} // Prevent drag
-                onClick={() => deleteTask(task.taskId)}
-                className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-colors p-1"
-                aria-label="Delete Task"
-            >
-                <Icon name="Trash2" className="w-4 h-4" />
-            </button>
-        </div>
+                    {isEditing ? (
+                        <Input
+                            ref={inputRef}
+                            type="text"
+                            value={localTitle}
+                            onChange={(e) => setLocalTitle(e.target.value)}
+                            onBlur={saveEdit}
+                            onKeyDown={handleKeyDown}
+                            className="flex-1 h-7 text-sm p-1 bg-background border-input focus-visible:ring-1 focus-visible:ring-ring"
+                        />
+                    ) : (
+                        <span
+                            className={cn(
+                                "flex-1 text-sm cursor-text transition-colors",
+                                isCompleted ? "line-through text-muted-foreground" : "text-foreground"
+                            )}
+                            onDoubleClick={() => {
+                                if (!isCompleted) setLocalIsEditing(true);
+                            }}
+                        >
+                            {originalTask.title}
+                        </span>
+                    )}
+
+                    {task.rolledOverFrom && (
+                        <span
+                            className="flex items-center gap-1 text-xs text-amber-600 dark:text-amber-500 font-medium italic bg-amber-50 dark:bg-amber-950/30 px-2 py-0.5 rounded-full whitespace-nowrap border border-amber-200 dark:border-amber-800"
+                            title={`Originally created on ${task.rolledOverFrom}`}
+                        >
+                            <Icon name="Rollover" className="w-3 h-3" />
+                            Rolled Over
+                        </span>
+                    )}
+
+                    <button
+                        onPointerDown={(e) => e.stopPropagation()} // Prevent drag
+                        onClick={() => deleteTask(task.taskId)}
+                        className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-colors p-1"
+                        aria-label="Delete Task"
+                    >
+                        <Icon name="Trash2" className="w-4 h-4" />
+                    </button>
+                </div>
+            </ContextMenuTrigger>
+            <ContextMenuContent className="w-64">
+                <ContextMenuItem onClick={() => duplicateTask(task.taskId)}>
+                    <Icon name="Copy" className="w-4 h-4 mr-2" />
+                    Duplicate
+                </ContextMenuItem>
+                <ContextMenuItem onClick={() => deleteTask(task.taskId)} className="text-destructive focus:text-destructive">
+                    <Icon name="Trash2" className="w-4 h-4 mr-2" />
+                    Delete
+                </ContextMenuItem>
+                <ContextMenuSeparator />
+                <ContextMenuSub>
+                    <ContextMenuSubTrigger>Move To...</ContextMenuSubTrigger>
+                    <ContextMenuSubContent className="w-48">
+                        <ContextMenuItem
+                            onClick={() => moveTask(task.taskId, 'must-do')}
+                            disabled={task.category === 'must-do'}
+                            className={task.category === 'must-do' ? "text-muted-foreground" : ""}
+                        >
+                            Must Do
+                        </ContextMenuItem>
+                        <ContextMenuItem
+                            onClick={() => moveTask(task.taskId, 'communications')}
+                            disabled={task.category === 'communications'}
+                            className={task.category === 'communications' ? "text-muted-foreground" : ""}
+                        >
+                            Communications
+                        </ContextMenuItem>
+                        <ContextMenuItem
+                            onClick={() => moveTask(task.taskId, 'todo')}
+                            disabled={task.category === 'todo'}
+                            className={task.category === 'todo' ? "text-muted-foreground" : ""}
+                        >
+                            To-Do
+                        </ContextMenuItem>
+                    </ContextMenuSubContent>
+                </ContextMenuSub>
+            </ContextMenuContent>
+        </ContextMenu>
     );
 };
 
