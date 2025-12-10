@@ -65,7 +65,8 @@ export const TaskItemBase: React.FC<TaskItemBaseProps> = React.memo(({
     const isEditing = localIsEditing || editingTaskId === task.taskId;
     const setStoreEditing = useStore(state => state.setEditingTaskId);
     const duplicateTask = useStore(state => state.duplicateTask);
-    const moveTask = useStore(state => state.moveTask);
+
+    const changeTaskCategory = useStore(state => state.changeTaskCategory);
 
     // Derived state: Is this task being manipulated? (Hovered but not dragging)
     const isManipulated = hoveredTaskId === task.taskId && !isDragging;
@@ -163,6 +164,11 @@ export const TaskItemBase: React.FC<TaskItemBaseProps> = React.memo(({
 
     const isNew = originalTask.createdAt && (Date.now() - originalTask.createdAt < 1000);
 
+    // Determine effective category for menu state
+    const effCategory = task.category === 'scheduled' && task.originalCategory
+        ? task.originalCategory
+        : task.category;
+
     return (
         <ContextMenu>
             <ContextMenuTrigger asChild>
@@ -178,6 +184,7 @@ export const TaskItemBase: React.FC<TaskItemBaseProps> = React.memo(({
                     {...attributes}
                     onMouseEnter={() => setHoveredTaskId(task.taskId)}
                     onMouseLeave={() => setHoveredTaskId(null)}
+                    onDoubleClick={(e) => e.stopPropagation()}
                     className={cn(
                         "group flex items-center gap-2 p-1.5 rounded-lg border shadow-sm transition-colors duration-200 touch-none", // Removed generic transition-all to let motion handle layout
                         getCategoryStyles(),
@@ -264,32 +271,32 @@ export const TaskItemBase: React.FC<TaskItemBaseProps> = React.memo(({
                     <Icon name="Copy" className="w-4 h-4 mr-2" />
                     Duplicate
                 </ContextMenuItem>
-                <ContextMenuItem onClick={() => deleteTask(task.taskId)} className="text-destructive focus:text-destructive">
+                <ContextMenuItem onClick={() => deleteTask(task.taskId)} className="focus:text-destructive">
                     <Icon name="Trash2" className="w-4 h-4 mr-2" />
                     Delete
                 </ContextMenuItem>
                 <ContextMenuSeparator />
                 <ContextMenuSub>
-                    <ContextMenuSubTrigger>Move To...</ContextMenuSubTrigger>
+                    <ContextMenuSubTrigger>Change Type</ContextMenuSubTrigger>
                     <ContextMenuSubContent className="w-48">
                         <ContextMenuItem
-                            onClick={() => moveTask(task.taskId, 'must-do')}
-                            disabled={task.category === 'must-do'}
-                            className={task.category === 'must-do' ? "text-muted-foreground" : ""}
+                            onClick={() => changeTaskCategory(task.taskId, 'must-do')}
+                            disabled={effCategory === 'must-do'}
+                            className={effCategory === 'must-do' ? "text-muted-foreground" : ""}
                         >
                             Must Do
                         </ContextMenuItem>
                         <ContextMenuItem
-                            onClick={() => moveTask(task.taskId, 'communications')}
-                            disabled={task.category === 'communications'}
-                            className={task.category === 'communications' ? "text-muted-foreground" : ""}
+                            onClick={() => changeTaskCategory(task.taskId, 'communications')}
+                            disabled={effCategory === 'communications'}
+                            className={effCategory === 'communications' ? "text-muted-foreground" : ""}
                         >
                             Communications
                         </ContextMenuItem>
                         <ContextMenuItem
-                            onClick={() => moveTask(task.taskId, 'todo')}
-                            disabled={task.category === 'todo'}
-                            className={task.category === 'todo' ? "text-muted-foreground" : ""}
+                            onClick={() => changeTaskCategory(task.taskId, 'todo')}
+                            disabled={effCategory === 'todo'}
+                            className={effCategory === 'todo' ? "text-muted-foreground" : ""}
                         >
                             To-Do
                         </ContextMenuItem>

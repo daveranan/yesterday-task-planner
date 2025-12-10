@@ -4,6 +4,7 @@ import TaskItem from './TaskItem';
 import { useDroppable } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { DayData, TaskGlobal, TaskEntry, ScheduleSettings } from '../store/types';
+import { useStore } from '../store/useStore';
 
 interface TimeSlotProps {
     slotId: string;
@@ -15,6 +16,9 @@ interface TimeSlotProps {
     onToggleTask: (taskId: string) => void;
     onDeleteTask: (taskId: string) => void;
     onEditTask: (taskId: string, newTitle: string) => void;
+    onMouseEnter: () => void;
+    onMouseLeave: () => void;
+    onDoubleClick: () => void;
 }
 
 // Helper component for a single droppable time slot
@@ -27,7 +31,10 @@ const TimeSlot: React.FC<TimeSlotProps> = ({
     allTasks,
     onToggleTask,
     onDeleteTask,
-    onEditTask
+    onEditTask,
+    onMouseEnter,
+    onMouseLeave,
+    onDoubleClick
 }) => {
     const { setNodeRef, isOver } = useDroppable({
         id: slotId,
@@ -50,6 +57,9 @@ const TimeSlot: React.FC<TimeSlotProps> = ({
     return (
         <div
             ref={setNodeRef}
+            onMouseEnter={onMouseEnter}
+            onMouseLeave={onMouseLeave}
+            onDoubleClick={onDoubleClick}
             className={`flex border-b border-neutral-200 dark:border-neutral-800 min-h-[32px] flex-1 relative
                 ${isBlockStart ? 'border-t-4 border-t-neutral-200 dark:border-t-neutral-800' : ''}
             `}
@@ -119,11 +129,29 @@ const Timeline: React.FC<TimelineProps> = ({
     isActive
 }) => {
     const [now, setNow] = useState(new Date());
+    const addTaskToSlot = useStore(state => state.addTaskToSlot);
+    const [hoveredSlotId, setHoveredSlotId] = useState<string | null>(null);
 
     useEffect(() => {
         const interval = setInterval(() => setNow(new Date()), 1000);
         return () => clearInterval(interval);
     }, []);
+
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'n' || e.key === 'N') {
+                const activeTag = document.activeElement?.tagName.toLowerCase();
+                if (activeTag === 'input' || activeTag === 'textarea') return;
+
+                if (hoveredSlotId) {
+                    e.preventDefault();
+                    addTaskToSlot(hoveredSlotId);
+                }
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [hoveredSlotId, addTaskToSlot]);
 
     const currentHour = now.getHours();
     const currentMin = now.getMinutes();
@@ -230,6 +258,9 @@ const Timeline: React.FC<TimelineProps> = ({
                                 onToggleTask={onToggleTask}
                                 onDeleteTask={onDeleteTask}
                                 onEditTask={onEditTask}
+                                onMouseEnter={() => setHoveredSlotId(slotId)}
+                                onMouseLeave={() => setHoveredSlotId(null)}
+                                onDoubleClick={() => addTaskToSlot(slotId)}
                             />
                         );
                     })}

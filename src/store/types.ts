@@ -146,6 +146,8 @@ export interface StoreActions {
     updateScheduleSettings: (settings: Partial<ScheduleSettings>) => void;
     setDayScheduleOverride: (date: string, override: DayScheduleOverride | null) => void;
     updateColumnLimits: (limits: Partial<Record<string, number>>) => void;
+    addTaskToSlot: (slotId: string) => void;
+    changeTaskCategory: (taskId: string, newCategory: string) => void;
 }
 
 export type Store = StoreState & StoreActions;

@@ -431,6 +431,81 @@ export const useStore = create<Store>((set, get) => ({
         });
     },
 
+    addTaskToSlot: (slotId: string) => {
+        const { currentDate, days } = get();
+
+        // 1. Create Task Global
+        const newTaskId = Date.now().toString();
+        const newTaskGlobal: TaskGlobal = {
+            title: '',
+            createdOn: currentDate,
+            createdAt: Date.now(),
+            completed: false,
+            category: 'scheduled',
+        };
+
+        // 2. Create Task Entry
+        const newEntry: TaskEntry = {
+            taskId: newTaskId,
+            category: 'scheduled',
+            slotId: slotId,
+            rolledOverFrom: null,
+            originalCategory: 'todo'
+        };
+
+        set((state) => {
+            const past = addToHistory(state, state.past, 'Add Task to Slot');
+            const currentDayData = state.days[currentDate] || { taskEntries: [] };
+
+            const newState = {
+                tasks: { ...state.tasks, [newTaskId]: newTaskGlobal },
+                days: {
+                    ...state.days,
+                    [currentDate]: {
+                        ...currentDayData,
+                        taskEntries: [...currentDayData.taskEntries, newEntry]
+                    }
+                },
+                editingTaskId: newTaskId
+            };
+
+            saveDataToFile({ tasks: newState.tasks, days: newState.days, drawer: state.drawer });
+            return { ...newState, past, future: [] };
+        });
+    },
+
+    changeTaskCategory: (taskId: string, newCategory: string) => {
+        const { tasks, currentDate, days } = get();
+        const task = tasks[taskId];
+        if (!task) return;
+
+        const currentDay = days[currentDate];
+        const entry = currentDay?.taskEntries.find(t => t.taskId === taskId);
+
+        if (entry && entry.category === 'scheduled') {
+            set((state) => {
+                const past = addToHistory(state, state.past, 'Change Task Type');
+
+                const updatedEntries = state.days[currentDate].taskEntries.map(t => {
+                    if (t.taskId === taskId) {
+                        return { ...t, originalCategory: newCategory };
+                    }
+                    return t;
+                });
+
+                const updatedDays = {
+                    ...state.days,
+                    [currentDate]: { ...state.days[currentDate], taskEntries: updatedEntries }
+                };
+
+                saveDataToFile({ tasks: state.tasks, days: updatedDays, drawer: state.drawer });
+                return { days: updatedDays, past, future: [] };
+            });
+        } else {
+            get().moveTask(taskId, newCategory);
+        }
+    },
+
     updateTaskTitle: (taskId: string, newTitle: string) => {
         set((state) => {
             const past = addToHistory(state, state.past);
