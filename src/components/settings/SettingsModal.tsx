@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useStore } from '../../store/useStore';
 import { Icon } from '../Icon';
 import { SHORTCUT_DESCRIPTIONS } from '../../constants/shortcuts';
+import { formatShortcut } from '../../utils/keyboardUtils';
 import {
     Dialog,
     DialogContent,
@@ -363,7 +364,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
                                                 className="w-32 h-8 font-mono text-xs"
                                                 title="Click to remap"
                                             >
-                                                {currentKey as string}
+                                                {formatShortcut(currentKey as string)}
                                             </Button>
                                         )}
                                     </div>
