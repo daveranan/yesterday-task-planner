@@ -432,7 +432,7 @@ export const useStore = create<Store>((set, get) => ({
     },
 
     addTaskToSlot: (slotId: string) => {
-        const { currentDate, days } = get();
+        const { currentDate } = get();
 
         // 1. Create Task Global
         const newTaskId = Date.now().toString();
