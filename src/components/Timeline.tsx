@@ -121,7 +121,7 @@ const Timeline: React.FC<TimelineProps> = ({
     const [now, setNow] = useState(new Date());
 
     useEffect(() => {
-        const interval = setInterval(() => setNow(new Date()), 60000);
+        const interval = setInterval(() => setNow(new Date()), 1000);
         return () => clearInterval(interval);
     }, []);
 
@@ -136,12 +136,34 @@ const Timeline: React.FC<TimelineProps> = ({
         `}>
             <div className="p-1.5 border-b border-neutral-200 dark:border-neutral-800 flex justify-between items-center bg-neutral-100 dark:bg-neutral-800/50">
                 <h3 className="font-bold text-neutral-900 dark:text-neutral-100">Work Blocks</h3>
-                <button
-                    className="text-xs px-2 py-0.5 bg-white dark:bg-neutral-700 border border-neutral-200 dark:border-neutral-600 rounded text-neutral-600 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-600 transition-colors"
-                    onClick={onOverrideClick}
-                >
-                    Override
-                </button>
+                <div className="flex items-center gap-2">
+                    {isToday && (() => {
+                        const endOfDay = new Date(now);
+                        endOfDay.setHours(config.endHour, 0, 0, 0);
+                        const diff = endOfDay.getTime() - now.getTime();
+
+                        if (diff <= 0) {
+                            return <span className="text-[11px] font-medium text-neutral-500 dark:text-neutral-400">see you out there space cowboy</span>;
+                        }
+
+                        const hours = Math.floor(diff / (1000 * 60 * 60));
+                        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+                        const formatted = `${hours}h ${minutes}m ${seconds}s`;
+
+                        return (
+                            <span className="text-[11px] font-medium text-neutral-500 dark:text-neutral-400 tabular-nums">
+                                {formatted}
+                            </span>
+                        );
+                    })()}
+                    <button
+                        className="text-xs px-2 py-0.5 bg-white dark:bg-neutral-700 border border-neutral-200 dark:border-neutral-600 rounded text-neutral-600 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-600 transition-colors"
+                        onClick={onOverrideClick}
+                    >
+                        Override
+                    </button>
+                </div>
             </div>
 
             <div className="flex-1 overflow-y-auto overflow-x-hidden scrollbar-style w-full">
