@@ -99,7 +99,6 @@ const Column: React.FC<ColumnProps> = ({ title, category, limit, tasks, allTasks
                             key={task.taskId} // Use taskId as key for consistency
                             index={index}
                             task={task}
-                            allTasks={allTasks}
                             toggleTask={toggleTask}
                             deleteTask={deleteTask}
                             handleEditTask={handleEditTask}

@@ -85,7 +85,6 @@ const TimeSlot: React.FC<TimeSlotProps> = ({
                         <TaskItem
                             key={task.taskId}
                             task={task}
-                            allTasks={allTasks}
                             toggleTask={onToggleTask}
                             deleteTask={onDeleteTask}
                             handleEditTask={onEditTask}

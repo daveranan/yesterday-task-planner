@@ -5,7 +5,7 @@ import { useSortable } from '@dnd-kit/sortable';
 import { useDraggable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
 import confetti from 'canvas-confetti';
-import { TaskEntry, TaskGlobal } from '../store/types';
+import { TaskEntry } from '../store/types';
 import { useStore } from '../store/useStore';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
@@ -23,7 +23,6 @@ import {
 
 interface TaskItemBaseProps {
     task: TaskEntry;
-    allTasks: Record<string, TaskGlobal>;
     toggleTask: (taskId: string) => void;
     deleteTask: (taskId: string) => void;
     handleEditTask: (taskId: string, newTitle: string) => void;
@@ -42,9 +41,8 @@ interface TaskItemBaseProps {
 }
 
 // The UI Component (Pure, no DnD hooks yourself, but accepts refs/styles)
-export const TaskItemBase: React.FC<TaskItemBaseProps> = ({
+export const TaskItemBase: React.FC<TaskItemBaseProps> = React.memo(({
     task,
-    allTasks,
     toggleTask,
     deleteTask,
     handleEditTask,
@@ -74,7 +72,7 @@ export const TaskItemBase: React.FC<TaskItemBaseProps> = ({
     const isGrabbed = grabbedTaskId === task.taskId;
 
     // Get the original task data from the global store
-    const originalTask = allTasks[task.taskId];
+    const originalTask = useStore(state => state.tasks[task.taskId]);
     const [localTitle, setLocalTitle] = useState(originalTask ? originalTask.title : '');
 
     const inputRef = useRef<HTMLInputElement>(null);
@@ -300,11 +298,10 @@ export const TaskItemBase: React.FC<TaskItemBaseProps> = ({
             </ContextMenuContent>
         </ContextMenu>
     );
-};
+}); // Wrapped in memo
 
 interface TaskItemSpecificProps {
     task: TaskEntry;
-    allTasks: Record<string, TaskGlobal>;
     toggleTask: (taskId: string) => void;
     deleteTask: (taskId: string) => void;
     handleEditTask: (taskId: string, newTitle: string) => void;
@@ -312,13 +309,15 @@ interface TaskItemSpecificProps {
 }
 
 // The Sortable Wrapper (Default)
-const TaskItem: React.FC<TaskItemSpecificProps> = (props) => {
+const TaskItem: React.FC<TaskItemSpecificProps> = React.memo((props) => {
     // We need to access selectedTaskId here to pass to Base
-    const selectedTaskId = useStore(state => state.selectedTaskId);
-    const hoveredTaskId = useStore(state => state.hoveredTaskId);
+    // We need to access selectedTaskId here to pass to Base
+    const isSelected = useStore(state => state.selectedTaskId === props.task.taskId);
+    // Optimization: Only subscribe to boolean state changes for THIS task
+    const isHovered = useStore(state => state.hoveredTaskId === props.task.taskId);
     const setHoveredTaskId = useStore(state => state.setHoveredTaskId);
-    const grabbedTaskId = useStore(state => state.grabbedTaskId);
-    const editingTaskId = useStore(state => state.editingTaskId);
+    const isGrabbed = useStore(state => state.grabbedTaskId === props.task.taskId);
+    const isEditing = useStore(state => state.editingTaskId === props.task.taskId);
 
     const {
         attributes,
@@ -345,23 +344,24 @@ const TaskItem: React.FC<TaskItemSpecificProps> = (props) => {
             attributes={attributes}
             listeners={listeners}
             isDragging={isDragging}
-            isSelected={selectedTaskId === props.task.taskId}
-            hoveredTaskId={hoveredTaskId}
+            isSelected={isSelected}
+            hoveredTaskId={isHovered ? props.task.taskId : null}
             setHoveredTaskId={setHoveredTaskId}
-            grabbedTaskId={grabbedTaskId}
-            editingTaskId={editingTaskId}
+            grabbedTaskId={isGrabbed ? props.task.taskId : null}
+            editingTaskId={isEditing ? props.task.taskId : null}
             index={props.index}
         />
     );
-};
+}); // Wrapped in memo
 
 // The Draggable Wrapper (For Timeline)
-export const DraggableTaskItem: React.FC<TaskItemSpecificProps> = (props) => {
-    const selectedTaskId = useStore(state => state.selectedTaskId);
-    const hoveredTaskId = useStore(state => state.hoveredTaskId);
+export const DraggableTaskItem: React.FC<TaskItemSpecificProps> = React.memo((props) => {
+    const isSelected = useStore(state => state.selectedTaskId === props.task.taskId);
+    // Optimization: Only subscribe to boolean state changes for THIS task
+    const isHovered = useStore(state => state.hoveredTaskId === props.task.taskId);
     const setHoveredTaskId = useStore(state => state.setHoveredTaskId);
-    const grabbedTaskId = useStore(state => state.grabbedTaskId);
-    const editingTaskId = useStore(state => state.editingTaskId);
+    const isGrabbed = useStore(state => state.grabbedTaskId === props.task.taskId);
+    const isEditing = useStore(state => state.editingTaskId === props.task.taskId);
 
     const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
         id: props.task.taskId,
@@ -380,14 +380,14 @@ export const DraggableTaskItem: React.FC<TaskItemSpecificProps> = (props) => {
             attributes={attributes}
             listeners={listeners}
             isDragging={isDragging}
-            isSelected={selectedTaskId === props.task.taskId}
-            hoveredTaskId={hoveredTaskId}
+            isSelected={isSelected}
+            hoveredTaskId={isHovered ? props.task.taskId : null}
             setHoveredTaskId={setHoveredTaskId}
-            grabbedTaskId={grabbedTaskId}
-            editingTaskId={editingTaskId}
+            grabbedTaskId={isGrabbed ? props.task.taskId : null}
+            editingTaskId={isEditing ? props.task.taskId : null}
             index={props.index}
         />
     );
-};
+}); // Wrapped in memo
 
 export default TaskItem;

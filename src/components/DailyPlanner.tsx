@@ -22,30 +22,30 @@ const DailyPlanner: React.FC = () => {
 
     // --- Store Selectors ---
     // --- Store Selectors ---
-    const {
-        currentDate,
-        setCurrentDate,
-        handleDateChange,
-        jumpToToday,
+    // --- Store Selectors ---
+    const currentDate = useStore(state => state.currentDate);
+    const settings = useStore(state => state.settings);
+    const days = useStore(state => state.days);
+    const allTasks = useStore(state => state.tasks);
+    const activeColumnId = useStore(state => state.activeColumnId);
 
-        settings,
-        days,
-        tasks: allTasks,
-        addTask,
-        toggleTask,
-        deleteTask,
-        updateTaskTitle,
-        updateDayData,
-        moveTask,
-        reorderTask,
-        checkRollover,
-        activeColumnId,
-        toggleDrawer,
-        moveTaskToDrawer,
-        moveDrawerTask,
-        reorderDrawerFolders,
-        moveTaskFromDrawerToDay,
-    } = useStore();
+    // Actions (stable functions, can be destructured or fetched once)
+    const setCurrentDate = useStore(state => state.setCurrentDate);
+    const handleDateChange = useStore(state => state.handleDateChange);
+    const jumpToToday = useStore(state => state.jumpToToday);
+    const addTask = useStore(state => state.addTask);
+    const toggleTask = useStore(state => state.toggleTask);
+    const deleteTask = useStore(state => state.deleteTask);
+    const updateTaskTitle = useStore(state => state.updateTaskTitle);
+    const updateDayData = useStore(state => state.updateDayData);
+    const moveTask = useStore(state => state.moveTask);
+    const reorderTask = useStore(state => state.reorderTask);
+    const checkRollover = useStore(state => state.checkRollover);
+    const toggleDrawer = useStore(state => state.toggleDrawer);
+    const moveTaskToDrawer = useStore(state => state.moveTaskToDrawer);
+    const moveDrawerTask = useStore(state => state.moveDrawerTask);
+    const reorderDrawerFolders = useStore(state => state.reorderDrawerFolders);
+    const moveTaskFromDrawerToDay = useStore(state => state.moveTaskFromDrawerToDay);
 
     // Enable Keyboard Navigation
     useKeyboardNavigation();
@@ -403,7 +403,6 @@ const DailyPlanner: React.FC = () => {
                         <div className="opacity-90 rotate-2 cursor-grabbing pointer-events-none">
                             <TaskItemBase
                                 task={activeTaskEntry}
-                                allTasks={allTasks}
                                 toggleTask={() => { }} // No-op during drag
                                 deleteTask={() => { }} // No-op during drag
                                 handleEditTask={() => { }} // No-op during drag
