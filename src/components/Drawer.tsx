@@ -222,6 +222,7 @@ const DrawerTaskItem: React.FC<{
 
     const [isEditing, setIsEditing] = useState(false);
     const [editValue, setEditValue] = useState(task.title);
+    const hasTitle = task.title.trim().length > 0;
 
     const handleSave = () => {
         if (editValue.trim()) {
@@ -237,7 +238,7 @@ const DrawerTaskItem: React.FC<{
             style={style}
             {...attributes}
             {...listeners}
-            className="group flex items-start gap-2 p-1.5 rounded-md hover:bg-muted/50 text-sm touch-none"
+            className="group flex items-start gap-2 p-1.5 rounded-md hover:bg-muted/50 text-sm touch-none cursor-grab active:cursor-grabbing"
             onMouseEnter={() => onHover(true)}
             onMouseLeave={() => onHover(false)}
         >
@@ -279,9 +280,13 @@ const DrawerTaskItem: React.FC<{
             ) : (
                 <span
                     onClick={(e) => { e.stopPropagation(); setIsEditing(true); }}
-                    className={`flex-1 min-w-0 whitespace-normal break-words cursor-text ${task.completed ? 'text-muted-foreground line-through' : ''}`}
+                    className={`flex-1 min-w-0 w-full min-h-[1.25rem] whitespace-normal break-words cursor-text ${task.completed ? 'text-muted-foreground line-through' : ''}`}
                 >
-                    {task.title}
+                    {hasTitle ? task.title : (
+                        <span className="text-muted-foreground italic">
+                            Click to add title
+                        </span>
+                    )}
                 </span>
             )}
 
