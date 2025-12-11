@@ -333,6 +333,7 @@ export const useStore = create<Store>((set, get) => ({
             createdAt: Date.now(),
             completed: false,
             category,
+            dueDate: null,
         };
 
         const newDayEntry: TaskEntry = {
@@ -442,6 +443,7 @@ export const useStore = create<Store>((set, get) => ({
             createdAt: Date.now(),
             completed: false,
             category: 'scheduled',
+            dueDate: null,
         };
 
         // 2. Create Task Entry
@@ -514,6 +516,21 @@ export const useStore = create<Store>((set, get) => ({
                 [taskId]: { ...state.tasks[taskId], title: newTitle }
             };
             saveDataToFile({ tasks: updatedTasks, days: state.days, drawer: state.drawer });
+            return { tasks: updatedTasks, past, future: [] };
+        });
+    },
+
+    setTaskDueDate: (taskId: string, dueDate: string | null) => {
+        set((state) => {
+            const task = state.tasks[taskId];
+            if (!task) return {};
+
+            const past = addToHistory(state, state.past, dueDate ? 'Set Due Date' : 'Clear Due Date');
+            const updatedTasks = {
+                ...state.tasks,
+                [taskId]: { ...task, dueDate }
+            };
+            saveDataToFile({ tasks: updatedTasks, days: state.days, drawer: state.drawer, settings: state.settings });
             return { tasks: updatedTasks, past, future: [] };
         });
     },
@@ -824,6 +841,7 @@ export const useStore = create<Store>((set, get) => ({
                 createdAt: Date.now(),
                 completed: false,
                 category: 'drawer', // Marker category
+                dueDate: null,
             };
 
             // Create Drawer Entry

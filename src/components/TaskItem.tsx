@@ -9,7 +9,10 @@ import { TaskEntry } from '../store/types';
 import { useStore } from '../store/useStore';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { getYYYYMMDD, getDateOffset } from '@/utils/dateUtils';
+import { toast } from 'sonner';
 import {
     ContextMenu,
     ContextMenuContent,
@@ -20,6 +23,13 @@ import {
     ContextMenuSubContent,
     ContextMenuSubTrigger,
 } from "@/components/ui/context-menu";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle
+} from "@/components/ui/dialog";
 
 interface TaskItemBaseProps {
     task: TaskEntry;
@@ -61,24 +71,58 @@ export const TaskItemBase: React.FC<TaskItemBaseProps> = React.memo(({
     index
 }) => {
     const [localIsEditing, setLocalIsEditing] = useState(false);
-    // Combine local click edit and global shortcut edit
-    const isEditing = localIsEditing || editingTaskId === task.taskId;
+    const [isDueDateDialogOpen, setIsDueDateDialogOpen] = useState(false);
+
     const setStoreEditing = useStore(state => state.setEditingTaskId);
     const duplicateTask = useStore(state => state.duplicateTask);
-
     const changeTaskCategory = useStore(state => state.changeTaskCategory);
+    const setTaskDueDate = useStore(state => state.setTaskDueDate);
+    const originalTask = useStore(state => state.tasks[task.taskId]);
+
+    const todayString = getYYYYMMDD(new Date());
+    const [dueDateDraft, setDueDateDraft] = useState<string>(originalTask?.dueDate || todayString);
+
+    // Combine local click edit and global shortcut edit
+    const isEditing = localIsEditing || editingTaskId === task.taskId;
 
     // Derived state: Is this task being manipulated? (Hovered but not dragging)
     const isManipulated = hoveredTaskId === task.taskId && !isDragging;
     const isGrabbed = grabbedTaskId === task.taskId;
 
-    // Get the original task data from the global store
-    const originalTask = useStore(state => state.tasks[task.taskId]);
     const [localTitle, setLocalTitle] = useState(originalTask ? originalTask.title : '');
 
     const inputRef = useRef<HTMLInputElement>(null);
 
     const isCompleted = originalTask ? originalTask.completed : false;
+
+    const dueDateInfo = React.useMemo(() => {
+        if (!originalTask?.dueDate) return null;
+
+        const today = new Date(`${todayString}T00:00:00`);
+        const due = new Date(`${originalTask.dueDate}T00:00:00`);
+        if (isNaN(due.getTime())) return null;
+
+        const diffDays = Math.round((due.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+        const formatter = new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric' });
+
+        let label = `Due ${formatter.format(due)}`;
+        if (diffDays === 0) label = 'Due Today';
+        else if (diffDays === 1) label = 'Due Tomorrow';
+        else if (diffDays === -1) label = 'Due Yesterday';
+
+        const tone: 'overdue' | 'soon' | 'normal' = diffDays < 0 ? 'overdue' : diffDays <= 2 ? 'soon' : 'normal';
+
+        return { label, tone, raw: originalTask.dueDate };
+    }, [originalTask?.dueDate, todayString]);
+
+    const dueToneClass = dueDateInfo ? ({
+        overdue: "bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-200 border-red-200 dark:border-red-800",
+        soon: "bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800",
+        normal: "bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800"
+    }[dueDateInfo.tone]) : "";
+
+    const tomorrowString = getDateOffset(todayString, 1);
+    const nextWeekString = getDateOffset(todayString, 7);
 
     useEffect(() => {
         if (isEditing) {
@@ -118,6 +162,39 @@ export const TaskItemBase: React.FC<TaskItemBaseProps> = React.memo(({
             setLocalIsEditing(false);
             if (editingTaskId === task.taskId) setStoreEditing(null);
         }
+    };
+
+    const applyDueDate = (dateString: string | null) => {
+        setTaskDueDate(task.taskId, dateString);
+    };
+
+    const openDueDateDialog = () => {
+        setDueDateDraft(originalTask?.dueDate || todayString);
+        setIsDueDateDialogOpen(true);
+    };
+
+    const handleDueDateSubmit = () => {
+        const value = dueDateDraft.trim();
+
+        if (!value) {
+            applyDueDate(null);
+            setIsDueDateDialogOpen(false);
+            return;
+        }
+
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+            toast.error('Please use the YYYY-MM-DD format.');
+            return;
+        }
+
+        const parsed = new Date(`${value}T00:00:00`);
+        if (isNaN(parsed.getTime())) {
+            toast.error('That due date is not valid.');
+            return;
+        }
+
+        applyDueDate(value);
+        setIsDueDateDialogOpen(false);
     };
 
     // Scroll Into View Effect - Moved to top level safely
@@ -170,140 +247,213 @@ export const TaskItemBase: React.FC<TaskItemBaseProps> = React.memo(({
         : task.category;
 
     return (
-        <ContextMenu>
-            <ContextMenuTrigger asChild>
-                <motion.div
-                    initial={isNew ? { opacity: 0, scale: 0.9 } : false}
-                    animate={isNew ? { opacity: 1, scale: 1 } : false}
-                    exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.15 } }}
-                    transition={{ duration: 0.2 }}
-                    id={`task-${task.taskId}`}
-                    ref={setNodeRef}
-                    style={style}
-                    {...(!isEditing ? listeners : {})}
-                    {...attributes}
-                    onMouseEnter={() => setHoveredTaskId(task.taskId)}
-                    onMouseLeave={() => setHoveredTaskId(null)}
-                    onDoubleClick={(e) => e.stopPropagation()}
-                    className={cn(
-                        "group flex items-center gap-2 p-1.5 rounded-lg border shadow-sm transition-colors duration-200 touch-none", // Removed generic transition-all to let motion handle layout
-                        getCategoryStyles(),
-                        (isOverlay || isGrabbed) && "opacity-90 rotate-2 scale-105 shadow-xl cursor-grabbing bg-card border-primary", // Ensure overlay looks "lifted"
-                        !isOverlay && !isGrabbed && "cursor-grab active:cursor-grabbing",
-                        isSelected || (isManipulated && !isSelected)
-                            ? "border-primary ring-1 ring-primary relative z-10"
-                            : ""
-                    )}
-                >
-                    <div
-                        className="flex items-center justify-center p-1"
-                        onPointerDown={(e) => e.stopPropagation()}
+        <>
+            <ContextMenu>
+                <ContextMenuTrigger asChild>
+                    <motion.div
+                        initial={isNew ? { opacity: 0, scale: 0.9 } : false}
+                        animate={isNew ? { opacity: 1, scale: 1 } : false}
+                        exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.15 } }}
+                        transition={{ duration: 0.2 }}
+                        id={`task-${task.taskId}`}
+                        ref={setNodeRef}
+                        style={style}
+                        {...(!isEditing ? listeners : {})}
+                        {...attributes}
+                        onMouseEnter={() => setHoveredTaskId(task.taskId)}
+                        onMouseLeave={() => setHoveredTaskId(null)}
+                        onDoubleClick={(e) => e.stopPropagation()}
+                        className={cn(
+                            "group flex items-center gap-2 p-1.5 rounded-lg border shadow-sm transition-colors duration-200 touch-none", // Removed generic transition-all to let motion handle layout
+                            getCategoryStyles(),
+                            (isOverlay || isGrabbed) && "opacity-90 rotate-2 scale-105 shadow-xl cursor-grabbing bg-card border-primary", // Ensure overlay looks "lifted"
+                            !isOverlay && !isGrabbed && "cursor-grab active:cursor-grabbing",
+                            isSelected || (isManipulated && !isSelected)
+                                ? "border-primary ring-1 ring-primary relative z-10"
+                                : ""
+                        )}
                     >
-                        <Checkbox
-                            id={`checkbox-${task.taskId}`}
-                            checked={isCompleted}
-                            onCheckedChange={() => {
-                                toggleTask(task.taskId);
-                            }}
-                            onClick={(e) => {
-                                if (!isCompleted) {
-                                    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-                                    const x = (rect.left + rect.width / 2) / window.innerWidth;
-                                    const y = (rect.top + rect.height / 2) / window.innerHeight;
+                        <div
+                            className="flex items-center justify-center p-1"
+                            onPointerDown={(e) => e.stopPropagation()}
+                        >
+                            <Checkbox
+                                id={`checkbox-${task.taskId}`}
+                                checked={isCompleted}
+                                onCheckedChange={() => {
+                                    toggleTask(task.taskId);
+                                }}
+                                onClick={(e) => {
+                                    if (!isCompleted) {
+                                        const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                                        const x = (rect.left + rect.width / 2) / window.innerWidth;
+                                        const y = (rect.top + rect.height / 2) / window.innerHeight;
 
-                                    confetti({
-                                        particleCount: 50,
-                                        spread: 60,
-                                        origin: { x, y }
-                                    });
-                                }
-                            }}
-                            className="data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground border-muted-foreground/50"
-                        />
-                    </div>
+                                        confetti({
+                                            particleCount: 50,
+                                            spread: 60,
+                                            origin: { x, y }
+                                        });
+                                    }
+                                }}
+                                className="data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground border-muted-foreground/50"
+                            />
+                        </div>
 
-                    {isEditing ? (
+                        {isEditing ? (
+                            <Input
+                                ref={inputRef}
+                                type="text"
+                                value={localTitle}
+                                onChange={(e) => setLocalTitle(e.target.value)}
+                                onBlur={saveEdit}
+                                onKeyDown={handleKeyDown}
+                                className="flex-1 h-7 text-sm p-1 bg-background border-input focus-visible:ring-1 focus-visible:ring-ring"
+                            />
+                        ) : (
+                            <span
+                                className={cn(
+                                    "flex-1 text-sm cursor-text transition-colors",
+                                    isCompleted ? "line-through text-muted-foreground" : "text-foreground"
+                                )}
+                                onDoubleClick={() => {
+                                    if (!isCompleted) setLocalIsEditing(true);
+                                }}
+                            >
+                                {originalTask.title}
+                            </span>
+                        )}
+
+                        {dueDateInfo && (
+                            <span
+                                className={cn(
+                                    "flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full whitespace-nowrap border",
+                                    dueToneClass
+                                )}
+                                title={`Due on ${dueDateInfo.raw}`}
+                            >
+                                <Icon name="Calendar" className="w-3 h-3" />
+                                {dueDateInfo.label}
+                            </span>
+                        )}
+
+                        {task.rolledOverFrom && (
+                            <span
+                                className="flex items-center gap-1 text-xs text-amber-600 dark:text-amber-500 font-medium italic bg-amber-50 dark:bg-amber-950/30 px-2 py-0.5 rounded-full whitespace-nowrap border border-amber-200 dark:border-amber-800"
+                                title={`Originally created on ${task.rolledOverFrom}`}
+                            >
+                                <Icon name="Rollover" className="w-3 h-3" />
+                                Rolled Over
+                            </span>
+                        )}
+
+                        <button
+                            onPointerDown={(e) => e.stopPropagation()} // Prevent drag
+                            onClick={() => deleteTask(task.taskId)}
+                            className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-colors p-1"
+                            aria-label="Delete Task"
+                        >
+                            <Icon name="Trash2" className="w-4 h-4" />
+                        </button>
+                    </motion.div>
+                </ContextMenuTrigger>
+                <ContextMenuContent className="w-64">
+                    <ContextMenuItem onClick={() => duplicateTask(task.taskId)}>
+                        <Icon name="Copy" className="w-4 h-4 mr-2" />
+                        Duplicate
+                    </ContextMenuItem>
+                    <ContextMenuItem onClick={() => deleteTask(task.taskId)} className="focus:text-destructive">
+                        <Icon name="Trash2" className="w-4 h-4 mr-2" />
+                        Delete
+                    </ContextMenuItem>
+                    <ContextMenuSeparator />
+                    <ContextMenuSub>
+                        <ContextMenuSubTrigger>Due Date</ContextMenuSubTrigger>
+                        <ContextMenuSubContent className="w-52">
+                            <ContextMenuItem onClick={() => applyDueDate(todayString)}>
+                                <Icon name="Calendar" className="w-4 h-4 mr-2" />
+                                Set to Today
+                            </ContextMenuItem>
+                            <ContextMenuItem onClick={() => applyDueDate(tomorrowString)}>
+                                <Icon name="Calendar" className="w-4 h-4 mr-2" />
+                                Tomorrow
+                            </ContextMenuItem>
+                            <ContextMenuItem onClick={() => applyDueDate(nextWeekString)}>
+                                <Icon name="Calendar" className="w-4 h-4 mr-2" />
+                                In 7 Days
+                            </ContextMenuItem>
+                            <ContextMenuSeparator />
+                            <ContextMenuItem onClick={openDueDateDialog}>
+                                <Icon name="Edit" className="w-4 h-4 mr-2" />
+                                Pick Date...
+                            </ContextMenuItem>
+                            <ContextMenuItem
+                                onClick={() => applyDueDate(null)}
+                                disabled={!originalTask?.dueDate}
+                                className={!originalTask?.dueDate ? "text-muted-foreground" : ""}
+                            >
+                                <Icon name="X" className="w-4 h-4 mr-2" />
+                                Clear Due Date
+                            </ContextMenuItem>
+                        </ContextMenuSubContent>
+                    </ContextMenuSub>
+                    <ContextMenuSeparator />
+                    <ContextMenuSub>
+                        <ContextMenuSubTrigger>Change Type</ContextMenuSubTrigger>
+                        <ContextMenuSubContent className="w-48">
+                            <ContextMenuItem
+                                onClick={() => changeTaskCategory(task.taskId, 'must-do')}
+                                disabled={effCategory === 'must-do'}
+                                className={effCategory === 'must-do' ? "text-muted-foreground" : ""}
+                            >
+                                Must Do
+                            </ContextMenuItem>
+                            <ContextMenuItem
+                                onClick={() => changeTaskCategory(task.taskId, 'communications')}
+                                disabled={effCategory === 'communications'}
+                                className={effCategory === 'communications' ? "text-muted-foreground" : ""}
+                            >
+                                Communications
+                            </ContextMenuItem>
+                            <ContextMenuItem
+                                onClick={() => changeTaskCategory(task.taskId, 'todo')}
+                                disabled={effCategory === 'todo'}
+                                className={effCategory === 'todo' ? "text-muted-foreground" : ""}
+                            >
+                                To-Do
+                            </ContextMenuItem>
+                        </ContextMenuSubContent>
+                    </ContextMenuSub>
+                </ContextMenuContent>
+            </ContextMenu>
+
+            <Dialog open={isDueDateDialogOpen} onOpenChange={setIsDueDateDialogOpen}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Pick a Due Date</DialogTitle>
+                        <DialogDescription>
+                            Choose a date in YYYY-MM-DD format. Leave empty to clear the due date.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="flex flex-col gap-4">
                         <Input
-                            ref={inputRef}
-                            type="text"
-                            value={localTitle}
-                            onChange={(e) => setLocalTitle(e.target.value)}
-                            onBlur={saveEdit}
-                            onKeyDown={handleKeyDown}
-                            className="flex-1 h-7 text-sm p-1 bg-background border-input focus-visible:ring-1 focus-visible:ring-ring"
-                        />
-                    ) : (
-                        <span
-                            className={cn(
-                                "flex-1 text-sm cursor-text transition-colors",
-                                isCompleted ? "line-through text-muted-foreground" : "text-foreground"
-                            )}
-                            onDoubleClick={() => {
-                                if (!isCompleted) setLocalIsEditing(true);
+                            type="date"
+                            value={dueDateDraft}
+                            onChange={(e) => setDueDateDraft(e.target.value)}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter') handleDueDateSubmit();
                             }}
-                        >
-                            {originalTask.title}
-                        </span>
-                    )}
-
-                    {task.rolledOverFrom && (
-                        <span
-                            className="flex items-center gap-1 text-xs text-amber-600 dark:text-amber-500 font-medium italic bg-amber-50 dark:bg-amber-950/30 px-2 py-0.5 rounded-full whitespace-nowrap border border-amber-200 dark:border-amber-800"
-                            title={`Originally created on ${task.rolledOverFrom}`}
-                        >
-                            <Icon name="Rollover" className="w-3 h-3" />
-                            Rolled Over
-                        </span>
-                    )}
-
-                    <button
-                        onPointerDown={(e) => e.stopPropagation()} // Prevent drag
-                        onClick={() => deleteTask(task.taskId)}
-                        className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-colors p-1"
-                        aria-label="Delete Task"
-                    >
-                        <Icon name="Trash2" className="w-4 h-4" />
-                    </button>
-                </motion.div>
-            </ContextMenuTrigger>
-            <ContextMenuContent className="w-64">
-                <ContextMenuItem onClick={() => duplicateTask(task.taskId)}>
-                    <Icon name="Copy" className="w-4 h-4 mr-2" />
-                    Duplicate
-                </ContextMenuItem>
-                <ContextMenuItem onClick={() => deleteTask(task.taskId)} className="focus:text-destructive">
-                    <Icon name="Trash2" className="w-4 h-4 mr-2" />
-                    Delete
-                </ContextMenuItem>
-                <ContextMenuSeparator />
-                <ContextMenuSub>
-                    <ContextMenuSubTrigger>Change Type</ContextMenuSubTrigger>
-                    <ContextMenuSubContent className="w-48">
-                        <ContextMenuItem
-                            onClick={() => changeTaskCategory(task.taskId, 'must-do')}
-                            disabled={effCategory === 'must-do'}
-                            className={effCategory === 'must-do' ? "text-muted-foreground" : ""}
-                        >
-                            Must Do
-                        </ContextMenuItem>
-                        <ContextMenuItem
-                            onClick={() => changeTaskCategory(task.taskId, 'communications')}
-                            disabled={effCategory === 'communications'}
-                            className={effCategory === 'communications' ? "text-muted-foreground" : ""}
-                        >
-                            Communications
-                        </ContextMenuItem>
-                        <ContextMenuItem
-                            onClick={() => changeTaskCategory(task.taskId, 'todo')}
-                            disabled={effCategory === 'todo'}
-                            className={effCategory === 'todo' ? "text-muted-foreground" : ""}
-                        >
-                            To-Do
-                        </ContextMenuItem>
-                    </ContextMenuSubContent>
-                </ContextMenuSub>
-            </ContextMenuContent>
-        </ContextMenu>
+                        />
+                        <div className="flex justify-end gap-2">
+                            <Button variant="ghost" onClick={() => setIsDueDateDialogOpen(false)}>
+                                Cancel
+                            </Button>
+                            <Button onClick={handleDueDateSubmit}>Save</Button>
+                        </div>
+                    </div>
+                </DialogContent>
+            </Dialog>
+        </>
     );
 }); // Wrapped in memo
 

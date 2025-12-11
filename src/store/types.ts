@@ -4,6 +4,7 @@ export interface TaskGlobal {
     createdAt?: number; // Timestamp for animation handling
     completed: boolean;
     category: string;
+    dueDate?: string | null; // YYYY-MM-DD | null
 }
 
 export interface TaskEntry {
@@ -124,6 +125,7 @@ export interface StoreActions {
     toggleTask: (taskId: string) => void;
     deleteTask: (taskId: string) => void;
     updateTaskTitle: (taskId: string, newTitle: string) => void;
+    setTaskDueDate: (taskId: string, dueDate: string | null) => void;
     updateDayData: (updates: Partial<DayData>) => void;
     undo: () => void;
     redo: () => void;
