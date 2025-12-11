@@ -237,7 +237,7 @@ const DrawerTaskItem: React.FC<{
             style={style}
             {...attributes}
             {...listeners}
-            className="group flex items-center gap-2 p-1.5 rounded-md hover:bg-muted/50 text-sm touch-none"
+            className="group flex items-start gap-2 p-1.5 rounded-md hover:bg-muted/50 text-sm touch-none"
             onMouseEnter={() => onHover(true)}
             onMouseLeave={() => onHover(false)}
         >
@@ -257,7 +257,7 @@ const DrawerTaskItem: React.FC<{
                     }
                     onToggle();
                 }}
-                className={`w-4 h-4 rounded-full border flex items-center justify-center flex-shrink-0 ${task.completed ? 'bg-primary border-primary' : 'border-muted-foreground'}`}
+                className={`w-4 h-4 mt-0.5 rounded-full border flex items-center justify-center flex-shrink-0 ${task.completed ? 'bg-primary border-primary' : 'border-muted-foreground'}`}
             >
                 {task.completed && <Icon name="Check" className="w-2.5 h-2.5 text-primary-foreground" />}
             </button>
@@ -279,7 +279,7 @@ const DrawerTaskItem: React.FC<{
             ) : (
                 <span
                     onClick={(e) => { e.stopPropagation(); setIsEditing(true); }}
-                    className={`flex-1 truncate cursor-text ${task.completed ? 'text-muted-foreground line-through' : ''}`}
+                    className={`flex-1 min-w-0 whitespace-normal break-words cursor-text ${task.completed ? 'text-muted-foreground line-through' : ''}`}
                 >
                     {task.title}
                 </span>
