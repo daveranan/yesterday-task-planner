@@ -1,82 +1,113 @@
 const { app, BrowserWindow, screen, ipcMain } = require('electron');
 const path = require('path');
-const isDev = !app.isPackaged; // Simple check for development mode
+const fs = require('fs');
 
-// Check if we are in development mode by environment variable if !app.isPackaged is not enough
-// or check if 'vite' is running.
-// For this setup, we'll assume isDev based on packaging.
-// But mostly users run 'npm start' which runs 'electron .'
-// We need to know if we should load localhost or file.
+const isDev = !app.isPackaged;
 
-// Better way: pass an argument or environment variable.
-// In package.json scripts: "start": "electron ."
-// If we want dev, we usually run "npm run dev" (vite) and "npm run start" (electron) in parallel.
-// To make it easier, we can try to connect to localhost first, or fall back?
-// Or just hardcode for now based on a check.
-// Let's assume if env var NODE_ENV is 'development', we use localhost.
-// But we didn't set that.
+// Window state file path
+const stateFilePath = path.join(app.getPath('userData'), 'window-state.json');
 
-// Let's use a try-catch approach or just assume dev if not packaged?
-// Re-reading implementation plan: "Load http://localhost:5173 in development."
+function loadWindowState() {
+  try {
+    if (fs.existsSync(stateFilePath)) {
+      const data = fs.readFileSync(stateFilePath, 'utf8');
+      return JSON.parse(data);
+    }
+  } catch (e) {
+    console.error('Failed to load window state:', e);
+  }
+  return null; // Return null if no state or error
+}
+
+function saveWindowState(state) {
+  try {
+    fs.writeFileSync(stateFilePath, JSON.stringify(state));
+  } catch (e) {
+    console.error('Failed to save window state:', e);
+  }
+}
 
 function createWindow() {
-  const { width, height } = screen.getPrimaryDisplay().workAreaSize;
+  // Load previous state
+  const windowState = loadWindowState();
+
+  // Default dimensions
+  let { width, height } = screen.getPrimaryDisplay().workAreaSize;
+  width = 1200;
+  height = 800;
+
+  // Use saved state if available
+  let x, y;
+  if (windowState) {
+    width = windowState.width;
+    height = windowState.height;
+    x = windowState.x;
+    y = windowState.y;
+  }
 
   // Create the browser window.
   const mainWindow = new BrowserWindow({
-    width: 1200,
-    height: 800,
+    width,
+    height,
+    x,
+    y,
     minWidth: 900,
     minHeight: 600,
-    // Frame: false ensures no native window controls or border
     frame: false,
-    // autoHideMenuBar: true, // Optional if you want to hide it but keep alt access, but removeMenu is safer for total removal
     webPreferences: {
-      // preload: path.join(__dirname, 'preload.js'),
-      // Allows use of Node.js modules in the renderer process (security risk, but needed for simple apps)
       nodeIntegration: true,
       contextIsolation: false,
     },
-    icon: path.join(__dirname, 'public/assets/img/favicon.ico')
+    icon: path.join(__dirname, 'public/assets/img/favicon.ico'),
+    show: false // Don't show immediately to avoid flickering if we maximize
   });
 
   // Remove the default menu
   mainWindow.removeMenu();
 
+  // Restore maximized state if applicable
+  if (windowState && windowState.isMaximized) {
+    mainWindow.maximize();
+  }
+
+  mainWindow.once('ready-to-show', () => {
+    mainWindow.show();
+  });
+
   // Load the app.
-  // In development (Vite running), load localhost.
-  // In production, load index.html from dist (or root if we build there).
-
-  // We can try to fetch localhost, if it fails, load file? No that's slow.
-  // Let's rely on an environment variable we can set in package.json
-  // But I can't easily change how the user runs it without adding packages like cross-env or concurrently.
-  // I will assume if the file 'dist/index.html' exists, we might be in prod?
-  // Or I can just check if I can connect?
-
-  // Simplest for now: check an env var that I can't easily set?
-  // Let's just try to load the URL if it's not packaged.
-
   if (!app.isPackaged) {
-    // Development
-    // mainWindow.loadURL('http://localhost:5173');
-    // Note: User needs to run `npm run dev` separately.
-    // To make it robust, we should probably start the vite server from electron? No.
-    // I will set it to load local index.html if it can't find localhost?
-
-    // Let's just try localhost. The user has to run npm run dev.
     mainWindow.loadURL('http://localhost:5173').catch(e => {
       console.log('Could not load localhost:5173, is Vite running?');
-      // Fallback to file just in case they just ran electron without vite
       mainWindow.loadFile('index.html');
     });
-
-    // Open DevTools
     mainWindow.webContents.openDevTools();
   } else {
-    // Production (packaged)
-    // When built, Vite puts result in dist/
     mainWindow.loadFile(path.join(__dirname, 'dist/index.html'));
   }
+
+  // --- Save Window State Logic ---
+  const saveState = () => {
+    if (!mainWindow.isDestroyed()) {
+      try {
+        const isMaximized = mainWindow.isMaximized();
+        // Use getNormalBounds if maximized to save the restored size
+        const bounds = isMaximized ? mainWindow.getNormalBounds() : mainWindow.getBounds();
+
+        saveWindowState({
+          x: bounds.x,
+          y: bounds.y,
+          width: bounds.width,
+          height: bounds.height,
+          isMaximized
+        });
+      } catch (e) {
+        console.error('Error saving window state:', e);
+      }
+    }
+  };
+
+  // Save state when the window is about to close
+  mainWindow.on('close', saveState);
 
   // --- IPC Handlers for Window Controls ---
   ipcMain.on('window-minimize', () => {
