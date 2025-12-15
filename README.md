@@ -8,8 +8,10 @@ A beautiful, opinionated daily offline task planner.
 
 - **Daily Focus**: Organize tasks into "Must Do", "Communications", and generic "To Do" lists.
 - **Timeline**: Schedule tasks into specific time slots for the day with "Workblocks".
+- **Drawer**: For all your backlog needs. Add & sort everything you plan to do.
 - **Keyboard Navigation**: Fully navigable via keyboard with distinct "manipulated" states for precision control.
 - **Task Rollover**: Unfinished tasks automatically roll over to the next day.
+- **Due dates**: Don't miss things you don't mean to.
 - **Gratefulness & Reflection**: Built-in sections for daily mindfulness.
 - **Persistent Settings**: Theme, audio preferences, and view toggles are automatically saved.
 - **Sound Effects**: Satisfying keyboard sound effects for interactions.
