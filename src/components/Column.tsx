@@ -125,6 +125,7 @@ const Column: React.FC<ColumnProps> = ({ title, category, limit, tasks, allTasks
                                 addNewTask();
                             }
                         }}
+                        onBlur={addNewTask}
                         disabled={isLimitReached}
                     />
                 </div>

@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
+import { matchesShortcut } from '../utils/keyboardUtils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useDroppable } from '@dnd-kit/core';
 import { useStore } from '../store/useStore';
@@ -30,17 +31,19 @@ const Drawer: React.FC = () => {
     // Separate tasks by folder
     const inboxTasks = drawer.tasks.filter(t => t.folderId === null);
 
-    const handleAddFolder = (e: React.FormEvent) => {
-        e.preventDefault();
+    const handleAddFolder = (e: React.FormEvent | React.FocusEvent) => {
+        if (e.type === 'submit') e.preventDefault();
         if (newFolderInput.trim()) {
             addDrawerFolder(newFolderInput.trim());
             setNewFolderInput('');
-            setIsCreatingFolder(false);
         }
+        setIsCreatingFolder(false);
     };
 
-    const handleAddTask = (e: React.FormEvent, folderId: string | null) => {
-        e.preventDefault();
+    const inboxInputRef = useRef<HTMLInputElement>(null);
+
+    const handleAddTask = (e: React.FormEvent | React.FocusEvent, folderId: string | null) => {
+        if (e.type === 'submit') e.preventDefault();
         if (newTaskInput.trim()) {
             addDrawerTask(newTaskInput.trim(), folderId);
             setNewTaskInput('');
@@ -74,6 +77,7 @@ const Drawer: React.FC = () => {
                             <div className="space-y-2">
                                 <form onSubmit={(e) => handleAddTask(e, null)}>
                                     <input
+                                        ref={inboxInputRef}
                                         type="text"
                                         placeholder="Add a thought..."
                                         value={newTaskInput}
@@ -81,12 +85,13 @@ const Drawer: React.FC = () => {
                                         className="w-full bg-muted/50 border-none rounded-md px-3 py-2 text-sm focus:ring-1 focus:ring-ring focus:outline-none"
                                         id="drawer-new-task-input"
                                         autoFocus
+                                        onBlur={(e) => handleAddTask(e, null)}
                                     />
                                 </form>
                             </div>
 
                             {/* Inbox Tasks */}
-                            <DroppableInbox tasks={inboxTasks} />
+                            <DroppableInbox tasks={inboxTasks} onQuickAdd={() => inboxInputRef.current?.focus()} />
 
                             {/* Folders */}
                             <div className="space-y-2">
@@ -106,7 +111,7 @@ const Drawer: React.FC = () => {
                                             value={newFolderInput}
                                             onChange={(e) => setNewFolderInput(e.target.value)}
                                             className="w-full bg-muted/50 border-none rounded-md px-3 py-1 text-sm focus:ring-1 focus:ring-ring focus:outline-none"
-                                            onBlur={() => !newFolderInput && setIsCreatingFolder(false)}
+                                            onBlur={handleAddFolder}
                                         />
                                     </form>
                                 )}
@@ -141,7 +146,7 @@ const Drawer: React.FC = () => {
 
 // Sub-components for cleaner render
 
-const DroppableInbox: React.FC<{ tasks: DrawerTaskEntry[] }> = ({ tasks }) => {
+const DroppableInbox: React.FC<{ tasks: DrawerTaskEntry[]; onQuickAdd: () => void }> = ({ tasks, onQuickAdd }) => {
     const { toggleDrawerTask, deleteDrawerTask, updateDrawerTaskTitle, tasks: allTasks, setHoveredTaskId } = useStore();
     const { setNodeRef, isOver } = useDroppable({
         id: 'drawer-inbox',
@@ -177,6 +182,7 @@ const DroppableInbox: React.FC<{ tasks: DrawerTaskEntry[] }> = ({ tasks }) => {
                         onDelete={() => deleteDrawerTask(task.taskId)}
                         onUpdateTitle={(title) => updateDrawerTaskTitle(task.taskId, title)}
                         onHover={(isHovering) => setHoveredTaskId(isHovering ? task.taskId : null)}
+                        onQuickAdd={onQuickAdd}
                     />
                 ))}
             </SortableContext>
@@ -190,7 +196,8 @@ const DrawerTaskItem: React.FC<{
     onDelete: () => void;
     onUpdateTitle: (title: string) => void;
     onHover: (isHovering: boolean) => void;
-}> = ({ taskEntry, onToggle, onDelete, onUpdateTitle, onHover }) => {
+    onQuickAdd: () => void;
+}> = ({ taskEntry, onToggle, onDelete, onUpdateTitle, onHover, onQuickAdd }) => {
     // Look up global task data
     const task = useStore(state => state.tasks[taskEntry.taskId]);
 
@@ -271,6 +278,10 @@ const DrawerTaskItem: React.FC<{
                     onBlur={handleSave}
                     onKeyDown={(e) => {
                         if (e.key === 'Enter') handleSave();
+                        if (matchesShortcut(e, 'Ctrl+Enter')) {
+                            handleSave();
+                            onQuickAdd();
+                        }
                         e.stopPropagation(); // Prevent drag interaction on input
                     }}
                     onClick={(e) => e.stopPropagation()}
@@ -310,6 +321,7 @@ const DrawerFolderItem: React.FC<{
 }> = ({ folder, tasks, onToggleExpand, onDelete, onRename, onAddTask, onToggleTask, onDeleteTask, onUpdateTaskTitle }) => {
 
     const { setHoveredTaskId } = useStore();
+    const folderInputRef = useRef<HTMLInputElement>(null);
     const allTasks = useStore(state => state.tasks);
     const {
         attributes,
@@ -354,16 +366,16 @@ const DrawerFolderItem: React.FC<{
         return 0; // Maintain original order for same completion status
     });
 
-    const handleRenameSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
+    const handleRenameSubmit = (e: React.FormEvent | React.FocusEvent) => {
+        if (e.type === 'submit') e.preventDefault();
         if (renameValue.trim()) {
             onRename(renameValue.trim());
         }
         setIsRenaming(false);
     };
 
-    const handleAddTask = (e: React.FormEvent) => {
-        e.preventDefault();
+    const handleAddTask = (e: React.FormEvent | React.FocusEvent) => {
+        if (e.type === 'submit') e.preventDefault();
         if (newTaskInput.trim()) {
             onAddTask(newTaskInput.trim());
             setNewTaskInput('');
@@ -394,7 +406,7 @@ const DrawerFolderItem: React.FC<{
                                 autoFocus
                                 value={renameValue}
                                 onChange={(e) => setRenameValue(e.target.value)}
-                                onBlur={() => setIsRenaming(false)}
+                                onBlur={handleRenameSubmit}
                                 className="w-full bg-transparent border-none p-0 text-sm focus:ring-0"
                             />
                         </form>
@@ -431,16 +443,19 @@ const DrawerFolderItem: React.FC<{
                                 onDelete={() => onDeleteTask(task.taskId)}
                                 onUpdateTitle={(title) => onUpdateTaskTitle(task.taskId, title)}
                                 onHover={(isHovering) => setHoveredTaskId(isHovering ? task.taskId : null)}
+                                onQuickAdd={() => folderInputRef.current?.focus()}
                             />
                         ))}
                     </SortableContext>
                     <form onSubmit={handleAddTask} className="pt-1">
                         <input
+                            ref={folderInputRef}
                             type="text"
                             placeholder="Add task..."
                             value={newTaskInput}
                             onChange={(e) => setNewTaskInput(e.target.value)}
                             className="w-full bg-transparent border-none text-xs placeholder:text-muted-foreground/50 focus:ring-0 p-1"
+                            onBlur={handleAddTask}
                         />
                     </form>
                 </div>
